@@ -1,0 +1,75 @@
+{
+	<lib>
+	Memcheck:Cond
+	...
+	obj:/usr/lib/lib*
+}
+{
+	<lib>
+	Memcheck:Value4
+	obj:/usr/lib/lib*
+}
+{
+	<lib>
+	Memcheck:Value8
+	obj:/usr/lib/lib*
+}
+{
+	<lib>
+	Memcheck:Addr4
+	obj:/usr/lib/lib*
+}
+{
+	<lib>
+	Memcheck:Addr8
+	obj:/usr/lib/lib*
+}
+{
+	<lib>
+	Memcheck:Leak
+	...
+	obj:/usr/lib/libpython*
+}
+{
+	<lib>
+	Memcheck:Leak
+	...
+	obj:/usr/lib/libpango*
+}
+{
+	<lib>
+	Memcheck:Leak
+	...
+	obj:/usr/lib/libg*
+}
+
+{
+	<known>
+	Memcheck:Leak
+	fun:malloc
+	fun:snazzy_connect
+}	
+{
+	<known>
+	Memcheck:Leak
+	fun:malloc
+	fun:new_str
+	fun:cat2
+	fun:help_register
+}
+{
+   <known>
+   Memcheck:Leak
+   fun:malloc
+   fun:FcPatternObjectInsertElt
+   fun:FcPatternObjectAddWithBinding
+   fun:FcPatternDuplicate
+   obj:/usr/lib/libcairo.so.2.11000.2
+   obj:/usr/lib/libcairo.so.2.11000.2
+   fun:cairo_toy_font_face_create
+   obj:/usr/lib/libcairo.so.2.11000.2
+   obj:/usr/lib/libcairo.so.2.11000.2
+   fun:cairo_text_extents
+   fun:make_tick_label.isra.8
+   fun:draw_axis
+}
