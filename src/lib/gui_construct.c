@@ -102,9 +102,9 @@ GtkWidget * new_scrolled_window (GtkPolicyType hpolicy, GtkPolicyType vpolicy)
 
 GtkWidget * new_combo_text (void)
 {
-#if GTK_MAJOR_VERSION == 3
-	return gtk_combo_box_text_new();
-#else
+#if GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION < 24
 	return gtk_combo_box_new_text();
+#else
+	return gtk_combo_box_text_new();
 #endif
 }

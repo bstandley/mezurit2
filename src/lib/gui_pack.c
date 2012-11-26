@@ -69,10 +69,10 @@ GtkWidget * add_with_viewport (GtkWidget *widget, GtkWidget *parent)
 
 GtkWidget * combo_text_append (GtkWidget *widget, const char *text)
 {
-#if GTK_MAJOR_VERSION == 3
-	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(widget), text);
-#else
+#if GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION < 24
 	gtk_combo_box_append_text(GTK_COMBO_BOX(widget), text);
+#else
+	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(widget), text);
 #endif
 	return widget;
 }

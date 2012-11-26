@@ -54,10 +54,9 @@ void snazzy_connect (GtkWidget *widget, const char *signal_list, int type, BlobC
 	char *str _strfree_ = cat1(signal_list);
 	for (char *signal_name = strtok(str, ", "); signal_name != NULL; signal_name = strtok(NULL, ", "))
 	{
-#if GTK_MAJOR_VERSION == 3
-		if (str_equal(signal_name, "expose-event")) continue;  // skip old, incorrect symbol
-#else
-		if (str_equal(signal_name, "draw")) continue;  // skip new, incorrect symbol
+#if GTK_MAJOR_VERSION < 3
+		char *alt_name _strfree_ = NULL;
+		if (str_equal(signal_name, "draw")) signal_name = alt_name = cat1("expose-event");  // swap-in correct (old) symbol
 #endif
 		Blob *blob = malloc(sizeof(Blob));
 		fill_blob(blob, cb, sig);
@@ -87,10 +86,10 @@ void show_all (GtkWidget *widget, void *ptr)
 
 void set_draw_on_expose (GtkWidget *widget, GtkWidget *child)
 {
-#if GTK_MAJOR_VERSION == 3
-	g_signal_connect(widget, "draw", G_CALLBACK(draw_on_expose_cb), child);
-#else
+#if GTK_MAJOR_VERSION < 3
 	g_signal_connect(widget, "expose-event", G_CALLBACK(draw_on_expose_cb), child);
+#else
+	g_signal_connect(widget, "draw", G_CALLBACK(draw_on_expose_cb), child);
 #endif
 }
 
