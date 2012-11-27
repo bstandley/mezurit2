@@ -18,6 +18,7 @@
 #ifndef _MAIN_TOOL_LOGGER_H
 #define _MAIN_TOOL_LOGGER_H 1
 
+#include <lib/util/mt.h>
 #include <lib/hardware/timing.h>
 #include <main/section.h>
 #include <main/setup/channel.h>
@@ -56,7 +57,7 @@ typedef struct
 
 	// public:
 
-		GStaticMutex mutex;
+		MtMutex mutex;
 		GtkWidget *button, *image, *gpib_button;
 
 	  	// The following vars are shared between threads and protected by Logger.mutex.

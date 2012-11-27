@@ -18,6 +18,7 @@
 #ifndef _MAIN_TOOL_SCOPE_H
 #define _MAIN_TOOL_SCOPE_H 1
 
+#include <lib/util/mt.h>
 #include <main/section.h>
 #include <main/tool/buffer.h>
 
@@ -42,7 +43,7 @@ typedef struct
 
 	// public:
 
-		GStaticMutex mutex;
+		MtMutex mutex;
 		GtkWidget *button, *image;
 
 	  	// The following vars are shared between threads, protected by Scope.mutex,

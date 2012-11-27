@@ -57,8 +57,8 @@ void buffer_init (Buffer *buffer, GtkWidget *parent)
 	set_draw_on_expose(parent, buffer->add_button);
 	set_draw_on_expose(parent, buffer->save_button);
 
-	g_static_mutex_init(&buffer->mutex);
-	g_static_mutex_init(&buffer->confirming);
+	mt_mutex_init(&buffer->mutex);
+	mt_mutex_init(&buffer->confirming);
 
 	buffer->svs = NULL;
 	buffer->timer = timer_new();
@@ -109,6 +109,8 @@ void buffer_final (Buffer *buffer)
 {
 	f_start(F_INIT);
 
+	mt_mutex_clear(&buffer->mutex);
+	mt_mutex_clear(&buffer->confirming);
 	free_svset(buffer->svs);
 	timer_destroy(buffer->timer);
 }
@@ -166,15 +168,15 @@ bool clear_buffer (Buffer *buffer, ChanSet *chanset, bool confirm, bool tzero)
 
 	if (confirm)
 	{
-		g_static_mutex_lock(&buffer->confirming);
+		mt_mutex_lock(&buffer->confirming);
 
-		g_static_mutex_lock(&buffer->mutex);
+		mt_mutex_lock(&buffer->mutex);
 		confirm = unsaved_data(buffer->svs);
-		g_static_mutex_unlock(&buffer->mutex);
+		mt_mutex_unlock(&buffer->mutex);
 
 		if (confirm) proceed = run_yes_no_dialog("There are unsaved points in the buffer.\nClear buffer anyway?");
 
-		g_static_mutex_unlock(&buffer->confirming);
+		mt_mutex_unlock(&buffer->confirming);
 	}
 
 	if (proceed)
@@ -186,13 +188,13 @@ bool clear_buffer (Buffer *buffer, ChanSet *chanset, bool confirm, bool tzero)
 		{
 			append_vset(svs, vs);
 
-			g_static_mutex_lock(&buffer->mutex);
+			mt_mutex_lock(&buffer->mutex);
 			free_svset(buffer->svs);
 			buffer->svs = svs;
 			buffer->locked = 0;
 			if (tzero) buffer->do_time_reset = 1;
 			buffer->percent = -1;
-			g_static_mutex_unlock(&buffer->mutex);
+			mt_mutex_unlock(&buffer->mutex);
 
 			status_add(1, supercat("Cleared buffer (Time reset: %s)\n", tzero ? "Y" : "N"));
 		}
@@ -228,30 +230,30 @@ long save_buffer (Buffer *buffer, const char *filename, bool always_append, bool
 {
 	f_start(F_RUN);
 
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	long N_pt = write_svset_custom(buffer->svs, NULL, 0, filename, *buffer->save_header, always_append, overwrite);
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 
 	return N_pt;
 }
 
 void set_scan_progress (Buffer *buffer, double frac)
 {
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	buffer->percent = (frac < 0) ? -1 : min_int((int) (frac * 100), 100);
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 }
 
 bool run_buffer_status (Buffer *buffer, Display *display)
 {
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 
 	long total  = total_pts(buffer->svs);
 	bool primed = (buffer->svs->last_vs->N_pt == 0);
 	int sets    = buffer->svs->N_set - (primed ? 1 : 0);
 	display->percent = buffer->percent;  // display will decide whether it should redraw the percent indicator
 
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 
 	if (buffer->displayed_total != total || buffer->displayed_sets != sets)
 	{

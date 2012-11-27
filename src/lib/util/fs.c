@@ -19,8 +19,8 @@
 
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #include <glib.h>
-#include <glib/gstdio.h>
 #pragma GCC diagnostic warning "-Wsign-conversion"
+#include <glib/gstdio.h>
 #ifdef MINGW
 #include <windows.h>
 #endif

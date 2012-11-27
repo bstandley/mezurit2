@@ -18,6 +18,7 @@
 #ifndef _MAIN_TOOL_TRIGGER_H
 #define _MAIN_TOOL_TRIGGER_H 1
 
+#include <lib/util/mt.h>
 #include <lib/hardware/timing.h>
 #include <main/section.h>
 #include <main/setup/channel.h>
@@ -49,7 +50,7 @@ typedef struct
 } Trigger;
 
 void trigger_array_init     (Trigger *trigger_array, GtkWidget **apt, Section *sect);
-void trigger_array_register (Trigger *trigger_array, int pid, GtkWidget **apt, Section *sect, GStaticMutex *mutex);
+void trigger_array_register (Trigger *trigger_array, int pid, GtkWidget **apt, Section *sect, MtMutex *mutex);
 void trigger_array_update   (Trigger *trigger_array);
 void trigger_array_final    (Trigger *trigger_array);
 
@@ -57,6 +58,6 @@ void trigger_parse (Trigger *trigger);  // call from DAQ thread
 void trigger_check (Trigger *trigger);  // call from DAQ thread
 void trigger_exec  (Trigger *trigger);  // call from DAQ thread
 
-bool set_trigger_buttons_all (Trigger *trigger_array, GStaticMutex *mutex);
+bool set_trigger_buttons_all (Trigger *trigger_array, MtMutex *mutex);
 
 #endif

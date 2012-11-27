@@ -30,14 +30,14 @@ gboolean timescale_cb (GtkWidget *widget, GdkEvent *event, Scope *scope, Numeric
 
 		if (ok)
 		{
-			g_static_mutex_lock(&scope->mutex);
+			mt_mutex_lock(&scope->mutex);
 			bool scanning = scope->scanning;
 			if (!scanning)
 			{
 				*var = target;
 				verify_timescale(scope);
 			}
-			g_static_mutex_unlock(&scope->mutex);
+			mt_mutex_unlock(&scope->mutex);
 
 			if (!scanning) update_readout(scope);
 		}
@@ -54,14 +54,14 @@ void timescale_mcf (double *var, const char *signal_name, MValue value, Scope *s
 
 	double target = check_entry(entry, value.x_double);
 
-	g_static_mutex_lock(&scope->mutex);
+	mt_mutex_lock(&scope->mutex);
 	bool scanning = scope->scanning;
 	if (!scanning)
 	{
 		*var = target;
 		if (str_equal(signal_name, "panel")) verify_timescale(scope);
 	}
-	g_static_mutex_unlock(&scope->mutex);
+	mt_mutex_unlock(&scope->mutex);
 
 	if (str_equal(signal_name, "panel") && !scanning) update_readout(scope);
 	write_entry(entry, *var);

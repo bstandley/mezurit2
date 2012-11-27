@@ -91,7 +91,7 @@ void logger_init (Logger *logger, GtkWidget **apt)
 	logger->gpib_button = pack_end(size_widget(gtk_check_button_new_with_label("Pause GPIB"), -1, 22), 0,
 	                      pack_end(gtk_hbox_new(0, 0),                                                 0, lower_vbox));
 
-	g_static_mutex_init(&logger->mutex);
+	mt_mutex_init(&logger->mutex);
 	logger->block_cbuf_length_cb = 0;
 }
 
@@ -212,6 +212,7 @@ void logger_final (Logger *logger)
 {
 	f_start(F_INIT);
 
+	mt_mutex_clear(&logger->mutex);
 	destroy_entry(logger->max_rate_entry);
 	timer_destroy(logger->resizer_timer);
 	replace(logger->reader_str, NULL);

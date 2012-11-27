@@ -24,18 +24,18 @@ static void panel_unlock (Panel *panel);
 
 void panel_lock (Panel *panel)
 {
-	g_static_mutex_lock(&panel->logger.mutex);
-	g_static_mutex_lock(&panel->scope.mutex);
-	g_static_mutex_lock(&panel->sweep_mutex);
-	g_static_mutex_lock(&panel->trigger_mutex);
+	mt_mutex_lock(&panel->logger.mutex);
+	mt_mutex_lock(&panel->scope.mutex);
+	mt_mutex_lock(&panel->sweep_mutex);
+	mt_mutex_lock(&panel->trigger_mutex);
 }
 
 void panel_unlock (Panel *panel)
 {
-	g_static_mutex_unlock(&panel->logger.mutex);
-	g_static_mutex_unlock(&panel->scope.mutex);
-	g_static_mutex_unlock(&panel->sweep_mutex);
-	g_static_mutex_unlock(&panel->trigger_mutex);
+	mt_mutex_unlock(&panel->logger.mutex);
+	mt_mutex_unlock(&panel->scope.mutex);
+	mt_mutex_unlock(&panel->sweep_mutex);
+	mt_mutex_unlock(&panel->trigger_mutex);
 }
 
 void config_cb (GtkWidget *widget, Hardware *hw_array, Panel **tv_panel, OldVars *oldvars, int load, int mode)  // if load == 0, then save

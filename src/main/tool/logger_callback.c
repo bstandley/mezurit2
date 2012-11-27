@@ -32,10 +32,10 @@ gboolean max_rate_cb (GtkWidget *widget, GdkEvent *event, Logger *logger)
 
 		if (ok)
 		{
-			g_static_mutex_lock(&logger->mutex);
+			mt_mutex_lock(&logger->mutex);
 			logger->max_rate = rate;
 			logger->max_rate_dirty = 1;  // tell DAQ thread to recalculate time interval
-			g_static_mutex_unlock(&logger->mutex);
+			mt_mutex_unlock(&logger->mutex);
 		}
 
 		write_entry(logger->max_rate_entry, logger->max_rate);
@@ -50,10 +50,10 @@ void max_rate_mcf (void *ptr, const char *signal_name, MValue value, Logger *log
 
 	double rate = check_entry(logger->max_rate_entry, value.x_double);
 
-	g_static_mutex_lock(&logger->mutex);
+	mt_mutex_lock(&logger->mutex);
 	logger->max_rate = rate;
 	logger->max_rate_dirty = 1;  // tell DAQ thread to recalculate time interval
-	g_static_mutex_unlock(&logger->mutex);
+	mt_mutex_unlock(&logger->mutex);
 
 	write_entry(logger->max_rate_entry, rate);
 }
@@ -78,10 +78,10 @@ void cbuf_length_cb (GtkWidget *widget, Logger *logger)
 		gtk_spin_button_set_value(GTK_SPIN_BUTTON(widget), length);
 	}
 
-	g_static_mutex_lock(&logger->mutex);
+	mt_mutex_lock(&logger->mutex);
 	logger->cbuf_length = length;
 	logger->cbuf_dirty = 1;  // tell DAQ thread to reset the circle buffer
-	g_static_mutex_unlock(&logger->mutex);
+	mt_mutex_unlock(&logger->mutex);
 }
 
 void cbuf_length_mcf (void *ptr, const char *signal_name, MValue value, Logger *logger)
@@ -96,8 +96,8 @@ void cbuf_length_mcf (void *ptr, const char *signal_name, MValue value, Logger *
 		gtk_spin_button_set_value(GTK_SPIN_BUTTON(logger->cbuf_length_widget), length);
 	}
 
-	g_static_mutex_lock(&logger->mutex);
+	mt_mutex_lock(&logger->mutex);
 	logger->cbuf_length = length;
 	logger->cbuf_dirty = 1;  // tell DAQ thread to reset the circle buffer
-	g_static_mutex_unlock(&logger->mutex);
+	mt_mutex_unlock(&logger->mutex);
 }

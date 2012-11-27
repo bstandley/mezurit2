@@ -70,14 +70,14 @@ gboolean sweep_direction_cb (GtkWidget *widget, GdkEvent *event, Sweep *sweep, i
 {
 	f_start(F_CALLBACK);
 
-	g_static_mutex_lock(sweep->mutex);
+	mt_mutex_lock(sweep->mutex);
 	bool skip = (dir == sweep->dir) || sweep->scanning;
 	if (!skip)
 	{
 		request_sweep_dir(sweep, dir, 0);
 		exec_sweep_dir(sweep);
 	}
-	g_static_mutex_unlock(sweep->mutex);
+	mt_mutex_unlock(sweep->mutex);
 
 	return skip;
 }
@@ -95,14 +95,14 @@ char * sweep_direction_csf (gchar **argv, Sweep *sweep_array, ChanSet *chanset, 
 			Sweep *sweep = &sweep_array[ici];
 			bool warn = 0;
 
-			g_static_mutex_lock(sweep->mutex);
+			mt_mutex_lock(sweep->mutex);
 			if (!sweep->scanning)
 			{
 				request_sweep_dir(sweep, dir, 0);
 				exec_sweep_dir(sweep);
 			}
 			else warn = 1;
-			g_static_mutex_unlock(sweep->mutex);
+			mt_mutex_unlock(sweep->mutex);
 
 			if (warn) status_add(1, cat1("Sweeping is disabled when scope is running.\n"));
 			return cat1(argv[0]);
@@ -143,19 +143,19 @@ void set_sweep_endpoint (Sweep *sweep, NumericRange *master_nr, NumericRange *sl
 {
 	bool enslave = (slave_nr != NULL && sweep->channel != NULL);
 
-	g_static_mutex_lock(sweep->mutex);
+	mt_mutex_lock(sweep->mutex);
 	/**/         set_range(master_nr, side, master);
 	if (enslave) set_range(slave_nr,  side, (mode == STEP_TO_DWELL || mode == DWELL_TO_STEP) ? step_dwell_compute(sweep, side, mode) :
 	                                                                                           compute_linear_compute(&sweep->channel->cf, mode, master));
 	if (mode == STEP_TO_DWELL || mode == DWELL_TO_STEP)
 	{
 		bool show_dwell = sweep->step.value[LOWER] > 0 || sweep->step.value[UPPER] > 0;
-		g_static_mutex_unlock(sweep->mutex);
+		mt_mutex_unlock(sweep->mutex);
 
 		set_range_vis(&sweep->dwell,    show_dwell);
 		set_range_vis(&sweep->blackout, show_dwell);
 	}
-	else g_static_mutex_unlock(sweep->mutex);
+	else mt_mutex_unlock(sweep->mutex);
 
 	/**/         write_entry(master_nr->entry[side], master_nr->value[side]);
 	if (enslave) write_entry(slave_nr->entry[side],  slave_nr->value[side]);
@@ -195,10 +195,10 @@ void set_jump_target (Sweep *sweep, NumericEntry *master_ne, NumericEntry *slave
 
 	bool enslave = (sweep->channel != NULL);  // extra check, should always be true
 
-	g_static_mutex_lock(sweep->mutex);
+	mt_mutex_lock(sweep->mutex);
 	/**/         *master_ptr = master;
 	if (enslave) *slave_ptr  = compute_linear_compute(&sweep->channel->cf, mode, master);
-	g_static_mutex_unlock(sweep->mutex);
+	mt_mutex_unlock(sweep->mutex);
 
 	/**/         write_entry(master_ne, *master_ptr);
 	if (enslave) write_entry(slave_ne,  *slave_ptr);
@@ -210,9 +210,9 @@ gboolean stopcondition_cb (GtkWidget *widget, GdkEvent *event, Sweep *sweep, boo
 
 	bool was_active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 
-	g_static_mutex_lock(sweep->mutex);
+	mt_mutex_lock(sweep->mutex);
 	*stop = !was_active;
-	g_static_mutex_unlock(sweep->mutex);
+	mt_mutex_unlock(sweep->mutex);
 
 	return 0;
 }
@@ -221,9 +221,9 @@ void stopcondition_mcf (bool *stop, const char *signal_name, MValue value, Sweep
 {
 	f_start(F_MCF);
 
-	g_static_mutex_lock(sweep->mutex);
+	mt_mutex_lock(sweep->mutex);
 	*stop = value.x_bool;
-	g_static_mutex_unlock(sweep->mutex);
+	mt_mutex_unlock(sweep->mutex);
 
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), value.x_bool);
 }
@@ -234,14 +234,14 @@ void jump_go_cb (GtkWidget *widget, Sweep *sweep)
 
 	if (sweep->channel != NULL)  // extra check
 	{
-		g_static_mutex_lock(sweep->mutex);
+		mt_mutex_lock(sweep->mutex);
 		if (!sweep->scanning)
 		{
 			request_sweep_dir(sweep, 0, 0);
 			exec_sweep_dir(sweep);
 			sweep->jump_dirty = 1;
 		}
-		g_static_mutex_unlock(sweep->mutex);
+		mt_mutex_unlock(sweep->mutex);
 	}
 }
 
@@ -278,9 +278,9 @@ char * link_clear_csf (gchar **argv, Sweep *sweep_array)
 {
 	f_start(F_CONTROL);
 
-	g_static_mutex_lock(sweep_array[0].mutex);
+	mt_mutex_lock(sweep_array[0].mutex);
 	for (int ici = 0; ici < M2_MAX_CHAN; ici++) sweep_array[ici].follower = NULL;
-	g_static_mutex_unlock(sweep_array[0].mutex);
+	mt_mutex_unlock(sweep_array[0].mutex);
 
 	return cat1(argv[0]);
 }
@@ -308,7 +308,7 @@ char * link_setup_csf (gchar **argv, Sweep *sweep_array, ChanSet *chanset)
 				if (first == NULL)
 				{
 					first = leader = &sweep_array[ici];
-					g_static_mutex_lock(first->mutex);
+					mt_mutex_lock(first->mutex);
 
 					f_print(F_RUN, "First leader: \"%s\"\n", leader->channel->desc);
 				}
@@ -326,7 +326,7 @@ char * link_setup_csf (gchar **argv, Sweep *sweep_array, ChanSet *chanset)
 	if (first != NULL)
 	{
 		if (first != leader) leader->follower = first;  // close the chain
-		g_static_mutex_unlock(first->mutex);
+		mt_mutex_unlock(first->mutex);
 	}
 
 	return cat1(argv[0]);  // reply now (if no usable channels were mentioned, then nothing was done...)

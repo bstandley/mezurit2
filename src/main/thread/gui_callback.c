@@ -108,9 +108,9 @@ gboolean gpib_pause_cb (GtkWidget *widget, GdkEvent *event, ThreadVars *tv)
 
 	bool was_active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 
-	g_static_mutex_lock(&tv->gpib_mutex);
+	mt_mutex_lock(&tv->gpib_mutex);
 	tv->gpib_paused = !was_active;
-	g_static_mutex_unlock(&tv->gpib_mutex);
+	mt_mutex_unlock(&tv->gpib_mutex);
 
 	return 0;
 }
@@ -138,13 +138,13 @@ char * gpib_send_recv_csf (gchar **argv, ThreadVars *tv)
 		}
 		else
 		{
-			g_static_mutex_lock(&tv->gpib_mutex);
+			mt_mutex_lock(&tv->gpib_mutex);
 			tv->gpib_id = id;
 			tv->gpib_pad = pad;
 			tv->gpib_eos = eos;
 			tv->gpib_msg = msg;
 			tv->gpib_expect_reply = expect_reply;
-			g_static_mutex_unlock(&tv->gpib_mutex);
+			mt_mutex_unlock(&tv->gpib_mutex);
 
 			return NULL;  // reply later, in GPIB thread
 		}
@@ -159,9 +159,9 @@ char * gpib_pause_csf (gchar **argv, ThreadVars *tv, Logger *logger)
 	bool paused;
 	if (scan_arg_bool(argv[1], "paused", &paused))
 	{
-		g_static_mutex_lock(&tv->gpib_mutex);
+		mt_mutex_lock(&tv->gpib_mutex);
 		tv->gpib_paused = paused;
-		g_static_mutex_unlock(&tv->gpib_mutex);
+		mt_mutex_unlock(&tv->gpib_mutex);
 
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(logger->gpib_button), paused);
 		return cat1(argv[0]);

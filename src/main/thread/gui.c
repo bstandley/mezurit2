@@ -134,13 +134,17 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 	clear_gtk_events(0);
 
 	// start daq thread:
-	g_static_mutex_lock(&tv->rl_mutex);
+	mt_mutex_lock(&tv->rl_mutex);
+#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
 	GThread *daq_thread = g_thread_create(run_daq_thread, tv, 1, NULL);
+#else
+	GThread *daq_thread = g_thread_new("DAQ", run_daq_thread, tv);
+#endif
 	f_print(F_UPDATE, "Created DAQ thread.\n");
 
 	// wait for daq_thread to unlock when it is ready to go:
-	g_static_mutex_lock   (&tv->rl_mutex);
-	g_static_mutex_unlock (&tv->rl_mutex);
+	mt_mutex_lock   (&tv->rl_mutex);
+	mt_mutex_unlock (&tv->rl_mutex);
 
 	while (get_logger_rl(tv) != LOGGER_RL_STOP)
 	{
@@ -168,13 +172,13 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 		if (!scanning && overtime_then_reset(reader_timer, reader_target))
 		{
 			// copy data from DAQ thread:
-			g_static_mutex_lock(&tv->data_mutex);
+			mt_mutex_lock(&tv->data_mutex);
 			for (int vci = 0; vci < chanset->N_total_chan; vci++)
 			{
 				tv->data_gui[vci]  = tv->data_shared[vci];
 				tv->known_gui[vci] = tv->known_shared[vci];
 			}
-			g_static_mutex_unlock(&tv->data_mutex);
+			mt_mutex_unlock(&tv->data_mutex);
 
 			run_reader_status(&panel->logger, chanset, tv->known_gui, tv->data_gui);
 			clear_gtk_events(5e-5);
@@ -186,9 +190,9 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 
 		if (plot->enabled)  // check how many points need to be plotted
 		{
-			g_static_mutex_lock(&buffer->mutex);
+			mt_mutex_lock(&buffer->mutex);
 			plot->draw_request = min_long(total_pts(buffer->svs) - plot->draw_total, M2_MAX_GRADUAL_PTS);
-			g_static_mutex_unlock(&buffer->mutex);
+			mt_mutex_unlock(&buffer->mutex);
 		}
 		else plot->draw_request = 0;
 
@@ -212,10 +216,10 @@ bool run_runlevel_updates (ThreadVars *tv, Panel *panel, int *logger_rld, int *s
 	bool sweep_events = set_sweep_buttons_all   (panel->sweep, tv->chanset->N_inv_chan);
 
 	// update runlevels:
-	g_static_mutex_lock(&tv->rl_mutex);
+	mt_mutex_lock(&tv->rl_mutex);
 	int logger_rl = tv->logger_rl;
 	int scope_rl  = tv->scope_rl;
-	g_static_mutex_unlock(&tv->rl_mutex);
+	mt_mutex_unlock(&tv->rl_mutex);
 
 	if (*logger_rld != logger_rl)
 	{
@@ -240,9 +244,9 @@ bool run_runlevel_updates (ThreadVars *tv, Panel *panel, int *logger_rld, int *s
 	// clear dir_dirty only after buttons have actually flipped on the screen:
 	if (sweep_events)
 	{
-		g_static_mutex_lock(&panel->sweep_mutex);
+		mt_mutex_lock(&panel->sweep_mutex);
 		for (int n = 0; n < tv->chanset->N_inv_chan; n++) panel->sweep[n].dir_dirty = 0;
-		g_static_mutex_unlock(&panel->sweep_mutex);
+		mt_mutex_unlock(&panel->sweep_mutex);
 	}
 
 	return (scope_rl == SCOPE_RL_SCAN);

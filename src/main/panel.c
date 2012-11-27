@@ -144,8 +144,8 @@ void panel_init (Panel *panel, int pid, GtkWidget *flipbook)
 	f_start(F_INIT);
 
 	panel->pid = pid;
-	g_static_mutex_init(&panel->sweep_mutex);
-	g_static_mutex_init(&panel->trigger_mutex);
+	mt_mutex_init(&panel->sweep_mutex);
+	mt_mutex_init(&panel->trigger_mutex);
 
 	GtkWidget *hbox_main, *vbox_main;
 	make_page(flipbook, &hbox_main, &vbox_main, &panel->terminal_scroll);
@@ -200,6 +200,9 @@ void panel_final (Panel *panel)
 	trigger_array_final (panel->trigger);
 	plot_final          (&panel->plot);
 	buffer_final        (&panel->buffer);
+
+	mt_mutex_clear(&panel->sweep_mutex);
+	mt_mutex_clear(&panel->trigger_mutex);
 }
 
 void panel_register (Panel *panel, ChanSet *chanset)

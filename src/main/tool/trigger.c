@@ -26,8 +26,8 @@
 
 enum { TRIGGER_IF = 0 };
 
-static void trigger_array_update_visibility (Trigger *trigger_array, GStaticMutex *mutex);
-static void update_line_array_vis (Trigger *trigger, GStaticMutex *mutex, int plus);
+static void trigger_array_update_visibility (Trigger *trigger_array, MtMutex *mutex);
+static void update_line_array_vis (Trigger *trigger, MtMutex *mutex, int plus);
 static void start_trigger (Trigger *trigger);
 
 #include "trigger_callback.c"
@@ -102,7 +102,7 @@ void trigger_array_final (Trigger *trigger_array)
 	}
 }
 
-void trigger_array_register (Trigger *trigger_array, int pid, GtkWidget **apt, Section *sect, GStaticMutex *mutex)
+void trigger_array_register (Trigger *trigger_array, int pid, GtkWidget **apt, Section *sect, MtMutex *mutex)
 {
 	f_start(F_INIT);
 
@@ -155,14 +155,14 @@ void trigger_array_update (Trigger *trigger_array)
 	trigger_array_update_visibility(trigger_array, NULL);
 }
 
-void update_line_array_vis (Trigger *trigger, GStaticMutex *mutex, int plus)
+void update_line_array_vis (Trigger *trigger, MtMutex *mutex, int plus)
 {
 	f_start(F_VERBOSE);
 
 	bool filled[M2_TRIGGER_LINES];
-	if (mutex != NULL) g_static_mutex_lock(mutex);
+	if (mutex != NULL) mt_mutex_lock(mutex);
 	for (int l = 0; l < M2_TRIGGER_LINES; l++) filled[l] = (str_length(trigger->line_expr[l]) > 0);
-	if (mutex != NULL) g_static_mutex_unlock(mutex);
+	if (mutex != NULL) mt_mutex_unlock(mutex);
 
 	set_visibility(trigger->hbox1,                filled[0]);
 	gtk_widget_set_sensitive(trigger->arm_button, filled[0]);
@@ -181,25 +181,25 @@ void update_line_array_vis (Trigger *trigger, GStaticMutex *mutex, int plus)
 	}
 }
 
-void trigger_array_update_visibility (Trigger *trigger_array, GStaticMutex *mutex)
+void trigger_array_update_visibility (Trigger *trigger_array, MtMutex *mutex)
 {
 	f_start(F_VERBOSE);
 
-	if (mutex != NULL) g_static_mutex_lock(mutex);
+	if (mutex != NULL) mt_mutex_lock(mutex);
 	int id_show = 0;  // index of last trigger that should be visible (one greater than index of last occupied trigger, if possible)
 	for (int id = 1; id < M2_MAX_TRIG; id++) if (str_length(trigger_array[id - 1].line_expr[TRIGGER_IF]) > 0) id_show = id;
-	if (mutex != NULL) g_static_mutex_unlock(mutex);
+	if (mutex != NULL) mt_mutex_unlock(mutex);
 
 	for (int id = 0; id < M2_MAX_TRIG; id++) set_visibility(trigger_array[id].vbox, id <= id_show);
 }
 
-bool set_trigger_buttons_all (Trigger *trigger_array, GStaticMutex *mutex)
+bool set_trigger_buttons_all (Trigger *trigger_array, MtMutex *mutex)
 {
 	bool armed     [M2_MAX_TRIG], busy       [M2_MAX_TRIG];
 	bool arm_dirty [M2_MAX_TRIG], busy_dirty [M2_MAX_TRIG];
 
 	// copy state from DAQ thread:
-	g_static_mutex_lock(mutex);
+	mt_mutex_lock(mutex);
 	for (int n = 0; n < M2_MAX_TRIG; n++)
 	{
 		armed[n]      = trigger_array[n].armed;
@@ -207,7 +207,7 @@ bool set_trigger_buttons_all (Trigger *trigger_array, GStaticMutex *mutex)
 		busy[n]       = trigger_array[n].busy;
 		busy_dirty[n] = trigger_array[n].busy_dirty;
 	}
-	g_static_mutex_unlock(mutex);
+	mt_mutex_unlock(mutex);
 
 	bool events = 0;
 	for (int n = 0; n < M2_MAX_TRIG; n++)

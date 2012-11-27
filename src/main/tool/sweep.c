@@ -362,13 +362,13 @@ bool set_sweep_buttons_all (Sweep *sweep_array, int N_inv_chan)
 	bool dir_dirty [M2_MAX_CHAN];
 
 	// copy state from DAQ thread:
-	g_static_mutex_lock(sweep_array[0].mutex);
+	mt_mutex_lock(sweep_array[0].mutex);
 	for (int n = 0; n < N_inv_chan; n++)
 	{
 		dir[n]       = sweep_array[n].dir;
 		dir_dirty[n] = sweep_array[n].dir_dirty;
 	}
-	g_static_mutex_unlock(sweep_array[0].mutex);
+	mt_mutex_unlock(sweep_array[0].mutex);
 
 	bool events = 0;
 	for (int n = 0; n < N_inv_chan; n++)

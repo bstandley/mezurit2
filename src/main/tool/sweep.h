@@ -19,6 +19,7 @@
 #define _MAIN_TOOL_SWEEP_H 1
 
 #include <lib/entry.h>
+#include <lib/util/mt.h>
 #include <main/section.h>
 #include <main/setup/channel.h>
 
@@ -26,7 +27,7 @@ typedef struct
 {
 	// private:
 
-		GStaticMutex *mutex;  // inherited from Panel
+		MtMutex *mutex;  // inherited from Panel
 
 		bool vis_sweep, vis_jump;  // threads: GUI only
 		double jump_voltage;       // threads: GUI only, but protected with Panel.sweep_mutex anyway

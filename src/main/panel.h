@@ -49,7 +49,7 @@ typedef struct
 	// public:
 
 		int pid;
-		GStaticMutex sweep_mutex, trigger_mutex;
+		MtMutex sweep_mutex, trigger_mutex;
 
 		GtkWidget *apt[M2_NUM_APTS];
 		GtkWidget *terminal_scroll;

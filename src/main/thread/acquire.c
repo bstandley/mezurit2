@@ -77,9 +77,9 @@ void thread_init_all (ThreadVars *tv)
 {
 	f_start(F_INIT);
 
-	g_static_mutex_init(&tv->rl_mutex);
-	g_static_mutex_init(&tv->gpib_mutex);
-	g_static_mutex_init(&tv->data_mutex);
+	mt_mutex_init(&tv->rl_mutex);
+	mt_mutex_init(&tv->gpib_mutex);
+	mt_mutex_init(&tv->data_mutex);
 
 	tv->pid = -1;
 	tv->panel = NULL;
@@ -90,6 +90,17 @@ void thread_init_all (ThreadVars *tv)
 	tv->catch_signal = NULL;
 
 	tv->scope_bench_timer = timer_new();
+}
+
+void thread_final_all (ThreadVars *tv)
+{
+	f_start(F_INIT);
+
+	mt_mutex_clear(&tv->rl_mutex);
+	mt_mutex_clear(&tv->gpib_mutex);
+	mt_mutex_clear(&tv->data_mutex);
+
+	timer_destroy(tv->scope_bench_timer);
 }
 
 void thread_register_daq (ThreadVars *tv)
@@ -132,11 +143,11 @@ gpointer run_gpib_thread (gpointer data)
 		if (!tv->gpib_paused)
 		{
 			for (int id = 0; id < M2_NUM_GPIB; id++) gpib_multi_transfer(id);
-			g_static_mutex_unlock(&tv->gpib_mutex);
+			mt_mutex_unlock(&tv->gpib_mutex);
 
 			for (int id = 0; id < M2_NUM_GPIB; id++) gpib_multi_tick(id);
 		}
-		else g_static_mutex_unlock(&tv->gpib_mutex);
+		else mt_mutex_unlock(&tv->gpib_mutex);
 
 		if (sr_msg != NULL)
 		{
@@ -154,11 +165,11 @@ gpointer run_gpib_thread (gpointer data)
 
 		wait_and_reset(timer, 0.02);
 
-		g_static_mutex_lock(&tv->gpib_mutex);
+		mt_mutex_lock(&tv->gpib_mutex);
 	}
 	while (tv->gpib_running);
 
-	g_static_mutex_unlock(&tv->gpib_mutex);
+	mt_mutex_unlock(&tv->gpib_mutex);
 	return data;
 }
 
@@ -215,7 +226,7 @@ gpointer run_daq_thread (gpointer data)
 		clk[ici].bo_target = 0;
 	}
 
-	g_static_mutex_unlock(&tv->rl_mutex);
+	mt_mutex_unlock(&tv->rl_mutex);
 
 	// main data aquisition loops
 
@@ -227,13 +238,16 @@ gpointer run_daq_thread (gpointer data)
 	tv->gpib_paused = 0;
 	tv->gpib_msg = NULL;
 
-	g_static_mutex_lock(&tv->gpib_mutex);
-
+	mt_mutex_lock(&tv->gpib_mutex);
+#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
 	GThread *gpib_thread = g_thread_create(run_gpib_thread, tv, 1, NULL);
+#else
+	GThread *gpib_thread = g_thread_new("GPIB", run_gpib_thread, tv);
+#endif
 	f_print(F_UPDATE, "Created GPIB thread.\n");
 
-	g_static_mutex_lock   (&tv->gpib_mutex);  // run_gpib_thread will unlock when everything is ready to go
-	g_static_mutex_unlock (&tv->gpib_mutex);
+	mt_mutex_lock   (&tv->gpib_mutex);  // run_gpib_thread will unlock when everything is ready to go
+	mt_mutex_unlock (&tv->gpib_mutex);
 
 	long k_sleep = 1;
 	while (get_logger_rl(tv) != LOGGER_RL_STOP)
@@ -242,7 +256,7 @@ gpointer run_daq_thread (gpointer data)
 		if (wait_and_reset(limit_timer, limit_target)) k_sleep = 1;  // reset timer either way
 		else if (M2_SLEEP_MULT == k_sleep++)  // encourage os to switch back to outer thread occasionally if it isn't already
 		{
-			xleep(1e-5);
+			g_thread_yield();
 			k_sleep = 1;
 		}
 
@@ -257,7 +271,7 @@ gpointer run_daq_thread (gpointer data)
 
 		if (!scanning)
 		{
-			g_static_mutex_lock(&logger->mutex);
+			mt_mutex_lock(&logger->mutex);
 
 			if (logger->max_rate_dirty)
 			{
@@ -267,16 +281,16 @@ gpointer run_daq_thread (gpointer data)
 
 			if (logger->cbuf_dirty) init_circle_buffer(logger, &cbuf);
 
-			g_static_mutex_unlock(&logger->mutex);
+			mt_mutex_unlock(&logger->mutex);
 
 			compute_set_time(timer_elapsed(buffer->timer));
 
 			if (!daq_failed && !run_acquisition(tv, &cbuf))
 			{
-				g_static_mutex_lock(&tv->rl_mutex);
+				mt_mutex_lock(&tv->rl_mutex);
 				tv->logger_rl = LOGGER_RL_HOLD;
 				tv->scope_rl  = SCOPE_RL_HOLD;
-				g_static_mutex_unlock(&tv->rl_mutex);
+				mt_mutex_unlock(&tv->rl_mutex);
 
 				daq_failed = 1;
 			}
@@ -307,8 +321,8 @@ gpointer run_daq_thread (gpointer data)
 		{
 			bool any_event = 0;
 
-			g_static_mutex_lock(&tv->panel->sweep_mutex);
-			g_static_mutex_lock(&tv->gpib_mutex);
+			mt_mutex_lock(&tv->panel->sweep_mutex);
+			mt_mutex_lock(&tv->gpib_mutex);
 
 			double t = timer_elapsed(sweep_timer);  // All sweeps share the same timebase this way.
 			for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++)
@@ -319,8 +333,8 @@ gpointer run_daq_thread (gpointer data)
 
 			for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++) exec_sweep_dir(&tv->panel->sweep[ici]);  // Actually change sweep dir/hold now that everyone has had a chance to update.
 			                                                                                                 // Otherwise leader/follower relationships will get out of sync.
-			g_static_mutex_unlock(&tv->gpib_mutex);
-			g_static_mutex_unlock(&tv->panel->sweep_mutex);
+			mt_mutex_unlock(&tv->gpib_mutex);
+			mt_mutex_unlock(&tv->panel->sweep_mutex);
 
 			if (any_event) run_sweep_response (tv, sweep_event);
 		}
@@ -328,9 +342,9 @@ gpointer run_daq_thread (gpointer data)
 
 	if (scanning) run_scope_continue(tv, &sv, scope, buffer);
 
-	g_static_mutex_lock(&tv->gpib_mutex);
+	mt_mutex_lock(&tv->gpib_mutex);
 	tv->gpib_running = 0;
-	g_static_mutex_unlock(&tv->gpib_mutex);
+	mt_mutex_unlock(&tv->gpib_mutex);
 	g_thread_join(gpib_thread);
 	f_print(F_UPDATE, "Joined GPIB thread.\n");
 
@@ -344,23 +358,23 @@ gpointer run_daq_thread (gpointer data)
 
 void stop_threads (ThreadVars *tv)
 {
-	g_static_mutex_lock(&tv->panel->sweep_mutex);
+	mt_mutex_lock(&tv->panel->sweep_mutex);
 	for(int n = 0; n < M2_MAX_CHAN; n++)
 	{
 		request_sweep_dir(&tv->panel->sweep[n], 0, 0);
 		exec_sweep_dir(&tv->panel->sweep[n]);
 	}
-	g_static_mutex_unlock(&tv->panel->sweep_mutex);
+	mt_mutex_unlock(&tv->panel->sweep_mutex);
 
-	g_static_mutex_lock(&tv->rl_mutex);
+	mt_mutex_lock(&tv->rl_mutex);
 	tv->logger_rl = LOGGER_RL_STOP;
 	tv->scope_rl  = SCOPE_RL_STOP;
-	g_static_mutex_unlock(&tv->rl_mutex);
+	mt_mutex_unlock(&tv->rl_mutex);
 }
 
 void set_recording (ThreadVars *tv, int rl)
 {
-	g_static_mutex_lock(&tv->rl_mutex);
+	mt_mutex_lock(&tv->rl_mutex);
 	if (tv->logger_rl != LOGGER_RL_STOP && rl != tv->logger_rl)
 	{
 		if (rl == RL_NO_HOLD)
@@ -373,12 +387,12 @@ void set_recording (ThreadVars *tv, int rl)
 			if (tv->scope_rl == SCOPE_RL_SCAN && tv->logger_rl == LOGGER_RL_RECORD) tv->logger_rl = LOGGER_RL_WAIT;
 		}
 	}
-	g_static_mutex_unlock(&tv->rl_mutex);
+	mt_mutex_unlock(&tv->rl_mutex);
 }
 
 bool set_scanning (ThreadVars *tv, int rl)
 {
-	g_static_mutex_lock(&tv->rl_mutex);
+	mt_mutex_lock(&tv->rl_mutex);
 	if (tv->scope_rl != SCOPE_RL_STOP && rl != tv->scope_rl)  // must manually escape from SCOPE_RL_STOP...
 	{
 		if (rl == RL_NO_HOLD)
@@ -396,23 +410,23 @@ bool set_scanning (ThreadVars *tv, int rl)
 	}
 
 	bool on = (tv->scope_rl == SCOPE_RL_SCAN);
-	g_static_mutex_unlock(&tv->rl_mutex);
+	mt_mutex_unlock(&tv->rl_mutex);
 	return on;
 }
 
 int get_logger_rl (ThreadVars *tv)
 {
-	g_static_mutex_lock(&tv->rl_mutex);
+	mt_mutex_lock(&tv->rl_mutex);
 	int rl = tv->logger_rl;
-	g_static_mutex_unlock(&tv->rl_mutex);
+	mt_mutex_unlock(&tv->rl_mutex);
 	return rl;
 }
 
 int get_scope_rl (ThreadVars *tv)
 {
-	g_static_mutex_lock(&tv->rl_mutex);
+	mt_mutex_lock(&tv->rl_mutex);
 	int rl = tv->scope_rl;
-	g_static_mutex_unlock(&tv->rl_mutex);
+	mt_mutex_unlock(&tv->rl_mutex);
 	return rl;
 }
 
@@ -420,11 +434,11 @@ void set_scan_callback_mode (ThreadVars *tv, bool scanning)
 {
 	if (tv->pid < 0) return;
 
-	g_static_mutex_lock(&tv->panel->sweep_mutex);
+	mt_mutex_lock(&tv->panel->sweep_mutex);
 	for (int n = 0; n < M2_MAX_CHAN; n++) tv->panel->sweep[n].scanning = scanning;  // block callbacks
-	g_static_mutex_unlock(&tv->panel->sweep_mutex);
+	mt_mutex_unlock(&tv->panel->sweep_mutex);
 
-	g_static_mutex_lock(&tv->panel->scope.mutex);
+	mt_mutex_lock(&tv->panel->scope.mutex);
 	tv->panel->scope.scanning = scanning;  // block callbacks
-	g_static_mutex_unlock(&tv->panel->scope.mutex);
+	mt_mutex_unlock(&tv->panel->scope.mutex);
 }

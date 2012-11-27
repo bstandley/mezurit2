@@ -28,21 +28,21 @@ bool run_acquisition (ThreadVars *tv, CircleBuffer *cbuf)
 		return 0;
 	}
 
-	g_static_mutex_lock(&tv->gpib_mutex);
+	mt_mutex_lock(&tv->gpib_mutex);
 	for (int vci = 0; vci < tv->chanset->N_total_chan; vci++)
 		tv->known_daq[vci] = compute_function_read(&tv->chanset->channel_by_vci[vci]->cf, COMPUTE_MODE_POINT, &tv->data_daq[vci]);
-	g_static_mutex_unlock(&tv->gpib_mutex);
+	mt_mutex_unlock(&tv->gpib_mutex);
 
 	if (cbuf->length > 1) run_circle_buffer(cbuf, tv->data_daq, tv->chanset->N_total_chan);
 
 	// copy to shared buffers:
-	g_static_mutex_lock(&tv->data_mutex);
+	mt_mutex_lock(&tv->data_mutex);
 	for (int vci = 0; vci < tv->chanset->N_total_chan; vci++)
 	{
 		tv->data_shared[vci]  = tv->data_daq[vci];
 		tv->known_shared[vci] = tv->known_daq[vci];
 	}
-	g_static_mutex_unlock(&tv->data_mutex);
+	mt_mutex_unlock(&tv->data_mutex);
 
 	return 1;
 }
@@ -92,7 +92,7 @@ void run_recording (ThreadVars *tv, CircleBuffer *cbuf, Clk *clk, bool *binsize_
 			else clk[ici].bo_enabled = 0;
 		}
 
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	if (buffer->do_time_reset)
 	{
 		init_circle_buffer(logger, cbuf);  // avoid averaging old time() data which is discontinuous
@@ -118,18 +118,18 @@ void run_recording (ThreadVars *tv, CircleBuffer *cbuf, Clk *clk, bool *binsize_
 				}
 		}
 	}
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 }
 
 void run_triggers (Panel *panel)
 {
-	g_static_mutex_lock(&panel->trigger_mutex);
+	mt_mutex_lock(&panel->trigger_mutex);
 
 	for (int n = 0; n < M2_MAX_TRIG; n++) if (panel->trigger[n].any_line_dirty) trigger_parse(&panel->trigger[n]);
 	for (int n = 0; n < M2_MAX_TRIG; n++) if (panel->trigger[n].armed)          trigger_check(&panel->trigger[n]);
 	for (int n = 0; n < M2_MAX_TRIG; n++) if (panel->trigger[n].busy)           trigger_exec (&panel->trigger[n]);
 
-	g_static_mutex_unlock(&panel->trigger_mutex);
+	mt_mutex_unlock(&panel->trigger_mutex);
 }
 
 bool run_scope_start (ThreadVars *tv, ScanVars *sv, Scope *scope, double loop_interval)
@@ -137,13 +137,13 @@ bool run_scope_start (ThreadVars *tv, ScanVars *sv, Scope *scope, double loop_in
 	bool ok = 0;
 	if (scope->master_id != -1)  // extra check
 	{
-		g_static_mutex_lock(&tv->panel->sweep_mutex);
+		mt_mutex_lock(&tv->panel->sweep_mutex);
 		for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++)
 		{
 			request_sweep_dir(&tv->panel->sweep[ici], 0, 0);
 			exec_sweep_dir(&tv->panel->sweep[ici]);
 		}
-		g_static_mutex_unlock(&tv->panel->sweep_mutex);
+		mt_mutex_unlock(&tv->panel->sweep_mutex);
 
 		compute_intervals(sv, scope->scan, loop_interval);
 

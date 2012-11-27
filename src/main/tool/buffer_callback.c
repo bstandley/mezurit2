@@ -49,18 +49,18 @@ void tzero_cb (GtkWidget *widget, Buffer *buffer)
 {
 	f_start(F_CALLBACK);
 
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	buffer->do_time_reset = 1;
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 }
 
 char * tzero_csf (gchar **argv, Buffer *buffer)
 {
 	f_start(F_CONTROL);
 
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	buffer->do_time_reset = 1;
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 
 	return cat1(argv[0]);
 }
@@ -69,18 +69,18 @@ void add_set_cb (GtkWidget *widget, Buffer *buffer, ChanSet *chanset)
 {
 	f_start(F_CALLBACK);
 
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	add_set(buffer, chanset);
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 }
 
 char * add_set_csf (gchar **argv, Buffer *buffer, ChanSet *chanset)
 {
 	f_start(F_CONTROL);
 
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	bool success = add_set(buffer, chanset);
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 
 	return supercat("%s;set_added|%d", argv[0], success ? 1 : 0);
 }

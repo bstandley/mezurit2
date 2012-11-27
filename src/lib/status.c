@@ -21,12 +21,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <time.h>
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <glib.h>
-#pragma GCC diagnostic warning "-Wsign-conversion"
 
 #include <config.h>
 #include <lib/pile.h>
+#include <lib/util/mt.h>
 #include <lib/util/str.h>
 
 static int f_mode;
@@ -34,7 +32,7 @@ static int f_indent;
 
 static Pile status_pile;  // holds dynamic strings temporarily until status_regenerate() is called, which "steals" them to place in status_msg[]
 static bool status_dirty;
-static GStaticMutex status_mutex;
+static MtMutex status_mutex;
 
 static int status_len, status_loc;
 static char *status_msg[M2_STATUS_MAX_MSG];
@@ -141,10 +139,9 @@ void status_init (void)
 {
 	f_start(F_INIT);
 
-	g_static_mutex_init(&status_mutex);
-
-	status_dirty = 0;
+	mt_mutex_init(&status_mutex);
 	pile_init(&status_pile);
+	status_dirty = 0;
 
 	status_len = 0;
 	status_loc = 0;
@@ -155,6 +152,7 @@ void status_final (void)
 {
 	f_start(F_INIT);
 
+	mt_mutex_clear(&status_mutex);
 	pile_final(&status_pile, NULL);
 
 	for (int i = 0; i < M2_STATUS_MAX_MSG; i++) replace(status_msg[i], NULL);
@@ -162,7 +160,7 @@ void status_final (void)
 
 void status_add (bool timestamp, char *msg_in)
 {
-	g_static_mutex_lock(&status_mutex);  // protect localtime() as well as status_pile
+	mt_mutex_lock(&status_mutex);  // protect localtime() as well as status_pile
 
 	char *msg_time _strfree_ = NULL;
 	if (timestamp)
@@ -175,7 +173,7 @@ void status_add (bool timestamp, char *msg_in)
 	pile_add(&status_pile, cat2(msg_time, msg_in));
 	status_dirty = 1;
 
-	g_static_mutex_unlock(&status_mutex);
+	mt_mutex_unlock(&status_mutex);
 
 	f_print(F_VERBOSE, "Status: %s", msg_in);
 	free(msg_in);
@@ -185,7 +183,7 @@ bool status_regenerate (void)
 {
 	bool dirty = 0;
 
-	g_static_mutex_lock(&status_mutex);
+	mt_mutex_lock(&status_mutex);
 	if (status_dirty)
 	{
 		for (char *msg = pile_first(&status_pile); msg != NULL; msg = pile_inc(&status_pile))
@@ -204,7 +202,7 @@ bool status_regenerate (void)
 		status_dirty = 0;
 		dirty = 1;
 	}
-	g_static_mutex_unlock(&status_mutex);
+	mt_mutex_unlock(&status_mutex);
 
 	return dirty;
 }

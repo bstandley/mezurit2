@@ -18,6 +18,7 @@
 #ifndef _MAIN_TOOL_BUFFER_H
 #define _MAIN_TOOL_BUFFER_H 1
 
+#include <lib/util/mt.h>
 #include <lib/hardware/timing.h>
 #include <lib/varset/setvarset.h>
 #include <main/setup/channel.h>
@@ -27,7 +28,7 @@ typedef struct
 {
 	// private:
 
-		GStaticMutex confirming;
+		MtMutex confirming;
 
 		bool *save_header, *save_mcf, *save_scr;  // threads: shared (read only), inherited from Bufmenu, TODO: use save_mcf, save_scr
 
@@ -44,7 +45,7 @@ typedef struct
 
 	// public:
 
-		GStaticMutex mutex;
+		MtMutex mutex;
 
 		bool *link_tzero;  // threads: GUI only, inherited from Bufmenu
 

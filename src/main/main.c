@@ -65,7 +65,9 @@ int main (int argc, char *argv[])
 {
 	remember_argv0(argv[0]);
 
+#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
 	g_thread_init(NULL);
+#endif
 	gtk_init(&argc, &argv);
 	Timer *timer _timerfree_ = timer_new();
 
@@ -258,7 +260,7 @@ void mezurit2_final (Mezurit2 *m2)
 {
 	f_start(F_INIT);
 
-	timer_destroy(m2->tv.scope_bench_timer);
+	thread_final_all(&m2->tv);
 
 	hardware_array_final(m2->setup.hw);
 	channel_array_final(m2->setup.channel);

@@ -73,7 +73,7 @@ void scope_init (Scope *scope, GtkWidget **apt)
 	scope->status_left  = pack_start(new_text_view(1, 4), 0, status_hbox);
 	scope->status_right = pack_start(new_text_view(0, 0), 1, status_hbox);
 
-	g_static_mutex_init(&scope->mutex);
+	mt_mutex_init(&scope->mutex);
 	scope->master_id = -1;
 	scope->scanning = 0;
 }
@@ -130,6 +130,7 @@ void scope_final (Scope *scope)
 {
 	f_start(F_INIT);
 
+	mt_mutex_clear(&scope->mutex);
 	destroy_entry(scope->rate_entry);
 	destroy_entry(scope->time_entry);
 }
@@ -251,7 +252,7 @@ void scan_array_process (Scan *scan_array, Buffer *buffer, ChanSet *chanset)
 	compute_save_context();
 	compute_set_context(full_data, prefactor, chanset->vci_by_vc, chanset->N_total_chan);
 
-	g_static_mutex_lock(&buffer->mutex);
+	mt_mutex_lock(&buffer->mutex);
 	if (buffer->svs->last_vs->N_pt > 0) add_set(buffer, chanset);
 	VSP vs = buffer->svs->last_vs;
 
@@ -276,7 +277,7 @@ void scan_array_process (Scan *scan_array, Buffer *buffer, ChanSet *chanset)
 	}
 	
 	if (buffer->svs->last_vs->N_pt > 0) add_set(buffer, chanset);  // add another set for future logging if this one got any data
-	g_static_mutex_unlock(&buffer->mutex);
+	mt_mutex_unlock(&buffer->mutex);
 
 	compute_restore_context();  // put logger settings back
 }

@@ -15,14 +15,14 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-static void trigger_plus_cb (GtkWidget *widget, Trigger *trigger, GStaticMutex *mutex);
+static void trigger_plus_cb (GtkWidget *widget, Trigger *trigger, MtMutex *mutex);
 static gboolean trigger_expose_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger);
-static gboolean trigger_button_cb (GtkToggleButton *button, GdkEvent *event, Trigger *trigger, GStaticMutex *mutex);
-static gboolean trigger_expr_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger_array, GStaticMutex *mutex, int i, int l);
-static void trigger_expr_mcf (void *ptr, const char *signal_name, MValue value, Trigger *trigger_array, GStaticMutex *mutex, int i, int l);
-static char * trigger_csf (gchar **argv, Trigger *trigger_array, GStaticMutex *mutex);
+static gboolean trigger_button_cb (GtkToggleButton *button, GdkEvent *event, Trigger *trigger, MtMutex *mutex);
+static gboolean trigger_expr_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger_array, MtMutex *mutex, int i, int l);
+static void trigger_expr_mcf (void *ptr, const char *signal_name, MValue value, Trigger *trigger_array, MtMutex *mutex, int i, int l);
+static char * trigger_csf (gchar **argv, Trigger *trigger_array, MtMutex *mutex);
 
-void trigger_plus_cb (GtkWidget *widget, Trigger *trigger, GStaticMutex *mutex)
+void trigger_plus_cb (GtkWidget *widget, Trigger *trigger, MtMutex *mutex)
 {
 	f_start(F_CALLBACK);
 
@@ -42,14 +42,14 @@ gboolean trigger_expose_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger
 	return 0;
 }
 
-gboolean trigger_button_cb (GtkToggleButton *button, GdkEvent *event, Trigger *trigger, GStaticMutex *mutex)
+gboolean trigger_button_cb (GtkToggleButton *button, GdkEvent *event, Trigger *trigger, MtMutex *mutex)
 {
 	f_start(F_CALLBACK);
 
 	bool was_active = gtk_toggle_button_get_active(button);
 	bool arm = (GTK_WIDGET(button) == trigger->arm_button);
 
-	g_static_mutex_lock(mutex);
+	mt_mutex_lock(mutex);
 	if (arm)
 	{
 		trigger->armed = !was_active;
@@ -64,12 +64,12 @@ gboolean trigger_button_cb (GtkToggleButton *button, GdkEvent *event, Trigger *t
 			trigger->busy_dirty = 1;
 		}
 	}
-	g_static_mutex_unlock(mutex);
+	mt_mutex_unlock(mutex);
 
 	return 0;
 }
 
-gboolean trigger_expr_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger_array, GStaticMutex *mutex, int i, int l)
+gboolean trigger_expr_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger_array, MtMutex *mutex, int i, int l)
 {
 	if (entry_update_required(event, widget))
 	{
@@ -78,11 +78,11 @@ gboolean trigger_expr_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger_a
 		Trigger *trigger = &trigger_array[i];
 		char *new_expr = cat1(gtk_entry_get_text(GTK_ENTRY(widget)));
 
-		g_static_mutex_lock(mutex);
+		mt_mutex_lock(mutex);
 		replace(trigger->line_expr[l], new_expr);
 		trigger->line_dirty[l] = 1;
 		trigger->any_line_dirty = 1;
-		g_static_mutex_unlock(mutex);
+		mt_mutex_unlock(mutex);
 
 		update_line_array_vis(trigger, mutex, 0);
 		trigger_array_update_visibility(trigger_array, mutex);
@@ -91,18 +91,18 @@ gboolean trigger_expr_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger_a
 	return 0;
 }
 
-void trigger_expr_mcf (void *ptr, const char *signal_name, MValue value, Trigger *trigger_array, GStaticMutex *mutex, int i, int l)
+void trigger_expr_mcf (void *ptr, const char *signal_name, MValue value, Trigger *trigger_array, MtMutex *mutex, int i, int l)
 {
 	f_start(F_MCF);
 
 	Trigger *trigger = &trigger_array[i];
 	char *new_expr = cat1(value.string);
 
-	g_static_mutex_lock(mutex);
+	mt_mutex_lock(mutex);
 	replace(trigger->line_expr[l], new_expr);
 	trigger->line_dirty[l] = 1;
 	trigger->any_line_dirty = 1;
-	g_static_mutex_unlock(mutex);
+	mt_mutex_unlock(mutex);
 
 	gtk_entry_set_text(GTK_ENTRY(trigger->line_entry[l]), value.string);
 	if (str_equal(signal_name, "panel"))
@@ -112,7 +112,7 @@ void trigger_expr_mcf (void *ptr, const char *signal_name, MValue value, Trigger
 	}
 }
 
-char * trigger_csf (gchar **argv, Trigger *trigger_array, GStaticMutex *mutex)
+char * trigger_csf (gchar **argv, Trigger *trigger_array, MtMutex *mutex)
 {
 	f_start(F_CONTROL);
 
@@ -121,12 +121,12 @@ char * trigger_csf (gchar **argv, Trigger *trigger_array, GStaticMutex *mutex)
 	{
 		Trigger *trigger = &trigger_array[id];
 
-		if (mutex != NULL) g_static_mutex_lock(mutex);
+		if (mutex != NULL) mt_mutex_lock(mutex);
 		if      (str_equal(argv[0], "arm_trigger")    && !trigger->armed) { trigger->armed = 1; trigger->arm_dirty = 1; }
 		else if (str_equal(argv[0], "disarm_trigger") &&  trigger->armed) { trigger->armed = 0; trigger->arm_dirty = 1; }
 		else if (str_equal(argv[0], "force_trigger")  && !trigger->busy)  { start_trigger(trigger); }
 		else if (str_equal(argv[0], "cancel_trigger") &&  trigger->busy)  { trigger->busy = 0; trigger->busy_dirty = 1; }
-		if (mutex != NULL) g_static_mutex_unlock(mutex);
+		if (mutex != NULL) mt_mutex_unlock(mutex);
 
 		return cat1(argv[0]);
 	}

@@ -19,9 +19,6 @@
 #define _MAIN_THREAD_ACQUIRE_H 1
 
 #include <stdbool.h>
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <glib.h>
-#pragma GCC diagnostic warning "-Wsign-conversion"
 
 #include <main/panel.h>
 
@@ -47,7 +44,7 @@ typedef struct
 
 	// private, when including gui*.c:
 
-		GStaticMutex rl_mutex, gpib_mutex, data_mutex;
+		MtMutex rl_mutex, gpib_mutex, data_mutex;
 
 		int logger_rl, scope_rl;              // threads: shared by DAQ and GUI,  protected by ThreadVars.rl_mutex
 
@@ -77,6 +74,7 @@ typedef struct
 } ThreadVars;
 
 void thread_init_all     (ThreadVars *tv);
+void thread_final_all    (ThreadVars *tv);
 void thread_register_daq (ThreadVars *tv);
 
 gpointer run_daq_thread (gpointer data);
