@@ -17,9 +17,8 @@
 
 #include "compute.h"
 
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <Python.h>
-#pragma GCC diagnostic warning "-Wredundant-decls"
+#define HEADER_SANS_WARNINGS <Python.h>
+#include <sans_warnings.h>
 
 #include <config.h>
 #include <lib/status.h>

@@ -17,20 +17,15 @@
 
 #include "terminal.h"
 
-#pragma GCC diagnostic ignored "-Wstrict-prototypes"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
 #ifndef MINGW
-#include <vte/vte.h>
+#define HEADER_SANS_WARNINGS <vte/vte.h>
+#include <sans_warnings.h>
 #else
 #include <stdlib.h>
 #include <windows.h>
 #endif
-#pragma GCC diagnostic warning "-Wstrict-prototypes"
-#pragma GCC diagnostic warning "-Wsign-conversion"
-
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <Python.h>
-#pragma GCC diagnostic warning "-Wredundant-decls"
+#define HEADER_SANS_WARNINGS <Python.h>
+#include <sans_warnings.h>
 
 #include <lib/status.h>
 #include <lib/gui.h>

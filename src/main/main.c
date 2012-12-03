@@ -15,10 +15,8 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <glib/gstdio.h>
-#pragma GCC diagnostic warning "-Wsign-conversion"
-
+#define HEADER_SANS_WARNINGS <glib/gstdio.h>
+#include <sans_warnings.h>
 #ifdef MINGW
 #include <windows.h>  // FreeConsole()
 #endif

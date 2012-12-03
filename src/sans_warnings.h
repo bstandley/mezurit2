@@ -15,27 +15,13 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _LIB_UTIL_MT_H
-#define _LIB_UTIL_MT_H 1
-
-#define HEADER_SANS_WARNINGS <glib.h>
-#include <sans_warnings.h>
-
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	#define mt_mutex_lock(_mt_mutex_ptr)   g_static_mutex_lock(_mt_mutex_ptr)
-	#define mt_mutex_unlock(_mt_mutex_ptr) g_static_mutex_unlock(_mt_mutex_ptr)
-#else
-	#define mt_mutex_lock(_mt_mutex_ptr)   g_mutex_lock(_mt_mutex_ptr)
-	#define mt_mutex_unlock(_mt_mutex_ptr) g_mutex_unlock(_mt_mutex_ptr)
+#ifndef SHOW_HEADER_WARNINGS
+#pragma GCC system_header
 #endif
 
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-typedef GStaticMutex MtMutex;
+#ifndef HEADER_SANS_WARNINGS
+#pragma message "Must define HEADER_SANS_WARNINGS before including this file."
 #else
-typedef GMutex MtMutex;
-#endif
-
-void mt_mutex_init  (MtMutex *mutex);
-void mt_mutex_clear (MtMutex *mutex);
-
+#include HEADER_SANS_WARNINGS
+#undef HEADER_SANS_WARNINGS
 #endif

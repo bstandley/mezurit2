@@ -17,12 +17,11 @@
 
 #include "server.h"
 
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <gio/gio.h>
-#pragma GCC diagnostic warning "-Wsign-conversion"
 #include <stdlib.h>  // malloc()
 #include <stdio.h>   // sscanf()
 #include <string.h>  // strlen()
+#define HEADER_SANS_WARNINGS <gio/gio.h>
+#include <sans_warnings.h>
 
 #include <lib/pile.h>
 #include <lib/status.h>

@@ -19,11 +19,8 @@
 #define _MAIN_MENU_BUFMENU_H 1
 
 #include <stdbool.h>
-#pragma GCC diagnostic ignored "-Wstrict-prototypes"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <gtk/gtk.h>
-#pragma GCC diagnostic warning "-Wstrict-prototypes"
-#pragma GCC diagnostic warning "-Wsign-conversion"
+#define HEADER_SANS_WARNINGS <gtk/gtk.h>
+#include <sans_warnings.h>
 
 typedef struct
 {

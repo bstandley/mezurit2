@@ -17,10 +17,8 @@
 
 #include "fs.h"
 
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <glib.h>
-#pragma GCC diagnostic warning "-Wsign-conversion"
-#include <glib/gstdio.h>
+#define HEADER_SANS_WARNINGS <glib/gstdio.h>
+#include <sans_warnings.h>
 #ifdef MINGW
 #include <windows.h>
 #endif

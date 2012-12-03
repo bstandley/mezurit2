@@ -15,12 +15,10 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <Python.h>
-#pragma GCC diagnostic warning "-Wredundant-decls"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <gio/gio.h>
-#pragma GCC diagnostic warning "-Wsign-conversion"
+#define HEADER_SANS_WARNINGS <Python.h>
+#include <sans_warnings.h>
+#define HEADER_SANS_WARNINGS <gio/gio.h>
+#include <sans_warnings.h>
 
 #include <lib/util/str.h>
 #include <lib/hardware/timing.h>

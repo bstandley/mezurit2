@@ -19,9 +19,8 @@
 #define _LIB_HARDWARE_TIMING_H 1
 
 #include <stdbool.h>
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <glib.h>
-#pragma GCC diagnostic warning "-Wsign-conversion"
+#define HEADER_SANS_WARNINGS <glib.h>
+#include <sans_warnings.h>
 
 #ifndef MINGW
 typedef GTimer Timer;
