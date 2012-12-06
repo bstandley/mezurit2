@@ -15,19 +15,23 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if GTK_MAJOR_VERSION < 3
 static gboolean draw_on_expose_cb (GtkWidget *widget, void *ptr, GtkWidget *child);
+#endif
 static void snazzy_void_void_cb (GtkWidget *widget, Blob *blob);
 static void snazzy_void_int_cb (GtkWidget *widget, gint id, Blob *blob);
 static void snazzy_void_ptr_cb (GtkWidget *widget, void *ptr, Blob *blob);
 static gboolean snazzy_bool_ptr_cb (GtkWidget *widget, void *ptr, Blob *blob);
 
+#if GTK_MAJOR_VERSION < 3
 gboolean draw_on_expose_cb (GtkWidget *widget, void *ptr, GtkWidget *child)
 {
 	f_print(F_VERBOSE, "Queued extra draw signal.\n");
 
-	gtk_widget_queue_draw(child);
+	gtk_widget_queue_draw(child);  // some icons and images do not auto-refresh on GTK2
 	return 0;
 }
+#endif
 
 void snazzy_void_void_cb (GtkWidget *widget, Blob *blob)
 {

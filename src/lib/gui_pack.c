@@ -18,7 +18,7 @@
 GtkWidget * pack_start (GtkWidget *widget, bool expand_fill, GtkWidget *box)
 {
 	GtkWidget *parent = deparent(widget);
-	gtk_box_pack_start(GTK_BOX(box), widget, expand_fill, expand_fill, 0);
+	gtk_box_pack_start(GTK_BOX(box), widget, expand_fill, expand_fill, 0);  // replace with gtk_grid_attach() for GTK3?
 	if (parent != NULL) g_object_unref(G_OBJECT(widget));
 	return widget;
 }
@@ -48,9 +48,31 @@ GtkWidget * paned_pack (GtkWidget *widget, int spot, bool resize, GtkWidget *pan
 
 GtkWidget * table_attach (GtkWidget *widget, int left, int top, GtkAttachOptions h_opts, GtkWidget *table)
 {
-	guint l = (guint) left;
-	guint t = (guint) top;
-	gtk_table_attach(GTK_TABLE(table), widget, l, l + 1, t, t + 1, h_opts, 0, 0, 0);
+	return table_attach_full(widget, left, top, 1, 1, h_opts, 0, 0, 0, table);
+}
+
+GtkWidget * table_attach_full (GtkWidget *widget, int left, int top, int width, int height, GtkAttachOptions h_opts, GtkAttachOptions v_opts, int xpadding, int ypadding, GtkWidget *table)
+{
+#if GTK_MAJOR_VERSION < 3
+	guint right  = (guint) (left + width);
+	guint bottom = (guint) (top + height);
+	gtk_table_attach(GTK_TABLE(table), widget, (guint) left, right, (guint) top, bottom, h_opts, v_opts, (guint) xpadding, (guint) ypadding);
+#else
+	gtk_grid_attach(GTK_GRID(table), widget, left, top, width, height);
+
+	if (h_opts & GTK_EXPAND) gtk_widget_set_hexpand(widget, 1);  // what about GTK_FILL?
+	if (v_opts & GTK_EXPAND) gtk_widget_set_vexpand(widget, 1);  // what about GTK_FILL?
+	if (xpadding > 0)
+	{
+		gtk_widget_set_margin_left (widget, xpadding);
+		gtk_widget_set_margin_right(widget, xpadding);
+	}
+	if (ypadding > 0)
+	{
+		gtk_widget_set_margin_top   (widget, ypadding);
+		gtk_widget_set_margin_bottom(widget, ypadding);
+	}
+#endif
 	return widget;
 }
 

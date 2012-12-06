@@ -10,6 +10,7 @@ driver_request='autodetect'
 gpib_request='autodetect'
 gtk_pkg=gtk+-2.0
 vte_pkg=vte
+gtk_themes='gtkrc-*'
 win32_path=../win32
 
 while [[ $# -gt 0 ]] ; do
@@ -25,6 +26,7 @@ while [[ $# -gt 0 ]] ; do
 	elif [[ $1 == '--use-gtk3' ]] ; then
 		gtk_pkg=gtk+-3.0
 		vte_pkg=vte-2.90
+		gtk_themes='*.css'
 	elif [[ $1 == '--disable-gpib' ]] ; then
 		gpib_request='none'
 	else
@@ -46,12 +48,12 @@ option_flags='-DSTATUS'  # use lib/status.h
 rules="copy:src/main/setup/${prog1}compute.py:src/main/setup/compute.py \
        copy:src/control/${prog1}control.py:src/control/client.py"
 
-shares="COPYING:COPYING                                   \
-        terminal_startup.py:resource/terminal_startup.py  \
-        $(find resource -name '*.pdf'   -printf '%P:%p ') \
-        $(find resource -name '*.mcf'   -printf '%P:%p ') \
-        $(find resource -name 'gtkrc-*' -printf '%P:%p ') \
-        $(find resource -name '*.png'   -printf '%P:%p ')"
+shares="COPYING:COPYING                                     \
+        terminal_startup.py:resource/terminal_startup.py    \
+        $(find resource -name '*.pdf'     -printf '%P:%p ') \
+        $(find resource -name '*.mcf'     -printf '%P:%p ') \
+		$(find resource -name $gtk_themes -printf '%P:%p ') \
+        $(find resource -name '*.png'     -printf '%P:%p ')"
 
 if ! $mingw ; then
 	rules="$rules app:src/main/$prog1:src/main/main.c                       \

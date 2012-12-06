@@ -37,14 +37,14 @@ void section_init (Section *sect, const char *icon_filename, const char *label_s
 
 	sect->full = pack_start(set_no_show_all(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE)), sect->expand_fill, apt[sect->location]);
 
-	GtkWidget *vbox = container_add(gtk_vbox_new(0, 0),
+	GtkWidget *vbox = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0),
 	                  container_add(new_alignment(1, 1, 1, 1),
 	                  container_add(name_widget(gtk_event_box_new(), "m2_section"),
 	                  container_add(new_alignment(1, 1, 1, 1),
 	                  container_add(name_widget(gtk_event_box_new(), "m2_border"), sect->full)))));
 
-	sect->heading = pack_start(gtk_hbox_new(0, 0),                         0, vbox);
-	sect->box     = container_add(gtk_vbox_new(0, 4),
+	sect->heading = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0),                         0, vbox);
+	sect->box     = container_add(new_box(GTK_ORIENTATION_VERTICAL, 4),
 	                pack_start(set_no_show_all(new_alignment(3, 3, 6, 3)), 1, vbox));
 
 	GtkWidget *icon  = pack_start(gtk_image_new_from_file(icon_filename),                      0, sect->heading);
@@ -88,7 +88,7 @@ void add_loc_menu (Section *sect, ...)
 	set_draw_on_expose(sect->full, sect->loc_button);
 	gtk_widget_set_tooltip_markup(sect->loc_button, "Move tool");
 
-	sect->loc_menu = attach_window(gtk_hbox_new(0, 0), sect->full);  // any parent will do
+	sect->loc_menu = attach_window(new_box(GTK_ORIENTATION_HORIZONTAL, 0), sect->full);  // any parent will do
 
 	va_list vl;
 	va_start(vl, sect);

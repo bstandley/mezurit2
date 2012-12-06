@@ -106,7 +106,7 @@ void plot_register (Plot *plot, int pid)
 	snazzy_connect(plot->zoom_back_item,    "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_BACK);
 	snazzy_connect(plot->zoom_forward_item, "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_FORWARD);
 
-	snazzy_connect(plot->area_widget, "draw, expose-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_draw_cb),  0x10, plot);
+	snazzy_connect(plot->area_widget, "draw",               SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_draw_cb),  0x10, plot);
 	snazzy_connect(plot->area_widget, "button-press-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_click_cb), 0x10, plot);
 
 	for (int a = 0; a < 3; a++)

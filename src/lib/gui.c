@@ -28,6 +28,9 @@
 #define M2_NUM_PIXBUF 23
 static GdkPixbuf *pixbuf_array[M2_NUM_PIXBUF];
 static char *last_dirname;
+#if GTK_MAJOR_VERSION > 2
+static GtkCssProvider *css_provider;
+#endif
 
 static void destroy_snazzy_var (Blob *blob, GClosure *closure);
 static GtkWidget * deparent (GtkWidget *widget);
@@ -56,7 +59,7 @@ void snazzy_connect (GtkWidget *widget, const char *signal_list, int type, BlobC
 	{
 #if GTK_MAJOR_VERSION < 3
 		char *alt_name _strfree_ = NULL;
-		if (str_equal(signal_name, "draw")) signal_name = alt_name = cat1("expose-event");  // swap-in correct (old) symbol
+		if (str_equal(signal_name, "draw")) signal_name = alt_name = cat1("expose-event");  // swap-in correct (old) signal
 #endif
 		Blob *blob = malloc(sizeof(Blob));
 		fill_blob(blob, cb, sig);
@@ -88,8 +91,6 @@ void set_draw_on_expose (GtkWidget *widget, GtkWidget *child)
 {
 #if GTK_MAJOR_VERSION < 3
 	g_signal_connect(widget, "expose-event", G_CALLBACK(draw_on_expose_cb), child);
-#else
-	g_signal_connect(widget, "draw", G_CALLBACK(draw_on_expose_cb), child);
 #endif
 }
 
@@ -268,11 +269,19 @@ void scroll_down (GtkWidget *widget)
 
 // Persistent state for run_file_chooser(), lookup_pixbuf():
 
-void gui_init (void)
+void gui_init (bool darkpanel)
 {
 	f_start(F_INIT);
 
 	last_dirname = catg(g_get_current_dir());
+
+#if GTK_MAJOR_VERSION > 2
+	css_provider = gtk_css_provider_new();
+	gtk_css_provider_load_from_path(css_provider, atg(sharepath(darkpanel ? "themes/dark.css" : "themes/light.css")), NULL);
+	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+#else
+	gtk_rc_parse(atg(sharepath(darkpanel ? "themes/gtkrc-dark" : "themes/gtkrc-light")));
+#endif
 
 	// Pre-loaded images:
 
@@ -306,6 +315,11 @@ void gui_final (void)
 	f_start(F_INIT);
 
 	free(last_dirname);
+
+#if GTK_MAJOR_VERSION > 2
+	gtk_style_context_remove_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider));
+	g_object_unref(G_OBJECT(css_provider));
+#endif
 
 	for (int id = 0; id < M2_NUM_PIXBUF; id++) g_object_unref(pixbuf_array[id]);
 }

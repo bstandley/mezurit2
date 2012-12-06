@@ -35,15 +35,15 @@ void buffer_init (Buffer *buffer, GtkWidget *parent)
 {
 	f_start(F_INIT);
 
-	GtkWidget *hbox = container_add(gtk_hbox_new(0, 4),
+	GtkWidget *hbox = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 4),
 	                  container_add(new_alignment(2, 4, 10, 10),
 	                  pack_start(name_widget(gtk_event_box_new(), "m2_buffer"), 0, parent)));
 
-	buffer->tzero_button = pack_start(gtk_button_new_with_label("T=0"),           0, hbox);
-	buffer->clear_button = pack_start(gtk_button_new_with_label("CLEAR"),         0, hbox);
-	buffer->add_button   = pack_start(new_button_with_icon(NULL, GTK_STOCK_ADD),  0, hbox);
-	GtkWidget *file_hbox = pack_start(gtk_hbox_new(0, 0),                         1, hbox);
-	buffer->save_button  = pack_start(gtk_button_new_with_label("SAVE"),          0, hbox);
+	buffer->tzero_button = pack_start(gtk_button_new_with_label("T=0"),          0, hbox);
+	buffer->clear_button = pack_start(gtk_button_new_with_label("CLEAR"),        0, hbox);
+	buffer->add_button   = pack_start(new_button_with_icon(NULL, GTK_STOCK_ADD), 0, hbox);
+	GtkWidget *file_hbox = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0),    1, hbox);
+	buffer->save_button  = pack_start(gtk_button_new_with_label("SAVE"),         0, hbox);
 
 	set_padding(file_hbox, 8);
 	buffer->file_entry  = pack_start(new_entry(0, -1),                           1, file_hbox);
@@ -124,7 +124,7 @@ void buffer_register (Buffer *buffer, int pid, ChanSet *chanset)
 	snazzy_connect(buffer->tzero_button, "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(tzero_cb),         0x10, buffer);
 	snazzy_connect(buffer->add_button,   "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(add_set_cb),       0x20, buffer, chanset);
 	snazzy_connect(buffer->file_entry,   "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(filename_cb),      0x10, buffer);
-	snazzy_connect(buffer->file_entry,   "draw, expose-event",               SNAZZY_BOOL_PTR,  BLOB_CALLBACK(buffer_expose_cb), 0x10, buffer);
+	snazzy_connect(buffer->file_entry,   "draw",                             SNAZZY_BOOL_PTR,  BLOB_CALLBACK(buffer_expose_cb), 0x10, buffer);
 	snazzy_connect(buffer->file_button,  "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(choose_file_cb),   0x10, buffer);
 	snazzy_connect(buffer->save_button,  "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(save_cb),          0x10, buffer);
 

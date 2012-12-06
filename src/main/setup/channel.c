@@ -53,7 +53,7 @@ void channel_array_init (Channel *channel_array, Section *sect, GtkWidget **apt)
 	section_init(sect, atg(sharepath("pixmaps/tool_channel.png")), "Channels", apt);
 	sect->expand_fill = 1;
 
-	GtkWidget *table = container_add(new_table(M2_MAX_CHAN + 1, 7, 0, 2),
+	GtkWidget *table = container_add(new_table(0, 2),
 	                   add_with_viewport(new_alignment(4, 4, 8, 4),
 	                   pack_start(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC), 1, sect->box)));
 

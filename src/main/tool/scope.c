@@ -41,7 +41,7 @@ void scope_init (Scope *scope, GtkWidget **apt)
 	add_orient_button(&scope->sect);
 
 	// container:
-	GtkWidget *table = pack_start(new_table(2, 3, 4, 2), 0, scope->sect.box);
+	GtkWidget *table = pack_start(new_table(4, 2), 0, scope->sect.box);
 
 	scope->rate_entry = new_numeric_entry(0, 3, 7);
 	scope->time_entry = new_numeric_entry(0, 2, 7);
@@ -57,8 +57,7 @@ void scope_init (Scope *scope, GtkWidget **apt)
 	table_attach(scope->time_entry->widget,            1, 1, 0,        table);
 
 	// controls:
-	GtkWidget *control_vbox = gtk_vbox_new(0, 2);
-	gtk_table_attach(GTK_TABLE(table), control_vbox, 2, 3, 0, 2, 0, 0, 0, 0);
+	GtkWidget *control_vbox = table_attach_full(new_box(GTK_ORIENTATION_VERTICAL, 2), 2, 0, 1, 2, 0, 0, 0, 0, table);
 
 	scope->button = pack_start(gtk_button_new(), 0, control_vbox);
 	scope->image  = pack_start(gtk_image_new(),  0, control_vbox);
@@ -66,7 +65,7 @@ void scope_init (Scope *scope, GtkWidget **apt)
 	set_draw_on_expose(scope->sect.full, scope->image);
 
 	// status:
-	GtkWidget *status_hbox = container_add(gtk_hbox_new(0, 0),
+	GtkWidget *status_hbox = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
 	                         container_add(fix_shadow(gtk_frame_new(NULL)),
 	                         pack_start(name_widget(gtk_event_box_new(), "m2_align"), 0, scope->sect.box)));
 

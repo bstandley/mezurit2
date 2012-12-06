@@ -1,0 +1,3 @@
+#m2_main, #m2_sbox               { background-color: #606060   }
+#m2_border, #m2_buffer           { background-color: #000000   }
+#m2_main GtkMenuBar, #m2_section { background-color: @bg_color }

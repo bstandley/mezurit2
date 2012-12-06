@@ -102,8 +102,6 @@ int main (int argc, char *argv[])
 	status_init();
 	status_add(0, supercat("Debug mode set to 0x%X. See Help for an explanation.\n", f_mode));
 
-	gtk_rc_parse(atg(sharepath(darkpanel ? "themes/gtkrc-dark" : "themes/gtkrc-light")));
-
 	verify_config_dir();
 	verify_config_file("compute.py",  atg(supercat("# Place your custom channel and trigger functions here. See %s for examples.\n\n", atg(libpath("mezurit2compute.py")))));
 	verify_config_file("terminal.py", atg(supercat("# Place your custom terminal functions here. See %s for examples.\n\n",            atg(libpath("mezurit2control.py")))));
@@ -114,7 +112,7 @@ int main (int argc, char *argv[])
 	control_init();
 	compute_init();
 	mcf_init();
-	gui_init();
+	gui_init(darkpanel);
 	entry_init();
 
 	Mezurit2 m2;
@@ -211,10 +209,10 @@ void mezurit2_init (Mezurit2 *m2)
 	m2->page.main_window = name_widget(gtk_window_new(GTK_WINDOW_TOPLEVEL), "m2_main");
 	gtk_window_set_default_size(GTK_WINDOW(m2->page.main_window), -1, M2_DEFAULT_HEIGHT);
 
-	GtkWidget *vbox = container_add(gtk_vbox_new(0, 0), m2->page.main_window);
+	GtkWidget *vbox = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0), m2->page.main_window);
 
-	GtkWidget *menubar = pack_start(gtk_menu_bar_new(), 0, vbox);
-	m2->page.flipbook  = pack_start(gtk_hbox_new(0, 0), 1, vbox);
+	GtkWidget *menubar = pack_start(gtk_menu_bar_new(),                     0, vbox);
+	m2->page.flipbook  = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 1, vbox);
 
 	int port = control_server_listen(M2_TS_ID);
 

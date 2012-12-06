@@ -26,7 +26,7 @@
 
 // Persistent state for run_file_chooser(), lookup_pixbuf():
 
-void gui_init  (void);
+void gui_init  (bool darkpanel);
 void gui_final (void);
 
 // Snazzy callbacks:
@@ -69,6 +69,7 @@ bool   run_yes_no_dialog (const char *message);
 
 // Custom constructors:
 
+GtkWidget * new_box (GtkOrientation orientation, gint spacing);
 GtkWidget * new_label (const char *str, double xalign);
 GtkWidget * new_alignment (guint top, guint bottom, guint left, guint right);
 GtkWidget * new_entry (int max, int width);
@@ -76,7 +77,7 @@ GtkWidget * new_combo_text (void);
 GtkWidget * new_text_view (gint left_margin, gint right_margin);
 GtkWidget * new_button_with_icon (const char *label_str, const char *icon);
 GtkWidget * new_toggle_button_with_icon (const char *label_str, const char *icon, GtkPositionType pos);
-GtkWidget * new_table (guint rows, guint cols, guint row_spacing, guint col_spacing);
+GtkWidget * new_table (guint row_spacing, guint col_spacing);
 GtkWidget * new_item (GtkWidget *child, GtkWidget *image);
 GtkWidget * new_scrolled_window (GtkPolicyType hpolicy, GtkPolicyType vpolicy);
 
@@ -88,7 +89,8 @@ GtkWidget * container_add     (GtkWidget *widget, GtkWidget *container);
 GtkWidget * combo_text_append (GtkWidget *widget, const char *text);
 GtkWidget * paned_pack        (GtkWidget *widget, int spot, bool resize, GtkWidget *paned);
 GtkWidget * add_with_viewport (GtkWidget *widget, GtkWidget *parent);
-GtkWidget * table_attach      (GtkWidget *widget, int left, int top, GtkAttachOptions h_opts, GtkWidget *table);
+GtkWidget * table_attach      (GtkWidget *widget, int left, int top,                        GtkAttachOptions h_opts,                                                      GtkWidget *table);
+GtkWidget * table_attach_full (GtkWidget *widget, int left, int top, int width, int height, GtkAttachOptions h_opts, GtkAttachOptions v_opts, int xpadding, int ypadding, GtkWidget *table);
 GtkWidget * menu_append       (GtkWidget *widget, GtkWidget *menu);
 GtkWidget * set_submenu       (GtkWidget *submenu, GtkWidget *item);
 

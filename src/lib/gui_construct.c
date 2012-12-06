@@ -15,6 +15,16 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+GtkWidget * new_box (GtkOrientation orientation, gint spacing)
+{
+#if GTK_MAJOR_VERSION < 3
+	GtkWidget *widget = (orientation == GTK_ORIENTATION_HORIZONTAL) ? gtk_hbox_new(0, spacing) : gtk_vbox_new(0, spacing);
+#else
+	GtkWidget *widget = gtk_box_new(orientation, spacing);
+#endif
+	return widget;
+}
+
 GtkWidget * new_label (const char *str, double xalign)
 {
 	GtkWidget *widget = gtk_label_new(str);
@@ -48,11 +58,17 @@ GtkWidget * new_text_view (gint left_margin, gint right_margin)
 	return widget;
 }
 
-GtkWidget * new_table (guint rows, guint cols, guint row_spacing, guint col_spacing)
+GtkWidget * new_table (guint row_spacing, guint col_spacing)
 {
-	GtkWidget *widget = gtk_table_new(rows, cols, 0);
+#if GTK_MAJOR_VERSION < 3
+	GtkWidget *widget = gtk_table_new(1, 1, 0);
 	gtk_table_set_row_spacings(GTK_TABLE(widget), row_spacing);
 	gtk_table_set_col_spacings(GTK_TABLE(widget), col_spacing);
+#else
+	GtkWidget *widget = gtk_grid_new();
+	gtk_grid_set_row_spacing   (GTK_GRID(widget), row_spacing);
+	gtk_grid_set_column_spacing(GTK_GRID(widget), col_spacing);
+#endif
 	return widget;
 }
 

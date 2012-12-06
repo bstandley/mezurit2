@@ -28,7 +28,7 @@ static void plot_style_mcf (bool *enabled, const char *signal_name, MValue value
 static void plot_vci_mcf (int *vci, const char *signal_name, MValue value, Plot *plot, Axis *axis);
 static void plot_minmax_mcf (double *var, const char *signal_name, MValue value, Plot *plot, Axis *axis, int side);
 
-gboolean plot_draw_cb (GtkWidget *widget, void *ptr, Plot *plot)
+gboolean plot_draw_cb (GtkWidget *widget, void *ptr, Plot *plot)  // ptr may be a CairoContext* or a GdkEvent*, but we don't care
 {
 	if (plot->exposure_blocked > 0)
 	{
