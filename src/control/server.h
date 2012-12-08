@@ -45,9 +45,6 @@ bool control_server_poll    (int id);
 void control_server_reply   (int id, const char *str);
 bool control_server_iterate (int id, int code);
 
-void control_server_lock   (int id);
-void control_server_unlock (int id);
-
 bool   upload_cmd_full     (int id, const char *str);
 char * download_last_reply (int id);
 

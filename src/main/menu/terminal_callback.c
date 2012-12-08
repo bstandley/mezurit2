@@ -22,13 +22,13 @@ void abort_control_cb (GtkWidget *widget, ThreadVars *tv)
 {
 	f_start(F_CALLBACK);
 
-	control_server_lock(M2_TS_ID);
+	mt_mutex_lock(&tv->ts_mutex);
 	if (get_cmd(M2_TS_ID) != NULL)
 	{
 		control_server_reply(M2_TS_ID, "abort");
 		tv->catch_sweep_ici = -1;  // only member of ThreadVars which needs to be reset
 	}
-	control_server_unlock(M2_TS_ID);
+	mt_mutex_unlock(&tv->ts_mutex);
 }
 
 void respawn_cb (GtkWidget *widget, Terminal *terminal)

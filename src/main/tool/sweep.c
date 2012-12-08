@@ -103,7 +103,7 @@ void sweep_array_init (Sweep *sweep_array, GtkWidget **apt)
 void sweep_array_register (Sweep *sweep_array, int pid, GtkWidget **apt, ChanSet *chanset)
 {
 	f_start(F_INIT);
-	Timer *timer _timerfree_ = timer_new();
+	Timer *bench_timer _timerfree_ = timer_new();
 
 	mcf_register(NULL, "# DAC Control", MCF_W);
 
@@ -190,7 +190,7 @@ void sweep_array_register (Sweep *sweep_array, int pid, GtkWidget **apt, ChanSet
 	control_server_connect(M2_TS_ID, "sweep_link_setup", M2_CODE_GUI << pid, BLOB_CALLBACK(link_setup_csf),      0x20, sweep_array, chanset);
 	control_server_connect(M2_TS_ID, "sweep_link_clear", M2_CODE_GUI << pid, BLOB_CALLBACK(link_clear_csf),      0x10, sweep_array);
 
-	f_print(F_BENCH, "Elapsed time: %f msec\n", timer_elapsed(timer) * 1e3);
+	f_print(F_BENCH, "Elapsed time: %f msec\n", timer_elapsed(bench_timer) * 1e3);
 }
 
 void sweep_register_legacy (Sweep *sweep, const char *prefix)

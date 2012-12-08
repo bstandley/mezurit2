@@ -150,14 +150,14 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 	{
 		clear_gtk_events(5e-5);
 
-		control_server_lock(M2_TS_ID);
+		mt_mutex_lock(&tv->ts_mutex);
 		if (tv->terminal_dirty)
 		{
 			bool matched = control_server_iterate(M2_TS_ID, M2_CODE_GUI << tv->pid);
 			if (!matched) control_server_reply(M2_TS_ID, "command_error");
 			tv->terminal_dirty = 0;
 		}
-		control_server_unlock(M2_TS_ID);
+		mt_mutex_unlock(&tv->ts_mutex);
 
 		xleep(plot->draw_request < M2_BOOST_THRESHOLD_PTS ? primary_interval : primary_boost_interval);  // primary sleeper
 

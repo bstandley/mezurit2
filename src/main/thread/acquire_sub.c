@@ -36,13 +36,15 @@ bool run_acquisition (ThreadVars *tv, CircleBuffer *cbuf)
 	if (cbuf->length > 1) run_circle_buffer(cbuf, tv->data_daq, tv->chanset->N_total_chan);
 
 	// copy to shared buffers:
-	mt_mutex_lock(&tv->data_mutex);
-	for (int vci = 0; vci < tv->chanset->N_total_chan; vci++)
+	if (mt_mutex_trylock(&tv->data_mutex))  // GUI does not require the absolute latest data
 	{
-		tv->data_shared[vci]  = tv->data_daq[vci];
-		tv->known_shared[vci] = tv->known_daq[vci];
+		for (int vci = 0; vci < tv->chanset->N_total_chan; vci++)
+		{
+			tv->data_shared[vci]  = tv->data_daq[vci];
+			tv->known_shared[vci] = tv->known_daq[vci];
+		}
+		mt_mutex_unlock(&tv->data_mutex);
 	}
-	mt_mutex_unlock(&tv->data_mutex);
 
 	return 1;
 }
@@ -161,9 +163,9 @@ bool run_scope_start (ThreadVars *tv, ScanVars *sv, Scope *scope, double loop_in
 
 	if (ok)
 	{
-		control_server_lock(M2_TS_ID);
+		mt_mutex_lock(&tv->ts_mutex);
 		if (str_equal(get_cmd(M2_TS_ID), "catch_scan_start")) control_server_reply(M2_TS_ID, "catch_scan_start");
-		control_server_unlock(M2_TS_ID);
+		mt_mutex_unlock(&tv->ts_mutex);
 	}
 	else set_scan_callback_mode(tv, 0);  // unblock callbacks
 
@@ -194,9 +196,9 @@ bool run_scope_continue (ThreadVars *tv, ScanVars *sv, Scope *scope, Buffer *buf
 
 		set_scan_callback_mode(tv, 0);  // unblock callbacks
 
-		control_server_lock(M2_TS_ID);
+		mt_mutex_lock(&tv->ts_mutex);
 		if (str_equal(get_cmd(M2_TS_ID), "catch_scan_finish")) control_server_reply(M2_TS_ID, "catch_scan_finish");
-		control_server_unlock(M2_TS_ID);
+		mt_mutex_unlock(&tv->ts_mutex);
 
 		return 0;
 	}
@@ -321,7 +323,7 @@ void set_blackout (Clk *clk, double dwell, double blackout)
 
 void run_sweep_response (ThreadVars *tv, SweepEvent *sweep_event)
 {
-	control_server_lock(M2_TS_ID);
+	mt_mutex_lock(&tv->ts_mutex);
 	if (tv->catch_sweep_ici != -1)
 	{
 		char *cmd = get_cmd(M2_TS_ID);
@@ -336,7 +338,7 @@ void run_sweep_response (ThreadVars *tv, SweepEvent *sweep_event)
 			control_server_reply(M2_TS_ID, cmd);
 		}
 	}
-	control_server_unlock(M2_TS_ID);
+	mt_mutex_unlock(&tv->ts_mutex);
 
 	for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++) clear_sweep_event(&sweep_event[ici]);
 }

@@ -80,6 +80,7 @@ void thread_init_all (ThreadVars *tv)
 	mt_mutex_init(&tv->rl_mutex);
 	mt_mutex_init(&tv->gpib_mutex);
 	mt_mutex_init(&tv->data_mutex);
+	mt_mutex_init(&tv->ts_mutex);
 
 	tv->pid = -1;
 	tv->panel = NULL;
@@ -99,6 +100,7 @@ void thread_final_all (ThreadVars *tv)
 	mt_mutex_clear(&tv->rl_mutex);
 	mt_mutex_clear(&tv->gpib_mutex);
 	mt_mutex_clear(&tv->data_mutex);
+	mt_mutex_clear(&tv->ts_mutex);
 
 	timer_destroy(tv->scope_bench_timer);
 }
@@ -158,9 +160,9 @@ gpointer run_gpib_thread (gpointer data)
 
 			replace(sr_msg, NULL);
 
-			control_server_lock(M2_TS_ID);
+			mt_mutex_lock(&tv->ts_mutex);
 			control_server_reply(M2_TS_ID, reply);
-			control_server_unlock(M2_TS_ID);
+			mt_mutex_unlock(&tv->ts_mutex);
 		}
 
 		wait_and_reset(timer, 0.02);
@@ -256,32 +258,33 @@ gpointer run_daq_thread (gpointer data)
 		if (wait_and_reset(limit_timer, limit_target)) k_sleep = 1;  // reset timer either way
 		else if (M2_SLEEP_MULT == k_sleep++)  // encourage os to switch back to outer thread occasionally if it isn't already
 		{
-			g_thread_yield();
+			g_thread_yield();  // not appropriate for RT mode (needs fixing)
 			k_sleep = 1;
 		}
 
 		// poll control server:
-		if (overtime_then_reset(poll_timer, poll_target))  // reset timer only if we are over the target time
+		if (timer_elapsed(poll_timer) > poll_target && mt_mutex_trylock(&tv->ts_mutex))
 		{
-			control_server_lock(M2_TS_ID);
-			if (control_server_poll(M2_TS_ID))
+			if (control_server_poll(M2_TS_ID))  // does nothing, returns 0, if a command is already in progress
 				tv->terminal_dirty = !control_server_iterate(M2_TS_ID, M2_CODE_DAQ << tv->pid);
-			control_server_unlock(M2_TS_ID);
+			mt_mutex_unlock(&tv->ts_mutex);
+			timer_reset(poll_timer);  // reset timer only if we were over the target time and successfully locked the server for polling
 		}
 
 		if (!scanning)
 		{
-			mt_mutex_lock(&logger->mutex);
-
-			if (logger->max_rate_dirty)
+			if (mt_mutex_trylock(&logger->mutex))  // GUI thread only locks when necessary, i.e., rarely
 			{
-				limit_target = 1e-3 / logger->max_rate;
-				logger->max_rate_dirty = 0;
+				if (logger->max_rate_dirty)
+				{
+					limit_target = 1e-3 / logger->max_rate;
+					logger->max_rate_dirty = 0;
+				}
+
+				if (logger->cbuf_dirty) init_circle_buffer(logger, &cbuf);
+
+				mt_mutex_unlock(&logger->mutex);
 			}
-
-			if (logger->cbuf_dirty) init_circle_buffer(logger, &cbuf);
-
-			mt_mutex_unlock(&logger->mutex);
 
 			compute_set_time(timer_elapsed(buffer->timer));
 

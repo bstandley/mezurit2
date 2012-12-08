@@ -67,7 +67,7 @@ int main (int argc, char *argv[])
 	g_thread_init(NULL);
 #endif
 	gtk_init(&argc, &argv);
-	Timer *timer _timerfree_ = timer_new();
+	Timer *bench_timer _timerfree_ = timer_new();
 
 	int f_mode = M2_F_MODE_DEFAULT;
 	bool darkpanel = 0;
@@ -143,7 +143,7 @@ int main (int argc, char *argv[])
 	if (m2.terminal.vte != NULL) gtk_widget_grab_focus(m2.terminal.vte);
 
 	status_add(1, supercat("Welcome to %s %s!\n", quote(PROG2), quote(VERSION)));
-	f_print(F_BENCH, "startup: %f sec\n", timer_elapsed(timer));
+	f_print(F_BENCH, "startup: %f sec\n", timer_elapsed(bench_timer));
 
 #ifdef MINGW
 	if (f_mode == M2_F_MODE_DEFAULT) FreeConsole();

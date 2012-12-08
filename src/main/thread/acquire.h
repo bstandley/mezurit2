@@ -44,7 +44,7 @@ typedef struct
 
 	// private, when including gui*.c:
 
-		MtMutex rl_mutex, gpib_mutex, data_mutex;
+		MtMutex rl_mutex, gpib_mutex, data_mutex, ts_mutex;
 
 		int logger_rl, scope_rl;              // threads: shared by DAQ and GUI,  protected by ThreadVars.rl_mutex
 
@@ -60,9 +60,9 @@ typedef struct
 		double data_gui     [M2_MAX_CHAN];    // threads: GUI only
 		bool   known_gui    [M2_MAX_CHAN];    // threads: GUI only
 
-		bool terminal_dirty;                  // threads: shared, implicity protected by the control server (persists between page switches)
-		int catch_sweep_ici;                  // threads: shared, implicity protected by the control server (persists between page switches)
-		char *catch_signal;                   // threads: shared, implicity protected by the control server (persists between page switches)
+		bool terminal_dirty;                  // threads: shared, protected by ts_mutex (persists between page switches)
+		int catch_sweep_ici;                  // threads: shared, protected by ts_mutex (persists between page switches)
+		char *catch_signal;                   // threads: shared, protected by ts_mutex (persists between page switches)
 
 		ChanSet *chanset;                     // threads: shared, inherited from Mezurit2, built by run_gui_thread(), thereafter read-only
 

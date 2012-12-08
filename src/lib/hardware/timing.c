@@ -49,12 +49,12 @@ void xleep (double dt)
 #ifndef MINGW
 	g_usleep((gulong) (1e6 * dt));
 #else
-	Timer *timer = timer_new();
+	LARGE_INTEGER count_LI;
+	QueryPerformanceCounter(&count_LI);
+	Timer timer_static = count_LI.QuadPart;  // static version of timer_new()
 
-	for (double rt = dt; rt > 0; rt = dt - timer_elapsed(timer))
+	for (double rt = dt; rt > 0; rt = dt - timer_elapsed(&timer_static))  // Sleep() can be unreliable for short intervals.
 		Sleep(rt > 1e-3 ? (DWORD) (rt * 1e3) : 0);
-
-	timer_destroy(timer);
 #endif
 }
 

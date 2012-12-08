@@ -22,11 +22,13 @@
 #include <sans_warnings.h>
 
 #if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	#define mt_mutex_lock(_mt_mutex_ptr)   g_static_mutex_lock(_mt_mutex_ptr)
-	#define mt_mutex_unlock(_mt_mutex_ptr) g_static_mutex_unlock(_mt_mutex_ptr)
+	#define mt_mutex_lock(_mt_mutex_ptr)    g_static_mutex_lock(_mt_mutex_ptr)
+	#define mt_mutex_trylock(_mt_mutex_ptr) g_static_mutex_trylock(_mt_mutex_ptr)
+	#define mt_mutex_unlock(_mt_mutex_ptr)  g_static_mutex_unlock(_mt_mutex_ptr)
 #else
-	#define mt_mutex_lock(_mt_mutex_ptr)   g_mutex_lock(_mt_mutex_ptr)
-	#define mt_mutex_unlock(_mt_mutex_ptr) g_mutex_unlock(_mt_mutex_ptr)
+	#define mt_mutex_lock(_mt_mutex_ptr)    g_mutex_lock(_mt_mutex_ptr)
+	#define mt_mutex_trylock(_mt_mutex_ptr) g_mutex_trylock(_mt_mutex_ptr)
+	#define mt_mutex_unlock(_mt_mutex_ptr)  g_mutex_unlock(_mt_mutex_ptr)
 #endif
 
 #if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32

@@ -25,7 +25,6 @@
 
 #include <lib/pile.h>
 #include <lib/status.h>
-#include <lib/util/mt.h>
 #include <lib/util/str.h>
 
 #include "send_recv.c"
@@ -43,7 +42,7 @@ typedef struct
 typedef struct
 {
 	GSocket *perm_socket, *temp_socket;
-	MtMutex mutex;
+	Timer *bench_timer;
 	Pile signals;
 	gchar **argv;
 	char *last_reply;
@@ -71,7 +70,7 @@ void control_init (void)
 		server[id].argv = NULL;
 		server[id].last_reply = NULL;
 
-		mt_mutex_init(&server[id].mutex);
+		server[id].bench_timer = timer_new();
 		pile_init(&server[id].signals);
 	}
 }
@@ -90,7 +89,7 @@ void control_final (void)
 
 		g_strfreev(server[id].argv);
 
-		mt_mutex_clear(&server[id].mutex);
+		timer_destroy(server[id].bench_timer);
 		pile_final(&server[id].signals, PILE_CALLBACK(free_control_signal_cb));
 	}
 }
@@ -167,18 +166,6 @@ void control_server_reply (int id, const char *str)
 	server[id].argv = NULL;
 }
 
-void control_server_lock (int id)
-{
-	f_verify(id >= 0 && id < M2_CONTROL_MAX_SERVER, SERVER_ID_WARNING_MSG, return);
-	mt_mutex_lock(&server[id].mutex);
-}
-
-void control_server_unlock (int id)
-{
-	f_verify(id >= 0 && id < M2_CONTROL_MAX_SERVER, SERVER_ID_WARNING_MSG, return);
-	mt_mutex_unlock(&server[id].mutex);
-}
-
 void control_server_connect (int id, const char *cmd, int mask, BlobCallback cb, int sig, ...)
 {
 	f_verify(id >= 0 && id < M2_CONTROL_MAX_SERVER, SERVER_ID_WARNING_MSG, return);
@@ -193,7 +180,7 @@ bool control_server_iterate (int id, int code)
 {
 	f_verify(id >= 0 && id < M2_CONTROL_MAX_SERVER, SERVER_ID_WARNING_MSG, return 0);
 	f_start(F_CONTROL);
-	Timer *timer _timerfree_ = timer_new();
+	timer_reset(server[id].bench_timer);
 
 	ControlSignal *cs = pile_first(&server[id].signals);
 	while (cs != NULL)
@@ -213,14 +200,14 @@ bool control_server_iterate (int id, int code)
 #undef _CALL
 			if (reply != NULL) control_server_reply(id, reply);
 
-			f_print(F_CONTROL, "match signal, dt = %f us\n", 1e6 * timer_elapsed(timer));
+			f_print(F_CONTROL, "match signal, dt = %f us\n", 1e6 * timer_elapsed(server[id].bench_timer));
 			return 1;
 		}
 
 		cs = pile_inc(&server[id].signals);
 	}
 
-	f_print(F_CONTROL, "unmatched signal, dt = %f us\n", 1e6 * timer_elapsed(timer));
+	f_print(F_CONTROL, "unmatched signal, dt = %f us\n", 1e6 * timer_elapsed(server[id].bench_timer));
 	return 0;
 }
 

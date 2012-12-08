@@ -57,7 +57,7 @@ char * emit_signal_csf (gchar **argv, ThreadVars *tv)  // connected to only "loc
 	{
 		bool matched = 0;
 
-		control_server_lock(M2_TS_ID);
+		mt_mutex_lock(&tv->ts_mutex);
 		if (str_equal(tv->catch_signal, name))
 		{
 			char *reply _strfree_ = cat3(get_cmd(M2_TS_ID), ";name|", name);
@@ -65,7 +65,7 @@ char * emit_signal_csf (gchar **argv, ThreadVars *tv)  // connected to only "loc
 			replace(tv->catch_signal, NULL);
 			matched = 1;
 		}
-		control_server_unlock(M2_TS_ID);
+		mt_mutex_unlock(&tv->ts_mutex);
 
 		return supercat("%s;matched|%d", argv[0], matched ? 1 : 0);
 	}
