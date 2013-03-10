@@ -8,8 +8,7 @@ load_defaults
 
 driver_request='autodetect'
 gpib_request='autodetect'
-gtk_pkg=gtk+-2.0
-vte_pkg=vte
+gtk_type=gtk2
 gtk_themes='gtkrc-*'
 win32_path=../win32
 
@@ -24,8 +23,7 @@ while [[ $# -gt 0 ]] ; do
 	elif [[ $1 =~ '--driver' ]] ; then
 		driver_request=$(echo $1 | sed "s/--driver=//")
 	elif [[ $1 == '--use-gtk3' ]] ; then
-		gtk_pkg=gtk+-3.0
-		vte_pkg=vte-2.90
+		gtk_type=gtk3
 		gtk_themes='*.css'
 	elif [[ $1 == '--disable-gpib' ]] ; then
 		gpib_request='none'
@@ -41,7 +39,7 @@ done
 
 prog1=mezurit2
 prog2=Mezurit2
-version=0.91
+version=0.92
 srcdir=src
 option_flags='-DSTATUS'  # use lib/status.h
 
@@ -62,13 +60,13 @@ else
 	ldlibs="-lwinmm"
 	rules="$rules app:src/main/$prog2.exe:src/main/main.c                    \
 	              lib:src/control/_${prog1}control.pyd:src/control/client.c"
-	shares="$shares $(find $win32_path/gtk2/bin   -name '*.dll'       -printf '%f:%p\n' | grep -v 'asprintf\|cairo-script-interpreter\|cairo-gobject\|gailutil\|gcc_s_dw2') \
-					$(find $win32_path/gtk2       -name 'libwimp.dll' -printf '%P:%p')                                                                                      \
-	                $(find $win32_path/gtk2       -name 'gtkrc'       -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows')                                                    \
-					$(find $win32_path/python2    -name 'python*.dll' -printf '%f:%p')                                                                                      \
-					$(find $win32_path/python2    -name 'python.exe'  -printf '%f:%p')                                                                                      \
-	                $(find $win32_path/python2    -name '*.pyd'       -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd')                                             \
-	                $(find $win32_path/pyreadline -name '*.py'        -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"
+	shares="$shares $(find $win32_path/$gtk_type/bin -name '*.dll'       -printf '%f:%p\n' | grep -v 'asprintf\|cairo-script-interpreter\|cairo-gobject\|gailutil\|gcc_s_dw2') \
+					$(find $win32_path/$gtk_type     -name 'libwimp.dll' -printf '%P:%p')                                                                                      \
+	                $(find $win32_path/$gtk_type     -name 'gtkrc'       -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows')                                                    \
+					$(find $win32_path/python2       -name 'python*.dll' -printf '%f:%p')                                                                                      \
+					$(find $win32_path/python2       -name 'python.exe'  -printf '%f:%p')                                                                                      \
+	                $(find $win32_path/python2       -name '*.pyd'       -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd')                                             \
+	                $(find $win32_path/pyreadline    -name '*.py'        -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"
 	for x in _abcoll _weakrefset abc copy_reg genericpath linecache ntpath os stat types UserDict       \
 	         warnings site traceback sysconfig re sre_compile sre_parse sre_constants locale codecs     \
 	         functools atexit socket weakref struct string glob fnmatch pdb cmd bdb repr pprint         \
@@ -84,6 +82,14 @@ detect_system
 detect_python
 
 #####################  GTK detection  #####################
+
+if [[ $gtk_type == 'gtk3' ]] ; then
+	gtk_pkg=gtk+-3.0
+	vte_pkg=vte-2.90
+else
+	gtk_pkg=gtk+-2.0
+	vte_pkg=vte
+fi
 
 if $mingw ; then
 	old_path=$PKG_CONFIG_PATH
