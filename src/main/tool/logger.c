@@ -26,6 +26,8 @@
 #include <lib/util/str.h>
 #include <lib/util/num.h>
 
+static void flush_reader (Logger *logger);
+
 #include "logger_callback.c"
 
 void logger_init (Logger *logger, GtkWidget **apt)
@@ -59,16 +61,18 @@ void logger_init (Logger *logger, GtkWidget **apt)
 	                         container_add(fix_shadow(gtk_frame_new(NULL)),
 	                         pack_start(name_widget(gtk_event_box_new(), "m2_align"), 0, lower_vbox)));
 
-	logger->reader_labels = pack_start(new_text_view(1, 8), 0, reader_hbox);
-	logger->reader_values = pack_start(new_text_view(0, 0), 1, reader_hbox);
-	logger->reader_units  = pack_start(new_text_view(0, 0), 0, reader_hbox);
-	logger->reader_types  = pack_start(new_text_view(6, 2), 0, reader_hbox);
-
-	gtk_text_view_set_justification(GTK_TEXT_VIEW(logger->reader_values), GTK_JUSTIFY_RIGHT);
+	logger->reader_labels = pack_start(new_text_view(1, 8),       0, reader_hbox);
+	logger->reader_align  = pack_start(new_alignment(0, 0, 0, 0), 1, reader_hbox);
+	logger->reader_units  = pack_start(new_text_view(0, 0),       0, reader_hbox);
+	logger->reader_types  = pack_start(new_text_view(6, 2),       0, reader_hbox);
+	logger->reader_values = NULL;  // built/rebuilt by flush_reader()
 
 	logger->reader_hash = 0;
 	logger->reader_str = NULL;
-	logger->reader_textbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(logger->reader_values));  // shortcut for later
+	logger->reader_textbuf = NULL;
+	logger->reader_flush_counter = 0;
+
+	flush_reader(logger);  // build reader_values widget
 
 	logger->resizer_queued = 0;
 	logger->resizer_timer = timer_new();
@@ -142,8 +146,25 @@ void set_logger_scanning (Logger *logger, bool scanning)
 {
 	gtk_widget_set_sensitive(logger->reader_labels, !scanning);
 	gtk_widget_set_sensitive(logger->reader_values, !scanning);
+	gtk_widget_set_sensitive(logger->reader_units,  !scanning);
 	gtk_widget_set_sensitive(logger->reader_types,  !scanning);
 }
+
+void flush_reader (Logger *logger)
+{
+	if (logger->reader_values != NULL)
+	{
+		gtk_container_remove(GTK_CONTAINER(logger->reader_align), logger->reader_values);
+		// widget actually destroyed?
+	}
+
+	logger->reader_values = container_add(new_text_view(0, 0), logger->reader_align);
+	gtk_text_view_set_justification(GTK_TEXT_VIEW(logger->reader_values), GTK_JUSTIFY_RIGHT);
+
+	logger->reader_textbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(logger->reader_values));  // shortcut for later
+
+	f_print(F_VERBOSE, "Flushed reader widget.\n");
+}	
 
 void run_reader_status (Logger *logger, ChanSet *chanset, bool *known, double *data)
 {
@@ -172,6 +193,13 @@ void run_reader_status (Logger *logger, ChanSet *chanset, bool *known, double *d
 	guint hash = g_str_hash(logger->reader_str);
 	if (hash != logger->reader_hash)
 	{
+		if (M2_READER_FLUSH_INTERVAL == logger->reader_flush_counter++)
+		{
+			flush_reader(logger);
+			gtk_widget_show(logger->reader_values);
+			logger->reader_flush_counter = 0;
+		}
+
 		logger->reader_hash = hash;
 		gtk_text_buffer_set_text(logger->reader_textbuf, logger->reader_str, -1);
 

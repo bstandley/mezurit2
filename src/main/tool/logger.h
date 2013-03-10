@@ -39,9 +39,10 @@ typedef struct
 		Section sect;
 		NumericEntry *max_rate_entry;
 		GtkWidget *cbuf_length_widget;
-		GtkWidget *reader_labels, *reader_units, *reader_types;
+		GtkWidget *reader_labels, *reader_align, *reader_units, *reader_types;
 		GtkWidget *reader_values;  // updated by run_reader_status() using buffered data
 
+		int reader_flush_counter;       // threads: GUI only
 		guint reader_hash;              // threads: GUI only
 		char *reader_str;               // threads: GUI only
 		GtkTextBuffer *reader_textbuf;  // threads: GUI only

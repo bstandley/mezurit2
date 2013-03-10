@@ -57,6 +57,7 @@
 #define M2_DEFAULT_GUI_RATE 120       // Hz
 #define M2_BOOST_GUI_RATE 5000        // Hz
 #define M2_MAX_READER_RATE 73         // Hz
+#define M2_READER_FLUSH_INTERVAL 800  // cycles
 #define M2_MAX_BUFFER_STATUS_RATE 41  // Hz
 #define M2_SCOPE_PROGRESS_RATE 11     // Hz
 #define M2_MAX_GRADUAL_PTS 800
