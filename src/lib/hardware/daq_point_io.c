@@ -49,7 +49,7 @@ int daq_multi_tick (int id)
 	f_verify(daq_board[id].multi_N_chan > 0, NULL,               return 1);
 	f_verify(daq_board[id].is_connected,     NULL,               return 0);
 
-	DaqBoard *board = &daq_board[id];
+	struct DaqBoard *board = &daq_board[id];
 	if (board->is_real)
 	{
 #if COMEDI
@@ -102,7 +102,7 @@ int daq_AI_read (int id, int chan, double *voltage)
 
 	if (!daq_board[id].ai.ch[chan].req)
 	{
-		DaqBoard *board = &daq_board[id];
+		struct DaqBoard *board = &daq_board[id];
 
 		// add this chan to multi config
 		board->ai.ch[chan].req = 1;

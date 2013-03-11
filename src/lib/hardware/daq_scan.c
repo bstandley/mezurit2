@@ -24,7 +24,7 @@ int daq_SCAN_start (int id)
 	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD, DAQ_ID_WARNING_MSG,      return 0);
 	f_verify(daq_board[id].is_connected,     DAQ_CONNECT_WARNING_MSG, return 0);
 
-	DaqBoard *board = &daq_board[id];
+	struct DaqBoard *board = &daq_board[id];
 
 	if (board->scan_prepared)
 	{
@@ -75,7 +75,7 @@ void daq_SCAN_prepare (int id, Scan *userscan)
 	// Note: Will always update userscan->N_pt, userscan->total_time.
 	//       Will update userscan->read_interval if successful.
 
-	DaqBoard *board = &daq_board[id];
+	struct DaqBoard *board = &daq_board[id];
 
 	replace(board->scan_buffer, NULL);
 	board->scan_prepared = 0;
@@ -228,7 +228,7 @@ long daq_SCAN_read (int id)
 	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD, DAQ_ID_WARNING_MSG, return 0);
 	f_verify(daq_board[id].is_connected,     NULL,               return 0);
 
-	DaqBoard *board = &daq_board[id];
+	struct DaqBoard *board = &daq_board[id];
 
 	long s_read = 0;
 	if (board->is_real)
@@ -311,7 +311,7 @@ long daq_SCAN_stop (int id)
 	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD, DAQ_ID_WARNING_MSG, return 0);
 	f_verify(daq_board[id].is_connected,     NULL,               return 0);
 
-	DaqBoard *board = &daq_board[id];
+	struct DaqBoard *board = &daq_board[id];
 
 	long s_read = daq_SCAN_read(id);  // attempt to grab last of the data
 	for (int i = 0; i < 8 && board->scan_offset != board->scan_total; i++)
@@ -346,7 +346,7 @@ int daq_AI_convert (int id, int chan, long pt, double *voltage)
 	f_verify(daq_board[id].is_connected,                NULL,               return 2);  // (unknown)
 	f_verify(chan >= 0 && chan < daq_board[id].ai.N_ch, NULL,               return 0);
 
-	DaqBoard *board = &daq_board[id];
+	struct DaqBoard *board = &daq_board[id];
 
 	int pci = board->scan_pci[chan];
 	if (pci < 0) return 0;

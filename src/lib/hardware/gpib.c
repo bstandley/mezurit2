@@ -48,7 +48,7 @@ typedef short *PSHORT;
 #define _pyfree_ __attribute__((cleanup(_py_clean_gpib)))
 void _py_clean_gpib (PyObject **py_ob);
 
-typedef struct
+struct GpibSlot
 {
 	int pad;
 	char *cmd, *reply_fmt, *write_fmt, *dummy_buf;
@@ -62,9 +62,9 @@ typedef struct
 	bool known_local, known_global;
 	double current_local, current_global;
 
-} GpibSlot;
+};
 
-typedef struct
+struct GpibBoard
 {
 	char *node;
 	bool is_real, is_connected;
@@ -78,12 +78,12 @@ typedef struct
 	char buf[M2_GPIB_BUF_LENGTH + 1];
 	Pile slots;
 
-} GpibBoard;
+};
 
-static GpibBoard gpib_board [M2_GPIB_MAX_BRD];
+static struct GpibBoard gpib_board [M2_GPIB_MAX_BRD];
 
 static void gpib_device_connect (int id, int pad);
-static void free_slot_cb (GpibSlot *slot);
+static void free_slot_cb (struct GpibSlot *slot);
 
 #include "gpib_slot_io.c"
 

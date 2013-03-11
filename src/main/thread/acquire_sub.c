@@ -15,12 +15,12 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-static double ave_circle_buffer (CircleBuffer *cbuf, int vci);
-static void run_circle_buffer (CircleBuffer *cbuf, double *data, int N_chan);
-static void compute_intervals (ScanVars *sv, Scan *scan_array, double loop_interval);
-static void set_blackout (Clk *clk, double dwell, double blackout);
+static double ave_circle_buffer (struct CircleBuffer *cbuf, int vci);
+static void run_circle_buffer (struct CircleBuffer *cbuf, double *data, int N_chan);
+static void compute_intervals (struct ScanVars *sv, Scan *scan_array, double loop_interval);
+static void set_blackout (struct Clk *clk, double dwell, double blackout);
 
-bool run_acquisition (ThreadVars *tv, CircleBuffer *cbuf)
+bool run_acquisition (ThreadVars *tv, struct CircleBuffer *cbuf)
 {
 	for (int id = 0; id < M2_NUM_DAQ; id++) if (daq_multi_tick(id) != 1)
 	{
@@ -49,7 +49,7 @@ bool run_acquisition (ThreadVars *tv, CircleBuffer *cbuf)
 	return 1;
 }
 
-void init_circle_buffer (Logger *logger, CircleBuffer *cbuf)
+void init_circle_buffer (Logger *logger, struct CircleBuffer *cbuf)
 {
 	cbuf->index = 0;
 	cbuf->filled = 0;
@@ -58,7 +58,7 @@ void init_circle_buffer (Logger *logger, CircleBuffer *cbuf)
 	logger->cbuf_dirty = 0;
 }
 
-double ave_circle_buffer (CircleBuffer *cbuf, int vci)
+double ave_circle_buffer (struct CircleBuffer *cbuf, int vci)
 {
 	double sum = 0;
 	for (int cbi = 0; cbi < cbuf->filled; cbi++)
@@ -66,7 +66,7 @@ double ave_circle_buffer (CircleBuffer *cbuf, int vci)
 	return sum / cbuf->filled;
 }
 
-void run_circle_buffer (CircleBuffer *cbuf, double *data, int N_chan)
+void run_circle_buffer (struct CircleBuffer *cbuf, double *data, int N_chan)
 {
 	// update number of filled rows
 	if (cbuf->filled < cbuf->length) cbuf->filled++;
@@ -83,7 +83,7 @@ void run_circle_buffer (CircleBuffer *cbuf, double *data, int N_chan)
 	if(cbuf->index == cbuf->length) cbuf->index = 0;
 }
 
-void run_recording (ThreadVars *tv, CircleBuffer *cbuf, Clk *clk, bool *binsize_valid, double *binsize, Logger *logger, Buffer *buffer)
+void run_recording (ThreadVars *tv, struct CircleBuffer *cbuf, struct Clk *clk, bool *binsize_valid, double *binsize, Logger *logger, Buffer *buffer)
 {
 	bool record_ok = (get_logger_rl(tv) == LOGGER_RL_RECORD);
 
@@ -134,7 +134,7 @@ void run_triggers (Panel *panel)
 	mt_mutex_unlock(&panel->trigger_mutex);
 }
 
-bool run_scope_start (ThreadVars *tv, ScanVars *sv, Scope *scope, double loop_interval)
+bool run_scope_start (ThreadVars *tv, struct ScanVars *sv, Scope *scope, double loop_interval)
 {
 	bool ok = 0;
 	if (scope->master_id != -1)  // extra check
@@ -172,7 +172,7 @@ bool run_scope_start (ThreadVars *tv, ScanVars *sv, Scope *scope, double loop_in
 	return ok;
 }
 
-bool run_scope_continue (ThreadVars *tv, ScanVars *sv, Scope *scope, Buffer *buffer)
+bool run_scope_continue (ThreadVars *tv, struct ScanVars *sv, Scope *scope, Buffer *buffer)
 {
 	
 	double elapsed = daq_SCAN_elapsed(scope->master_id);
@@ -204,7 +204,7 @@ bool run_scope_continue (ThreadVars *tv, ScanVars *sv, Scope *scope, Buffer *buf
 	}
 }
 
-void compute_intervals (ScanVars *sv, Scan *scan_array, double loop_interval)
+void compute_intervals (struct ScanVars *sv, Scan *scan_array, double loop_interval)
 {
 	sv->prog_mult = floor_int(1.0/M2_SCOPE_PROGRESS_RATE / loop_interval);
 
@@ -222,7 +222,7 @@ void compute_intervals (ScanVars *sv, Scan *scan_array, double loop_interval)
 	}
 }
 
-void run_sweep_step (Sweep *sweep, double t, Clk *clk, SweepEvent *sweep_event)
+void run_sweep_step (Sweep *sweep, double t, struct Clk *clk, struct SweepEvent *sweep_event)
 {
 	double dt = t - clk->t0;
 
@@ -314,14 +314,14 @@ void run_sweep_step (Sweep *sweep, double t, Clk *clk, SweepEvent *sweep_event)
 	}
 }
 
-void set_blackout (Clk *clk, double dwell, double blackout)
+void set_blackout (struct Clk *clk, double dwell, double blackout)
 {
 	clk->bo_enabled = 1;
 	timer_reset(clk->bo_timer);
 	clk->bo_target = (dwell / 1e3) * (blackout / 100.0);
 }
 
-void run_sweep_response (ThreadVars *tv, SweepEvent *sweep_event)
+void run_sweep_response (ThreadVars *tv, struct SweepEvent *sweep_event)
 {
 	mt_mutex_lock(&tv->ts_mutex);
 	if (tv->catch_sweep_ici != -1)
@@ -343,7 +343,7 @@ void run_sweep_response (ThreadVars *tv, SweepEvent *sweep_event)
 	for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++) clear_sweep_event(&sweep_event[ici]);
 }
 
-void clear_sweep_event (SweepEvent *sweep_event)
+void clear_sweep_event (struct SweepEvent *sweep_event)
 {
 	sweep_event->any          = 0;
 	sweep_event->zerostop     = 0;

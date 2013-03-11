@@ -31,15 +31,15 @@
 
 #define SERVER_ID_WARNING_MSG "Warning: Control server id out of range.\n"
 
-typedef struct
+struct ControlSignal
 {
 	char *cmd;
 	int mask;
 	Blob blob;
 
-} ControlSignal;
+};
 
-typedef struct
+struct Server
 {
 	GSocket *perm_socket, *temp_socket;
 	Timer *bench_timer;
@@ -47,11 +47,11 @@ typedef struct
 	gchar **argv;
 	char *last_reply;
 
-} Server;
+};
 
-static Server server[M2_CONTROL_MAX_SERVER];
+static struct Server server[M2_CONTROL_MAX_SERVER];
 
-static void free_control_signal_cb (ControlSignal *rs);
+static void free_control_signal_cb (struct ControlSignal *rs);
 
 int all_pid (int code)
 {
@@ -94,7 +94,7 @@ void control_final (void)
 	}
 }
 
-void free_control_signal_cb (ControlSignal *rs)
+void free_control_signal_cb (struct ControlSignal *rs)
 {
 	replace(rs->cmd, NULL);
 }
@@ -170,7 +170,7 @@ void control_server_connect (int id, const char *cmd, int mask, BlobCallback cb,
 {
 	f_verify(id >= 0 && id < M2_CONTROL_MAX_SERVER, SERVER_ID_WARNING_MSG, return);
 
-	ControlSignal *cs = pile_add(&server[id].signals, malloc(sizeof(ControlSignal)));
+	struct ControlSignal *cs = pile_add(&server[id].signals, malloc(sizeof(struct ControlSignal)));
 	cs->cmd = cat1(cmd);
 	cs->mask = mask;
 	fill_blob(&cs->blob, cb, sig);
@@ -182,7 +182,7 @@ bool control_server_iterate (int id, int code)
 	f_start(F_CONTROL);
 	timer_reset(server[id].bench_timer);
 
-	ControlSignal *cs = pile_first(&server[id].signals);
+	struct ControlSignal *cs = pile_first(&server[id].signals);
 	while (cs != NULL)
 	{
 		if ((code & cs->mask) && str_equal(server[id].argv[0], cs->cmd))

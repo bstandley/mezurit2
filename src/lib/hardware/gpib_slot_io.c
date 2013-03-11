@@ -15,7 +15,7 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-void free_slot_cb (GpibSlot *slot)
+void free_slot_cb (struct GpibSlot *slot)
 {
 	free(slot->cmd);
 	free(slot->reply_fmt);
@@ -31,7 +31,7 @@ int gpib_slot_add (int id, int pad, const char *cmd, double dt, double dummy_val
 
 	if (gpib_board[id].dev[pad] == -2) gpib_device_connect(id, pad);
 
-	GpibSlot *slot = malloc(sizeof(GpibSlot));
+	struct GpibSlot *slot = malloc(sizeof(struct GpibSlot));
 
 	slot->pad = pad;
 	slot->cmd = cat1(cmd);
@@ -64,7 +64,7 @@ int gpib_slot_read (int id, int s, double *x)
 	f_verify(id >= 0 && id < M2_GPIB_MAX_BRD, NULL, return 0);
 	f_verify(gpib_board[id].is_connected,     NULL, return 0);
 
-	GpibSlot *slot = pile_item(&gpib_board[id].slots, (size_t) s);
+	struct GpibSlot *slot = pile_item(&gpib_board[id].slots, (size_t) s);
 	if (slot == NULL)
 	{
 		f_print(F_ERROR, "Error: Slot index out of range.\n");
@@ -92,7 +92,7 @@ int gpib_slot_write (int id, int s, double target)
 	f_verify(id >= 0 && id < M2_GPIB_MAX_BRD, GPIB_ID_WARNING_MSG, return 0);
 	f_verify(gpib_board[id].is_connected,     NULL,                return 0);
 
-	GpibSlot *slot = pile_item(&gpib_board[id].slots, (size_t) s);
+	struct GpibSlot *slot = pile_item(&gpib_board[id].slots, (size_t) s);
 	if (slot == NULL)
 	{
 		f_print(F_ERROR, "Error: Slot index out of range.\n");
@@ -121,7 +121,7 @@ int gpib_multi_tick (int id)
 	f_verify(id >= 0 && id < M2_GPIB_MAX_BRD, GPIB_ID_WARNING_MSG, return 0);
 	f_verify(gpib_board[id].is_connected,     NULL,                return 0);
 
-	GpibSlot *slot = pile_first(&gpib_board[id].slots);
+	struct GpibSlot *slot = pile_first(&gpib_board[id].slots);
 	while (slot != NULL)
 	{
 		if (slot->write_request_local)
@@ -151,7 +151,7 @@ void gpib_multi_transfer (int id)
 	f_verify(id >= 0 && id < M2_GPIB_MAX_BRD, GPIB_ID_WARNING_MSG, return);
 	f_verify(gpib_board[id].is_connected,     NULL,                return);
 
-	GpibSlot *slot = pile_first(&gpib_board[id].slots);
+	struct GpibSlot *slot = pile_first(&gpib_board[id].slots);
 	while (slot != NULL)
 	{
 		if (slot->write_request_global)

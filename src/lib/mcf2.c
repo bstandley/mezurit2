@@ -26,14 +26,14 @@
 #include <lib/status.h>
 #include <lib/util/str.h>
 
-typedef struct
+struct MSignal
 {
 	char *name, *note;
 	Blob blob;
 
-} MSignal;
+};
 
-typedef struct
+struct MVar
 {
 	void *ptr;
 	char *name, *pattern;
@@ -41,15 +41,15 @@ typedef struct
 	MValue default_value;
 	Pile cb_signals;
 
-} MVar;
+};
 
 static Pile mcf_pile;
 
-static void free_mvar_cb (MVar *mvar);
-static void free_msignal_cb (MSignal *ms);
-static bool signal_search (MVar *mvar, const char *signal_name, MValue value);
+static void free_mvar_cb (struct MVar *mvar);
+static void free_msignal_cb (struct MSignal *ms);
+static bool signal_search (struct MVar *mvar, const char *signal_name, MValue value);
 
-void free_mvar_cb (MVar *mvar)
+void free_mvar_cb (struct MVar *mvar)
 {
 	free(mvar->name);
 	free(mvar->pattern);
@@ -58,7 +58,7 @@ void free_mvar_cb (MVar *mvar)
 	pile_final(&mvar->cb_signals, PILE_CALLBACK(free_msignal_cb));
 }
 
-void free_msignal_cb (MSignal *ms)
+void free_msignal_cb (struct MSignal *ms)
 {
 	free(ms->name);
 	free(ms->note);
@@ -80,7 +80,7 @@ void mcf_final (void)
 
 int mcf_register (void *ptr, const char *name, int flags, ...)
 {
-	MVar *mvar = pile_add(&mcf_pile, malloc(sizeof(MVar)));
+	struct MVar *mvar = pile_add(&mcf_pile, malloc(sizeof(struct MVar)));
 	int var = (int) mcf_pile.occupied - 1;
 
 	mvar->ptr = ptr;
@@ -120,14 +120,14 @@ int mcf_register (void *ptr, const char *name, int flags, ...)
 
 void mcf_connect_with_note (int var, const char *signal_list, const char *signal_note, BlobCallback cb, int sig, ...)
 {
-	MVar *mvar = pile_item(&mcf_pile, (size_t) var);
+	struct MVar *mvar = pile_item(&mcf_pile, (size_t) var);
 	if (mvar == NULL) { f_print(F_ERROR, "Error: MVar id out of range.\n"); }
 	else
 	{
 		char *str _strfree_ = cat1(signal_list);
 		for (char *signal_name = strtok(str, ", "); signal_name != NULL; signal_name = strtok(NULL, ", "))
 		{
-			MSignal *ms = pile_add(&mvar->cb_signals, malloc(sizeof(MSignal)));
+			struct MSignal *ms = pile_add(&mvar->cb_signals, malloc(sizeof(struct MSignal)));
 			ms->name = cat1(signal_name);
 			ms->note = cat1(signal_note);
 			fill_blob(&ms->blob, cb, sig);
@@ -137,14 +137,14 @@ void mcf_connect_with_note (int var, const char *signal_list, const char *signal
 
 void mcf_connect (int var, const char *signal_list, BlobCallback cb, int sig, ...)
 {
-	MVar *mvar = pile_item(&mcf_pile, (size_t) var);
+	struct MVar *mvar = pile_item(&mcf_pile, (size_t) var);
 	if (mvar == NULL) { f_print(F_ERROR, "Error: MVar id out of range.\n"); }
 	else
 	{
 		char *str _strfree_ = cat1(signal_list);
 		for (char *signal_name = strtok(str, ", "); signal_name != NULL; signal_name = strtok(NULL, ", "))
 		{
-			MSignal *ms = pile_add(&mvar->cb_signals, malloc(sizeof(MSignal)));
+			struct MSignal *ms = pile_add(&mvar->cb_signals, malloc(sizeof(struct MSignal)));
 			ms->name = cat1(signal_name);
 			ms->note = NULL;
 			fill_blob(&ms->blob, cb, sig);
@@ -154,7 +154,7 @@ void mcf_connect (int var, const char *signal_list, BlobCallback cb, int sig, ..
 
 bool mcf_process_string (char *str, const char *signal_name)  // str will be modified
 {
-	MVar *mvar = pile_first(&mcf_pile);
+	struct MVar *mvar = pile_first(&mcf_pile);
 	while (mvar != NULL)
 	{
 		MValue value;
@@ -197,9 +197,9 @@ bool mcf_process_string (char *str, const char *signal_name)  // str will be mod
 	return (mvar != NULL);
 }
 
-bool signal_search (MVar *mvar, const char *signal_name, MValue value)
+bool signal_search (struct MVar *mvar, const char *signal_name, MValue value)
 {
-	MSignal *ms = pile_first(&mvar->cb_signals);
+	struct MSignal *ms = pile_first(&mvar->cb_signals);
 	while (ms != NULL)
 	{
 		if (str_equal(ms->name, signal_name))
@@ -228,7 +228,7 @@ void mcf_load_defaults (const char *signal_name)
 {
 	f_start(F_UPDATE);
 
-	MVar *mvar = pile_first(&mcf_pile);
+	struct MVar *mvar = pile_first(&mcf_pile);
 	while (mvar != NULL)
 	{
 		if (mvar->flags & MCF_DEFAULT) signal_search(mvar, signal_name, mvar->default_value);
@@ -266,7 +266,7 @@ int mcf_read_file (const char *filename, const char *signal_name)
 
 char * mcf_lookup (const char *line)
 {
-	MVar *mvar = pile_first(&mcf_pile);
+	struct MVar *mvar = pile_first(&mcf_pile);
 	while (mvar != NULL)
 	{
 		if (str_equal(mvar->name, line))
@@ -299,7 +299,7 @@ bool mcf_write_file (const char *filename)
 		return 0;
 	}
 
-	MVar *mvar = pile_first(&mcf_pile);
+	struct MVar *mvar = pile_first(&mcf_pile);
 	while (mvar != NULL)
 	{
 		if (mvar->flags & MCF_W)

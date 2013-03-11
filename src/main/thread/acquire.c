@@ -27,48 +27,48 @@
 #include <lib/hardware/gpib.h>
 #include <control/server.h>
 
-typedef struct
+struct Clk
 {
 	double t0, t_hold, bo_target;
 	Timer *bo_timer;
 	bool bo_enabled;
 
-} Clk;
+};
 
-typedef struct
+struct CircleBuffer
 {
 	double data[M2_MAX_CBUF_LENGTH][M2_MAX_CHAN];
 	int index, filled, length;
 
-} CircleBuffer;
+};
 
-typedef struct
+struct ScanVars
 {
 	int  counter      [M2_NUM_DAQ];
 	int  read_mult    [M2_NUM_DAQ];
 	long s_read_total [M2_NUM_DAQ];
 	int  prog_mult;
 
-} ScanVars;
+};
 
-typedef struct
+struct SweepEvent
 {
 	bool any, zerostop, min, max, min_posthold, max_posthold;
 
-} SweepEvent;
+};
 
 static gpointer run_gpib_thread (gpointer);
 
-static bool run_acquisition    (ThreadVars *tv, CircleBuffer *cbuf);
-static void run_recording      (ThreadVars *tv, CircleBuffer *cbuf, Clk *clk, bool *binsize_valid, double *binsize, Logger *logger, Buffer *buffer);
+static bool run_acquisition    (ThreadVars *tv, struct CircleBuffer *cbuf);
+static void run_recording      (ThreadVars *tv, struct CircleBuffer *cbuf, struct Clk *clk, bool *binsize_valid, double *binsize, Logger *logger, Buffer *buffer);
 static void run_triggers       (Panel *panel);
-static bool run_scope_start    (ThreadVars *tv, ScanVars *sv, Scope *scope, double loop_interval);
-static bool run_scope_continue (ThreadVars *tv, ScanVars *sv, Scope *scope, Buffer *buffer);
-static void run_sweep_step     (Sweep *sweep, double t, Clk *clk, SweepEvent *sweep_event);
-static void run_sweep_response (ThreadVars *tv, SweepEvent *sweep_event);
+static bool run_scope_start    (ThreadVars *tv, struct ScanVars *sv, Scope *scope, double loop_interval);
+static bool run_scope_continue (ThreadVars *tv, struct ScanVars *sv, Scope *scope, Buffer *buffer);
+static void run_sweep_step     (Sweep *sweep, double t, struct Clk *clk, struct SweepEvent *sweep_event);
+static void run_sweep_response (ThreadVars *tv, struct SweepEvent *sweep_event);
 
-static void init_circle_buffer (Logger *logger, CircleBuffer *cbuf);
-static void clear_sweep_event (SweepEvent *sweep_event);
+static void init_circle_buffer (Logger *logger, struct CircleBuffer *cbuf);
+static void clear_sweep_event (struct SweepEvent *sweep_event);
 
 #include "acquire_sub.c"
 #include "acquire_callback.c"
@@ -185,7 +185,7 @@ gpointer run_daq_thread (gpointer data)
 
 	// buffers setup
 
-	CircleBuffer cbuf;
+	struct CircleBuffer cbuf;
 	init_circle_buffer(logger, &cbuf);
 
 	double binsize       [M2_MAX_CHAN];  // index: vci
@@ -199,7 +199,7 @@ gpointer run_daq_thread (gpointer data)
 
 	// common variables used by functions
 
-	SweepEvent sweep_event[M2_MAX_CHAN];
+	struct SweepEvent sweep_event[M2_MAX_CHAN];
 	for (int ici = 0; ici < M2_MAX_CHAN; ici++) clear_sweep_event(&sweep_event[ici]);
 
 	// set up computing environment
@@ -219,7 +219,7 @@ gpointer run_daq_thread (gpointer data)
 	double poll_target  = 1.0 / M2_TERMINAL_POLLING_RATE;
 	double limit_target = 1e-3 / logger->max_rate;
 
-	Clk clk[M2_MAX_CHAN];
+	struct Clk clk[M2_MAX_CHAN];
 	for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++)
 	{
 		clk[ici].t0 = clk[ici].t_hold = 0;  // should not need an inital value
@@ -232,7 +232,7 @@ gpointer run_daq_thread (gpointer data)
 
 	// main data aquisition loops
 
-	ScanVars sv;
+	struct ScanVars sv;
 	bool scanning = 0;
 	bool daq_failed = 0;
 

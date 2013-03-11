@@ -31,13 +31,13 @@
 #define _pyfree_ __attribute__((cleanup(_py_clean_compute)))
 void _py_clean_compute (PyObject **py_ob);
 
-typedef struct
+struct ComputeContext
 {
 	double *data, *prefactor;  // indexed with vci
 	int *vci_table;            // indexed with vc
 	int length;                // length of vci_table
 
-} ComputeContext;
+};
 
 static int    compute_pid;
 static double compute_time;
@@ -49,8 +49,8 @@ static bool compute_known;
 static ComputeFunc *compute_cf;
 static double compute_x;
 
-static ComputeContext compute_context;
-static ComputeContext compute_context_backup;
+static struct ComputeContext compute_context;
+static struct ComputeContext compute_context_backup;
 
 PyObject * lambda (const char *expr, bool use_x);
 

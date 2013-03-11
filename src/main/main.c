@@ -35,7 +35,7 @@
 #include <main/menu/bufmenu.h>
 #include <main/menu/help.h>
 
-typedef struct
+struct Mezurit2
 {
 	Config   config;
 	Page     page;
@@ -51,13 +51,13 @@ typedef struct
 	ChanSet chanset;
 	ThreadVars tv;
 
-} Mezurit2;
+};
 
 static GtkWidget * run_splash_window (void);
 
-static void mezurit2_init     (Mezurit2 *m2);
-static void mezurit2_register (Mezurit2 *m2);
-static void mezurit2_final    (Mezurit2 *m2);
+static void mezurit2_init     (struct Mezurit2 *m2);
+static void mezurit2_register (struct Mezurit2 *m2);
+static void mezurit2_final    (struct Mezurit2 *m2);
 
 int main (int argc, char *argv[])
 {
@@ -115,7 +115,7 @@ int main (int argc, char *argv[])
 	gui_init(darkpanel);
 	entry_init();
 
-	Mezurit2 m2;
+	struct Mezurit2 m2;
 	mezurit2_init(&m2);
 	mezurit2_register(&m2);
 
@@ -202,7 +202,7 @@ GtkWidget * run_splash_window (void)
 	return widget;
 }
 
-void mezurit2_init (Mezurit2 *m2)
+void mezurit2_init (struct Mezurit2 *m2)
 {
 	f_start(F_INIT);
 
@@ -252,7 +252,7 @@ void mezurit2_init (Mezurit2 *m2)
 	set_page(&m2->page, &m2->config, -1);
 }
 
-void mezurit2_final (Mezurit2 *m2)
+void mezurit2_final (struct Mezurit2 *m2)
 {
 	f_start(F_INIT);
 
@@ -263,7 +263,7 @@ void mezurit2_final (Mezurit2 *m2)
 	for (int pid = 0; pid < M2_NUM_PANEL; pid++) panel_final(&m2->panel[pid]);
 }
 
-void mezurit2_register (Mezurit2 *m2)
+void mezurit2_register (struct Mezurit2 *m2)
 {
 	f_start(F_INIT);
 

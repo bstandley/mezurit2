@@ -56,7 +56,7 @@ enum
 	DAQ_AI = 1
 };
 
-typedef struct
+struct AnalogChannel
 {
 	bool req;
 	int known;
@@ -68,11 +68,11 @@ typedef struct
 	TaskHandle task;
 #endif
 
-} AnalogChannel;
+};
 
-typedef struct
+struct SubDevice
 {
-	AnalogChannel ch[M2_DAQ_MAX_CHAN];
+	struct AnalogChannel ch[M2_DAQ_MAX_CHAN];
 	int N_ch;
 #if COMEDI
 	int num, buffer_size;
@@ -81,9 +81,9 @@ typedef struct
 	ssize_t b_sampl;
 #endif
 
-} SubDevice;
+};
 
-typedef struct
+struct DaqBoard
 {
 	char *node;
 	bool is_real, is_connected, scan_prepared;
@@ -96,7 +96,7 @@ typedef struct
 #elif NIDAQ
 	i16 nidaq_num, nidaq_bcode;
 #endif
-	SubDevice ao, ai;
+	struct SubDevice ao, ai;
 
 	// multi setup (AI only)
 	int multi_chan[M2_DAQ_MAX_CHAN];
@@ -131,13 +131,13 @@ typedef struct
 	TaskHandle scan_task;
 #endif
 
-} DaqBoard;
+};
 
-static DaqBoard daq_board[M2_DAQ_MAX_BRD];
+static struct DaqBoard daq_board[M2_DAQ_MAX_BRD];
 static Timer *global_timer;
 
-static void daq_board_close   (DaqBoard *board);
-static void subdevice_connect (DaqBoard *board, SubDevice *subdev, int type);
+static void daq_board_close   (struct DaqBoard *board);
+static void subdevice_connect (struct DaqBoard *board, struct SubDevice *subdev, int type);
 #if NIDAQ
 static char * bcode_to_str (int bcode);
 #elif NIDAQMX
@@ -189,7 +189,7 @@ void daq_final (void)
 	}
 }
 
-void daq_board_close (DaqBoard *board)
+void daq_board_close (struct DaqBoard *board)
 {
 	f_start(F_UPDATE);
 
@@ -322,7 +322,7 @@ int daq_board_connect (int id, const char *node)
 	return daq_board[id].is_connected;
 }
 
-void subdevice_connect (DaqBoard *board, SubDevice *subdev, int type)
+void subdevice_connect (struct DaqBoard *board, struct SubDevice *subdev, int type)
 {
 	f_start(F_UPDATE);
 
