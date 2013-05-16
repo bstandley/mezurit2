@@ -65,7 +65,7 @@ void setup_init (Setup *setup, GtkWidget *flipbook)
 	make_page(flipbook, &hbox_main, &vbox_main, &setup->terminal_scroll);
 
 	setup->apt[SECTION_RIGHT] = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0),
-	                            add_with_viewport(name_widget(gtk_event_box_new(), "m2_sbox"),
+	                            add_with_viewport(name_widget(gtk_event_box_new(), "m2_worktop"),
 	                            container_add(name_widget(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), "m2_scroll"),
 	                            pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main))));
 
@@ -151,7 +151,7 @@ void panel_init (Panel *panel, int pid, GtkWidget *flipbook)
 	make_page(flipbook, &hbox_main, &vbox_main, &panel->terminal_scroll);
 
 	GtkWidget *hbox_right = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
-	                        add_with_viewport(name_widget(gtk_event_box_new(), "m2_sbox"),
+	                        add_with_viewport(name_widget(gtk_event_box_new(), "m2_worktop"),
 	                        container_add(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS),
 	                        pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main))));
 
@@ -160,7 +160,7 @@ void panel_init (Panel *panel, int pid, GtkWidget *flipbook)
 	panel->apt[SECTION_BOTTOM] = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
 
 	GtkWidget *hbox_left   = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
-	                         add_with_viewport(name_widget(gtk_event_box_new(), "m2_sbox"),
+	                         add_with_viewport(name_widget(gtk_event_box_new(), "m2_worktop"),
 	                         pack_start(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS),              0, hbox_middle)));
 	GtkWidget *vbox_middle = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0),
 	                         pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE), 1, hbox_middle));
@@ -263,10 +263,11 @@ void make_page (GtkWidget *flipbook, GtkWidget **hbox_main, GtkWidget **vbox_mai
 	GtkWidget *panes = pack_start(gtk_paned_new(GTK_ORIENTATION_VERTICAL), 1, *hbox_main);
 #endif
 
-	GtkWidget *align_main = paned_pack(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, 0), 1, 1, panes);
+	GtkWidget *align_main = container_add(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, 0),
+	                        paned_pack(name_widget(gtk_event_box_new(), "m2_worktop"), 1, 1, panes));
 	*terminal_scroll      = container_add(new_scrolled_window(GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS),
-	                        container_add(fix_shadow(gtk_frame_new(NULL)),
-	                        paned_pack(new_alignment(0, 0, 0, M2_HALFSPACE),                       2, 0, panes)));
+							container_add(new_alignment(M2_HALFSPACE, M2_HALFSPACE*2, M2_HALFSPACE*2, M2_HALFSPACE),
+	                        paned_pack(name_widget(gtk_event_box_new(), "m2_worktop"), 2, 0, panes)));
 #else
 	GtkWidget *align_main = pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, 0), 1, *hbox_main);
 	*terminal_scroll      = NULL;

@@ -1,4 +1,3 @@
-
 style "m2_widget_style"
 {
 	bg[NORMAL]   = "#242424"
@@ -42,7 +41,7 @@ style "m2_section_style" { bg[NORMAL] = "#3C3C3C" }
 style "m2_align_style"   { bg[NORMAL] = "#242424" }
 
 widget "m2_main"              style "m2_main_style"
-widget "m2_main.*.m2_sbox"    style "m2_main_style"
+widget "m2_main.*.m2_worktop" style "m2_main_style"
 widget "m2_main.*.m2_border"  style "m2_border_style"
 widget "m2_main.*.m2_section" style "m2_section_style"
 widget "m2_main.*.m2_align"   style "m2_align_style"

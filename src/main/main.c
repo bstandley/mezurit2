@@ -211,8 +211,9 @@ void mezurit2_init (struct Mezurit2 *m2)
 
 	GtkWidget *vbox = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0), m2->page.main_window);
 
-	GtkWidget *menubar = pack_start(gtk_menu_bar_new(),                     0, vbox);
-	m2->page.flipbook  = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 1, vbox);
+	GtkWidget *menubar = pack_start(gtk_menu_bar_new(),                             0, vbox);
+	m2->page.flipbook  = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
+	                     pack_start(name_widget(gtk_event_box_new(), "m2_worktop"), 1, vbox));
 
 	int port = control_server_listen(M2_TS_ID);
 

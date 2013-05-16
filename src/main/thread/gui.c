@@ -94,7 +94,11 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 	clear_gtk_events(0);
 	gtk_widget_show(flipbook);
 
-	if (plot->exposure_complete != 1) full_plot(plot);  // redraw plot in case nothing caused an "expose" event
+	if (!plot->exposure_complete)
+	{
+		full_plot(plot);  // redraw plot in case nothing caused an "expose" event
+		plot->needs_context_regen = 1;
+	}
 
 	// shared variables
 

@@ -84,7 +84,11 @@ GtkWidget * menu_append (GtkWidget *widget, GtkWidget *menu)
 
 GtkWidget * add_with_viewport (GtkWidget *widget, GtkWidget *parent)
 {
+#if GTK_MAJOR_VERSION == 2 || (GTK_MAJOR_VERSION == 3 && GTK_MINOR_VERSION < 8)
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(parent), widget);
+#else
+	gtk_container_add(GTK_CONTAINER(parent), widget);
+#endif
 	gtk_viewport_set_shadow_type(GTK_VIEWPORT(gtk_widget_get_parent(widget)), GTK_SHADOW_NONE);
 	return widget;
 }

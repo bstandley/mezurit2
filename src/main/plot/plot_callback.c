@@ -41,6 +41,7 @@ gboolean plot_draw_cb (GtkWidget *widget, void *ptr, Plot *plot)  // ptr may be 
 
 	full_plot(plot);
 	plot->exposure_complete = 1;
+	plot->needs_context_regen = 1;
 
 	return 0;
 }

@@ -53,11 +53,11 @@ typedef struct
 #endif
 		cairo_surface_t *surface;  // internal image buffer
 		Region region;             // dimensions of surface and margins of plottable space
-		double XM, YM;             // location of clicked point (XC = -1 for none)
+		double XM, YM;             // location of clicked point (XM = -1 for none)
 
 		int active_set;  // index of currently-plotting varset
 		long draw_set;   // points already drawn from currently-plotting varset
-		bool resized;
+		bool needs_context_regen;
 		bool mcf_activity;
 
 		SVSP svs, blank_svs;

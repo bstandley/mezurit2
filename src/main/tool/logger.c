@@ -142,6 +142,7 @@ void set_logger_scanning (Logger *logger, bool scanning)
 {
 	gtk_widget_set_sensitive(logger->reader_labels, !scanning);
 	gtk_widget_set_sensitive(logger->reader_values, !scanning);
+	gtk_widget_set_sensitive(logger->reader_units,  !scanning);
 	gtk_widget_set_sensitive(logger->reader_types,  !scanning);
 }
 

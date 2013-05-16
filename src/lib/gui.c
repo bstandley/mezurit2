@@ -276,8 +276,13 @@ void gui_init (bool darkpanel)
 	last_dirname = catg(g_get_current_dir());
 
 #if GTK_MAJOR_VERSION > 2
+	if (darkpanel) f_print(F_WARNING, "The dark panel theme is not available in GTK3. Sorry!\n");
 	css_provider = gtk_css_provider_new();
-	gtk_css_provider_load_from_path(css_provider, atg(sharepath(darkpanel ? "themes/dark.css" : "themes/light.css")), NULL);
+#ifndef MINGW
+	gtk_css_provider_load_from_path(css_provider, atg(sharepath("themes/light.css")),     NULL);
+#else
+	gtk_css_provider_load_from_path(css_provider, atg(sharepath("themes/light-win.css")), NULL);
+#endif
 	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 #else
 	gtk_rc_parse(atg(sharepath(darkpanel ? "themes/gtkrc-dark" : "themes/gtkrc-light")));

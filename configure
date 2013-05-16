@@ -8,25 +8,16 @@ load_defaults
 
 driver_request='autodetect'
 gpib_request='autodetect'
-gtk_type=gtk2
-gtk_themes='gtkrc-*'
-win32_path=../win32
 
 while [[ $# -gt 0 ]] ; do
 	found=true
 	if [[ $1 == '--help' || $1 == '-h' ]] ; then
 		mention_standard_options
 		echo -e "  --driver=[driver]       specify driver: none, comedi, nidaq, nidaqmx (default: autodetect)\n"
-		echo -e "  --use-gtk3              select GTK3 over GTK2\n"
 		echo -e "  --disable-gpib          disable GPIB driver\n"
 		exit
-	elif [[ $1 =~ '--driver' ]] ; then
-		driver_request=$(echo $1 | sed "s/--driver=//")
-	elif [[ $1 == '--use-gtk3' ]] ; then
-		gtk_type=gtk3
-		gtk_themes='*.css'
-	elif [[ $1 == '--disable-gpib' ]] ; then
-		gpib_request='none'
+	elif [[ $1 =~ '--driver'       ]] ; then driver_request=$(echo $1 | sed "s/--driver=//")
+	elif [[ $1 == '--disable-gpib' ]] ; then gpib_request='none'
 	else
 		found=false
 	fi
@@ -46,27 +37,30 @@ option_flags='-DSTATUS'  # use lib/status.h
 rules="copy:src/main/setup/${prog1}compute.py:src/main/setup/compute.py \
        copy:src/control/${prog1}control.py:src/control/client.py"
 
-shares="COPYING:COPYING                                     \
-        terminal_startup.py:resource/terminal_startup.py    \
-        $(find resource -name '*.pdf'     -printf '%P:%p ') \
-        $(find resource -name '*.mcf'     -printf '%P:%p ') \
-		$(find resource -name $gtk_themes -printf '%P:%p ') \
-        $(find resource -name '*.png'     -printf '%P:%p ')"
+shares="COPYING:COPYING                                       \
+        terminal_startup.py:resource/terminal_startup.py      \
+        $(find resource -name '*.pdf'       -printf '%P:%p ') \
+        $(find resource -name '*.mcf'       -printf '%P:%p ') \
+        $(find resource -name '*.png'       -printf '%P:%p ')"
+
+if [[ $gtk_type == 'gtk3' ]] ; then shares="$shares $(find resource -name '*.css'   -printf '%P:%p ')"
+else                                shares="$shares $(find resource -name 'gtkrc-*' -printf '%P:%p ')" ; fi
+
 
 if ! $mingw ; then
-	rules="$rules app:src/main/$prog1:src/main/main.c                       \
+	rules="$rules app:src/main/$prog1:src/main/main.c \
 	              lib:src/control/_${prog1}control.so:src/control/client.c"
 else
 	ldlibs="-lwinmm"
-	rules="$rules app:src/main/$prog2.exe:src/main/main.c                    \
+	rules="$rules app:src/main/$prog2.exe:src/main/main.c \
 	              lib:src/control/_${prog1}control.pyd:src/control/client.c"
-	shares="$shares $(find $win32_path/$gtk_type/bin -name '*.dll'       -printf '%f:%p\n' | grep -v 'asprintf\|cairo-script-interpreter\|cairo-gobject\|gailutil\|gcc_s_dw2') \
-					$(find $win32_path/$gtk_type     -name 'libwimp.dll' -printf '%P:%p')                                                                                      \
-	                $(find $win32_path/$gtk_type     -name 'gtkrc'       -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows')                                                    \
-					$(find $win32_path/python2       -name 'python*.dll' -printf '%f:%p')                                                                                      \
-					$(find $win32_path/python2       -name 'python.exe'  -printf '%f:%p')                                                                                      \
-	                $(find $win32_path/python2       -name '*.pyd'       -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd')                                             \
-	                $(find $win32_path/pyreadline    -name '*.py'        -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"
+	shares="$shares $(find $win32_path/$gtk_type     -name 'gschemas.compiled' -printf '%P:%p')                                          \
+					$(find $win32_path/$gtk_type     -name 'libwimp.dll'       -printf '%P:%p')                                          \
+	                $(find $win32_path/$gtk_type     -name 'gtkrc'             -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows')        \
+					$(find $win32_path/python2       -name 'python*.dll'       -printf '%f:%p')                                          \
+					$(find $win32_path/python2       -name 'python.exe'        -printf '%f:%p')                                          \
+	                $(find $win32_path/python2       -name '*.pyd'             -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd') \
+	                $(find $win32_path/pyreadline    -name '*.py'              -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"
 	for x in _abcoll _weakrefset abc copy_reg genericpath linecache ntpath os stat types UserDict       \
 	         warnings site traceback sysconfig re sre_compile sre_parse sre_constants locale codecs     \
 	         functools atexit socket weakref struct string glob fnmatch pdb cmd bdb repr pprint         \
@@ -74,47 +68,26 @@ else
 	         logging/handlers ctypes/__init__ ctypes/_endian ctypes/util ctypes/wintypes pydoc ; do
 		shares="$shares lib/$x.py:$win32_path/python2/Lib/$x.py"
 	done
+	for x in libglib libgdk libgtk libgobject libgmodule libgio libatk libpango libfontconfig libpng    \
+	         zlib intl freetype libcairo-2 libcairo-gobject libgthread libexpat libxml libffi libjasper \
+	         liblzma libtiff libjpeg libpixman ; do
+		shares="$shares $(find $win32_path/$gtk_type -name '*.dll' -printf '%f:%p\n' | grep $x)"
+	done
 fi
 
 ###################  system detection  ####################
 
 detect_system
 detect_python
-
-#####################  GTK detection  #####################
-
-if [[ $gtk_type == 'gtk3' ]] ; then
-	gtk_pkg=gtk+-3.0
-	vte_pkg=vte-2.90
-else
-	gtk_pkg=gtk+-2.0
-	vte_pkg=vte
-fi
-
-if $mingw ; then
-	old_path=$PKG_CONFIG_PATH
-	export PKG_CONFIG_PATH=$(find $win32_path -name $gtk_pkg.pc -printf %h)
-	vte_pkg=  # VTE is not available on win32 :(
-fi
-
-glib_version=$(pkg-config --modversion glib-2.0)
-gtk_version=$(pkg-config --modversion $gtk_pkg)
-
-extra_flags="$extra_flags $(pkg-config --cflags $gtk_pkg gthread-2.0 $vte_pkg) -DG_DISABLE_DEPRECATED=1 -DGTK_DISABLE_DEPRECATED=1 -DGTK_MULTIHEAD_SAFE=1"
-ldlibs="$ldlibs $(pkg-config --libs $gtk_pkg gthread-2.0 $vte_pkg)"
-
-if $mingw ; then export PKG_CONFIG_PATH=$old_path ; fi
+detect_gtk
 
 ####################  GPIB detection  #####################
 
 if [[ $gpib_request == 'autodetect' ]] ; then
 	opt_gpib_mode='(Auto-detected)'
 	gpib=none
-	if $mingw ; then
-		find $win32_path | grep ni488.h >> /dev/null && gpib=ni488
-	else
-		which gpib_config >> /dev/null && gpib=linuxgpib
-	fi
+	if $mingw ; then find $win32_path | grep ni488.h >> /dev/null && gpib=ni488
+	else             which gpib_config               >> /dev/null && gpib=linuxgpib ; fi
 else
 	gpib=$gpib_request
 fi

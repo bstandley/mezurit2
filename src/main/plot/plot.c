@@ -74,7 +74,7 @@ void plot_init (Plot *plot, GtkWidget *parent)
 	plot->display.str_dirty = 0;
 	plot->display.ext.width = plot->display.ext.height = -1;
 
-	plot->resized = 0;
+	plot->needs_context_regen = 0;
 	plot->active_set = 0;
 	plot->draw_set = 0;
 
@@ -280,7 +280,6 @@ void full_plot (Plot *plot)
 		plot->surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, alloc.width, alloc.height);
 		r->X = alloc.width;
 		r->Y = alloc.height;
-		plot->resized = 1;
 	}
 
 	cairo_t *cr = cairo_create(plot->surface);
@@ -338,9 +337,9 @@ void full_plot (Plot *plot)
 
 void plot_tick (Plot *plot)  // bite-size plotting session for smooth operation
 {
-	if (plot->resized)
+	if (plot->needs_context_regen)
 	{
-		plot->resized = 0;
+		plot->needs_context_regen = 0;
 		plot_close(plot);
 		plot_open(plot);
 	}
