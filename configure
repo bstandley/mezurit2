@@ -43,10 +43,6 @@ shares="COPYING:COPYING                                       \
         $(find resource -name '*.mcf'       -printf '%P:%p ') \
         $(find resource -name '*.png'       -printf '%P:%p ')"
 
-if [[ $gtk_type == 'gtk3' ]] ; then shares="$shares $(find resource -name '*.css'   -printf '%P:%p ')"
-else                                shares="$shares $(find resource -name 'gtkrc-*' -printf '%P:%p ')" ; fi
-
-
 if ! $mingw ; then
 	rules="$rules app:src/main/$prog1:src/main/main.c \
 	              lib:src/control/_${prog1}control.so:src/control/client.c"
@@ -54,11 +50,8 @@ else
 	ldlibs="-lwinmm"
 	rules="$rules app:src/main/$prog2.exe:src/main/main.c \
 	              lib:src/control/_${prog1}control.pyd:src/control/client.c"
-	shares="$shares $(find $win32_path/$gtk_type     -name 'gschemas.compiled' -printf '%P:%p')                                          \
-					$(find $win32_path/$gtk_type     -name 'libwimp.dll'       -printf '%P:%p')                                          \
-	                $(find $win32_path/$gtk_type     -name 'gtkrc'             -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows')        \
-					$(find $win32_path/python2       -name 'python*.dll'       -printf '%f:%p')                                          \
-					$(find $win32_path/python2       -name 'python.exe'        -printf '%f:%p')                                          \
+	shares="$shares $(find $win32_path/python2       -name 'python*.dll'       -printf '%f:%p')                                          \
+	                $(find $win32_path/python2       -name 'python.exe'        -printf '%f:%p')                                          \
 	                $(find $win32_path/python2       -name '*.pyd'             -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd') \
 	                $(find $win32_path/pyreadline    -name '*.py'              -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"
 	for x in _abcoll _weakrefset abc copy_reg genericpath linecache ntpath os stat types UserDict       \
@@ -70,10 +63,16 @@ else
 	done
 	for x in libglib libgdk libgtk libgobject libgmodule libgio libatk libpango libfontconfig libpng    \
 	         zlib intl freetype libcairo-2 libcairo-gobject libgthread libexpat libxml libffi libjasper \
-	         liblzma libtiff libjpeg libpixman ; do
-		shares="$shares $(find $win32_path/$gtk_type -name '*.dll' -printf '%f:%p\n' | grep $x)"
+	         liblzma libtiff libjpeg libpixman libiconv-2 ; do
+		shares="$shares $(find $gtk_win32_path -name '*.dll' -printf '%f:%p\n' | grep $x)"
 	done
+	if [[ $gtk_type == 'gtk3' ]] ; then shares="$shares $(find $gtk_win32_path -name 'gschemas.compiled' -printf 'share/glib-2.0/schemas/%f:%p ')"
+	else                                shares="$shares $(find $gtk_win32_path -name 'gtkrc'             -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows') \
+	                                                    $(find $gtk_win32_path -name 'libwimp.dll'       -printf 'lib/gtk-2.0/2.10.0/engines/%f:%p')" ; fi
 fi
+
+if [[ $gtk_type == 'gtk3' ]] ; then shares="$shares $(find resource -name '*.css'   -printf '%P:%p ')"
+else                                shares="$shares $(find resource -name 'gtkrc-*' -printf '%P:%p ')" ; fi
 
 ###################  system detection  ####################
 
