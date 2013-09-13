@@ -30,7 +30,7 @@ done
 
 prog1=mezurit2
 prog2=Mezurit2
-version=0.92
+version=0.92beta
 srcdir=src
 option_flags='-DSTATUS'  # use lib/status.h
 

@@ -76,6 +76,13 @@ long ceil_long (double x)
 	return (long) ceil(x);
 }
 
+double window_double (double x, double x_min, double x_max)
+{
+	x = (x < x_min) ? x_min : x;
+	x = (x > x_max) ? x_max : x;
+	return x;
+}
+
 double round_down_double (double x, double d)
 {
 	return (d > 0.0) ? floor(x / d) * d : x;

@@ -98,15 +98,15 @@ struct DaqBoard
 #endif
 	struct SubDevice ao, ai;
 
-	// multi setup (AI only)
+	// multi setup (AI only, slightly complicated to avoid ghosting on multiplexed ADCs)
 	int multi_chan[M2_DAQ_MAX_CHAN];
 	int multi_N_chan;
 #if COMEDI
-	lsampl_t multi_raw[M2_DAQ_MAX_CHAN];
-	comedi_insn multi_insn[M2_DAQ_MAX_CHAN];
+	lsampl_t multi_raw[2*M2_DAQ_MAX_CHAN];
+	comedi_insn multi_insn[2*M2_DAQ_MAX_CHAN];
 	comedi_insnlist multi_insnlist;
 #elif NIDAQ
-	f64 multi_voltage[M2_DAQ_MAX_CHAN];
+	f64 multi_voltage[2*M2_DAQ_MAX_CHAN];
 #elif NIDAQMX
 	float64 multi_voltage[M2_DAQ_MAX_CHAN];
 	TaskHandle multi_task;

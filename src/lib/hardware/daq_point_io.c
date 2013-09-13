@@ -53,7 +53,7 @@ int daq_multi_tick (int id)
 	if (board->is_real)
 	{
 #if COMEDI
-		if (comedi_do_insnlist(board->comedi_dev, &board->multi_insnlist) != board->multi_N_chan) return 0;
+		if (comedi_do_insnlist(board->comedi_dev, &board->multi_insnlist) != 2*board->multi_N_chan) return 0;
 #elif NIDAQ
 		if (AI_VRead_Scan(board->nidaq_num, board->multi_voltage) != 0) return 0;
 #elif NIDAQMX
@@ -65,8 +65,10 @@ int daq_multi_tick (int id)
 			int chan = board->multi_chan[pci];
 			board->ai.ch[chan].known = 1;
 #if COMEDI
-			board->ai.ch[chan].voltage = comedi_to_phys(board->multi_raw[pci], board->ai.ch[chan].crange, board->ai.ch[chan].maxdata);
-#elif NIDAQ || NIDAQMX
+			board->ai.ch[chan].voltage = comedi_to_phys(board->multi_raw[2*pci + 1], board->ai.ch[chan].crange, board->ai.ch[chan].maxdata);
+#elif NIDAQ
+			board->ai.ch[chan].voltage = board->multi_voltage[2*pci + 1];
+#elif NIDAQMX
 			board->ai.ch[chan].voltage = board->multi_voltage[pci];
 #else
 			board->ai.ch[chan].known = 2;
@@ -118,26 +120,39 @@ int daq_AI_read (int id, int chan, double *voltage)
 #if COMEDI
 			for (int pci = 0; pci < board->multi_N_chan; pci++)
 			{
-				board->multi_insn[pci].insn     = INSN_READ;
-				board->multi_insn[pci].n        = 1;
-				board->multi_insn[pci].data     = &board->multi_raw[pci];
-				board->multi_insn[pci].subdev   = (unsigned int) board->ai.num;
-				board->multi_insn[pci].chanspec = CR_PACK((unsigned int) board->multi_chan[pci], board->ai.range, AREF_GROUND);
+				board->multi_insn[2*pci].insn     = board->multi_insn[2*pci + 1].insn     = INSN_READ;  // second time around should be more accurate now that the (multiplexed) ADC has settled
+				board->multi_insn[2*pci].n        = board->multi_insn[2*pci + 1].n        = 1;          // could also try setting this to "2", but that would require a more complex data buffer
+				board->multi_insn[2*pci].subdev   = board->multi_insn[2*pci + 1].subdev   = (unsigned int) board->ai.num;
+				board->multi_insn[2*pci].chanspec = board->multi_insn[2*pci + 1].chanspec = CR_PACK((unsigned int) board->multi_chan[pci], board->ai.range, AREF_GROUND);
+
+				board->multi_insn[2*pci].data     = &board->multi_raw[2*pci];
+				board->multi_insn[2*pci + 1].data = &board->multi_raw[2*pci + 1];
 			}
-			board->multi_insnlist.n_insns = (unsigned int) board->multi_N_chan;
-			board->multi_insnlist.insns = board->multi_insn;
+			board->multi_insnlist.n_insns = (unsigned int) (2*board->multi_N_chan);
+			board->multi_insnlist.insns = board->multi_insn;  // always the same, but why not do it near where it's used?
 #elif NIDAQ
-			i16 local_phys_chan[M2_DAQ_MAX_CHAN], local_phys_gain[M2_DAQ_MAX_CHAN];
+			i16 local_phys_chan[2*M2_DAQ_MAX_CHAN], local_phys_gain[2*M2_DAQ_MAX_CHAN];
 			for (int pci = 0; pci < board->multi_N_chan; pci++)
 			{
-				local_phys_chan[pci] = (i16) board->multi_chan[pci];
-				local_phys_gain[pci] = NIDAQ_ADC_GAIN;
+				local_phys_chan[2*pci] = local_phys_chan[2*pci + 1] = (i16) board->multi_chan[pci];
+				local_phys_gain[2*pci] = local_phys_gain[2*pci + 1] = NIDAQ_ADC_GAIN;
 			}
-			SCAN_Setup(board->nidaq_num, (i16) board->multi_N_chan, local_phys_chan, local_phys_gain);
+			SCAN_Setup(board->nidaq_num, (i16) (2*board->multi_N_chan), local_phys_chan, local_phys_gain);
 #elif NIDAQMX
 
 			mention_mx_error(DAQmxClearTask(board->multi_task));
 			create_mx_scan(&board->multi_task, board->node, -1, 1, board->multi_N_chan, board->multi_chan);
+
+			float64 conv_rate = -1, conv_max_rate = -1;
+			mention_mx_error(DAQmxGetAIConvRate(board->multi_task, &conv_rate));
+			mention_mx_error(DAQmxGetAIConvMaxRate(board->multi_task, &conv_max_rate));
+			if (conv_rate > 0 && conv_max_rate > 0)
+			{
+				double tau = 1.0 / conv_max_rate + window_double(160e-6 / board->multi_N_chan, 20e-6, 40e-6);
+				if (mention_mx_error(DAQmxSetAIConvRate(board->multi_task, 1.0 / tau)) == 0)
+					status_add(1, supercat("ADC conversion time increased from %1.1f us to %1.1f us.\n", 1e6 / conv_rate, 1e6 * tau));
+			}
+
 			mention_mx_error(DAQmxStartTask(board->multi_task));  // starts task so it will be ready for OnDemand reads in the future
 #endif
 		}

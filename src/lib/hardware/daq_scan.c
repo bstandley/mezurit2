@@ -163,7 +163,7 @@ void daq_SCAN_prepare (int id, Scan *userscan)
 
 		if (timebase > 0)
 		{
-			userscan->rate_kHz = 1 / (userscan->N_chan * timebase * board->scan_sample_t * 1e3);
+			userscan->rate_kHz = 1.0 / (userscan->N_chan * timebase * board->scan_sample_t * 1e3);
 			userscan->read_interval = 1.0;
 
 			userscan->N_pt = (long) (userscan->total_time * userscan->rate_kHz * 1e3);    // compute for the first time

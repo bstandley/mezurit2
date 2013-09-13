@@ -110,16 +110,16 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 
 	// timing
 
-	double primary_interval         = 0.8/M2_DEFAULT_GUI_RATE;
-	double secondary_interval       = 0.2/M2_DEFAULT_GUI_RATE;
-	double primary_boost_interval   = 0.8/M2_BOOST_GUI_RATE;
-	double secondary_boost_interval = 0.2/M2_BOOST_GUI_RATE;
+	double primary_interval         = 0.8 / M2_DEFAULT_GUI_RATE;
+	double secondary_interval       = 0.2 / M2_DEFAULT_GUI_RATE;
+	double primary_boost_interval   = 0.8 / M2_BOOST_GUI_RATE;
+	double secondary_boost_interval = 0.2 / M2_BOOST_GUI_RATE;
 
 	Timer *reader_timer = timer_new();
 	Timer *buffer_timer = timer_new();
 
-	double reader_target = 1.0/M2_MAX_READER_RATE;
-	double buffer_target = 1.0/M2_MAX_BUFFER_STATUS_RATE;
+	double reader_target = 1.0 / M2_MAX_READER_RATE;
+	double buffer_target = 1.0 / M2_MAX_BUFFER_STATUS_RATE;
 	
 	// in-flight plotting:
 	plot_reset(plot);
