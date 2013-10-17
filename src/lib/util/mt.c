@@ -19,7 +19,9 @@
 
 void mt_mutex_init (MtMutex *mutex)
 {
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
+#ifdef PTHREAD_MUTEXES
+	pthread_mutex_init(mutex, NULL);
+#elif GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
 	g_static_mutex_init(mutex);
 #else
 	g_mutex_init(mutex);
@@ -28,7 +30,9 @@ void mt_mutex_init (MtMutex *mutex)
 
 void mt_mutex_clear (MtMutex *mutex)
 {
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
+#ifdef PTHREAD_MUTEXES
+	pthread_mutex_destroy(mutex);
+#elif GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
 	g_static_mutex_free(mutex);  // for completeness (not required because no MtMutexes in Mezurit2 are part of dynamically-allocated structures)
 #else
 	g_mutex_clear(mutex);
@@ -53,3 +57,24 @@ void mt_thread_yield (void)
 {
 	g_thread_yield();
 }
+
+/* for pthread.h threads (not just mutexes) sprinkle in the following lines:
+
+#ifdef MINGW
+#include <windows.h>
+#else
+#include <sched.h>
+#endif
+
+	MtThread thread;
+	pthread_create(&thread, NULL, f, data);
+
+	pthread_join(thread, NULL);
+
+#ifdef MINGW
+	Sleep(0);
+#else
+	sched_yield();
+#endif
+
+*/

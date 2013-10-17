@@ -18,10 +18,17 @@
 #ifndef _LIB_UTIL_MT_H
 #define _LIB_UTIL_MT_H 1
 
+#ifdef PTHREAD_MUTEXES
+#include <pthread.h>
+#endif
 #define HEADER_SANS_WARNINGS <glib.h>
 #include <sans_warnings.h>
 
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
+#ifdef PTHREAD_MUTEXES
+	#define mt_mutex_lock(_mt_mutex_ptr)    pthread_mutex_lock(_mt_mutex_ptr)
+	#define mt_mutex_trylock(_mt_mutex_ptr) pthread_mutex_trylock(_mt_mutex_ptr)
+	#define mt_mutex_unlock(_mt_mutex_ptr)  pthread_mutex_unlock(_mt_mutex_ptr)
+#elif GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
 	#define mt_mutex_lock(_mt_mutex_ptr)    g_static_mutex_lock(_mt_mutex_ptr)
 	#define mt_mutex_trylock(_mt_mutex_ptr) g_static_mutex_trylock(_mt_mutex_ptr)
 	#define mt_mutex_unlock(_mt_mutex_ptr)  g_static_mutex_unlock(_mt_mutex_ptr)
@@ -31,13 +38,15 @@
 	#define mt_mutex_unlock(_mt_mutex_ptr)  g_mutex_unlock(_mt_mutex_ptr)
 #endif
 
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
+#ifdef PTHREAD_MUTEXES
+typedef pthread_mutex_t MtMutex;
+#elif GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
 typedef GStaticMutex MtMutex;
 #else
 typedef GMutex MtMutex;
 #endif
 
-typedef GThread *MtThread;
+typedef GThread *MtThread;  // for pthread.h threads (not just mutexes) use "typedef pthread_t MtThread;"
 
 void mt_mutex_init  (MtMutex *mutex);
 void mt_mutex_clear (MtMutex *mutex);
