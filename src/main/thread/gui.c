@@ -138,17 +138,8 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 	clear_gtk_events(0);
 
 	// start daq thread:
-	mt_mutex_lock(&tv->rl_mutex);
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	GThread *daq_thread = g_thread_create(run_daq_thread, tv, 1, NULL);
-#else
-	GThread *daq_thread = g_thread_new("DAQ", run_daq_thread, tv);
-#endif
+	MtThread daq_thread = mt_thread_create(run_daq_thread, tv);
 	f_print(F_UPDATE, "Created DAQ thread.\n");
-
-	// wait for daq_thread to unlock when it is ready to go:
-	mt_mutex_lock   (&tv->rl_mutex);
-	mt_mutex_unlock (&tv->rl_mutex);
 
 	while (get_logger_rl(tv) != LOGGER_RL_STOP)
 	{
@@ -207,7 +198,7 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 
 	plot_close(plot);
 
-	g_thread_join(daq_thread);
+	mt_thread_join(daq_thread);
 	f_print(F_UPDATE, "Joined DAQ thread.\n");
 
 	tv->panel = NULL;

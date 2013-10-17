@@ -50,25 +50,31 @@ else
 	ldlibs="-lwinmm"
 	rules="$rules app:src/main/$prog2.exe:src/main/main.c \
 	              lib:src/control/_${prog1}control.pyd:src/control/client.c"
-	shares="$shares $(find $win32_path/python2       -name 'python*.dll'       -printf '%f:%p')                                          \
-	                $(find $win32_path/python2       -name 'python.exe'        -printf '%f:%p')                                          \
-	                $(find $win32_path/python2       -name '*.pyd'             -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd') \
-	                $(find $win32_path/pyreadline    -name '*.py'              -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"
-	for x in _abcoll _weakrefset abc copy_reg genericpath linecache ntpath os stat types UserDict       \
-	         warnings site traceback sysconfig re sre_compile sre_parse sre_constants locale codecs     \
-	         functools atexit socket weakref struct string glob fnmatch pdb cmd bdb repr pprint         \
-	         rlcompleter keyword encodings/__init__ encodings/aliases encodings/cp437 logging/__init__  \
-	         logging/handlers ctypes/__init__ ctypes/_endian ctypes/util ctypes/wintypes pydoc ; do
-		shares="$shares lib/$x.py:$win32_path/python2/Lib/$x.py"
-	done
-	for x in libglib libgdk libgtk libgobject libgmodule libgio libatk libpango libfontconfig libpng    \
-	         zlib intl freetype libcairo-2 libcairo-gobject libgthread libexpat libxml libffi libjasper \
-	         liblzma libtiff libjpeg libpixman libiconv-2 ; do
-		shares="$shares $(find $gtk_win32_path -name '*.dll' -printf '%f:%p\n' | grep $x)"
-	done
-	if [[ $gtk_type == 'gtk3' ]] ; then shares="$shares $(find $gtk_win32_path -name 'gschemas.compiled' -printf 'share/glib-2.0/schemas/%f:%p ')"
-	else                                shares="$shares $(find $gtk_win32_path -name 'gtkrc'             -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows') \
-	                                                    $(find $gtk_win32_path -name 'libwimp.dll'       -printf 'lib/gtk-2.0/2.10.0/engines/%f:%p')" ; fi
+	shares="$shares $(find $win32_path/python2    -name 'python*.dll' -printf '%f:%p')                                          \
+	                $(find $win32_path/python2    -name 'python.exe'  -printf '%f:%p')                                          \
+	                $(find $win32_path/python2    -name '*.pyd'       -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd') \
+	                $(find $win32_path/pyreadline -name '*.py'        -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"
+	py_files="_abcoll _weakrefset abc copy_reg genericpath linecache ntpath os stat types UserDict       \
+	          warnings site traceback sysconfig re sre_compile sre_parse sre_constants locale codecs     \
+	          functools atexit socket weakref struct string glob fnmatch pdb cmd bdb repr pprint         \
+	          rlcompleter keyword encodings/__init__ encodings/aliases encodings/cp437 logging/__init__  \
+	          logging/handlers ctypes/__init__ ctypes/_endian ctypes/util ctypes/wintypes pydoc"
+
+	for x in $py_files ; do shares="$shares lib/$x.py:$win32_path/python2/Lib/$x.py" ; done
+
+	dlls="libglib libgdk_pixbuf libgobject libgmodule libgio libatk libpango libfontconfig libpng    \
+	      zlib intl freetype libcairo-2 libcairo-gobject libgthread libexpat libxml libffi libjasper \
+	      liblzma libtiff libjpeg libpixman libiconv-2"
+	if [[ $gtk_type == 'gtk3' ]] ; then
+		dlls="$dlls libgdk-3 libgtk-3"
+		shares="$shares $(find $gtk_win32_path -name 'gschemas.compiled' -printf 'share/glib-2.0/schemas/%f:%p ')"
+	else
+		dlls="$dlls libgdk-win32-2 libgtk-win32-2"
+	    shares="$shares $(find $gtk_win32_path -name 'gtkrc'       -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows') \
+	                    $(find $gtk_win32_path -name 'libwimp.dll' -printf 'lib/gtk-2.0/2.10.0/engines/%f:%p')"
+	fi
+
+	for x in $dlls ; do shares="$shares $(find $gtk_win32_path -name '*.dll' -printf '%f:%p\n' | grep $x)" ; done
 fi
 
 if [[ $gtk_type == 'gtk3' ]] ; then shares="$shares $(find resource -name '*.css'   -printf '%P:%p ')"

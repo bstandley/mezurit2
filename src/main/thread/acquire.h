@@ -77,7 +77,7 @@ void thread_init_all     (ThreadVars *tv);
 void thread_final_all    (ThreadVars *tv);
 void thread_register_daq (ThreadVars *tv);
 
-gpointer run_daq_thread (gpointer data);
+void * run_daq_thread (void *data);
 void stop_threads (ThreadVars *tv);
 
 void set_recording (ThreadVars *tv, int rl);

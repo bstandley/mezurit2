@@ -49,13 +49,11 @@ bool run_acquisition (ThreadVars *tv, struct CircleBuffer *cbuf)
 	return 1;
 }
 
-void init_circle_buffer (Logger *logger, struct CircleBuffer *cbuf)
+void init_circle_buffer (struct CircleBuffer *cbuf, int length)
 {
 	cbuf->index = 0;
 	cbuf->filled = 0;
-	cbuf->length = logger->cbuf_length;
-
-	logger->cbuf_dirty = 0;
+	cbuf->length = length;
 }
 
 double ave_circle_buffer (struct CircleBuffer *cbuf, int vci)
@@ -83,7 +81,7 @@ void run_circle_buffer (struct CircleBuffer *cbuf, double *data, int N_chan)
 	if(cbuf->index == cbuf->length) cbuf->index = 0;
 }
 
-void run_recording (ThreadVars *tv, struct CircleBuffer *cbuf, struct Clk *clk, bool *binsize_valid, double *binsize, Logger *logger, Buffer *buffer)
+void run_recording (ThreadVars *tv, struct CircleBuffer *cbuf, struct Clk *clk, bool *binsize_valid, double *binsize, Buffer *buffer)
 {
 	bool record_ok = (get_logger_rl(tv) == LOGGER_RL_RECORD);
 
@@ -97,7 +95,7 @@ void run_recording (ThreadVars *tv, struct CircleBuffer *cbuf, struct Clk *clk, 
 	mt_mutex_lock(&buffer->mutex);
 	if (buffer->do_time_reset)
 	{
-		init_circle_buffer(logger, cbuf);  // avoid averaging old time() data which is discontinuous
+		init_circle_buffer(cbuf, cbuf->length);  // avoid averaging old time() data which is discontinuous, while keeping length the same (if it was changed in the panel that will be caught elsewhere)
 		timer_reset(buffer->timer);
 		buffer->do_time_reset = 0;
 	}

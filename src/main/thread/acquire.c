@@ -57,17 +57,17 @@ struct SweepEvent
 
 };
 
-static gpointer run_gpib_thread (gpointer);
+static void * run_gpib_thread (void *data);
 
 static bool run_acquisition    (ThreadVars *tv, struct CircleBuffer *cbuf);
-static void run_recording      (ThreadVars *tv, struct CircleBuffer *cbuf, struct Clk *clk, bool *binsize_valid, double *binsize, Logger *logger, Buffer *buffer);
+static void run_recording      (ThreadVars *tv, struct CircleBuffer *cbuf, struct Clk *clk, bool *binsize_valid, double *binsize, Buffer *buffer);
 static void run_triggers       (Panel *panel);
 static bool run_scope_start    (ThreadVars *tv, struct ScanVars *sv, Scope *scope, double loop_interval);
 static bool run_scope_continue (ThreadVars *tv, struct ScanVars *sv, Scope *scope, Buffer *buffer);
 static void run_sweep_step     (Sweep *sweep, double t, struct Clk *clk, struct SweepEvent *sweep_event);
 static void run_sweep_response (ThreadVars *tv, struct SweepEvent *sweep_event);
 
-static void init_circle_buffer (Logger *logger, struct CircleBuffer *cbuf);
+static void init_circle_buffer (struct CircleBuffer *cbuf, int length);
 static void clear_sweep_event (struct SweepEvent *sweep_event);
 
 #include "acquire_sub.c"
@@ -119,7 +119,7 @@ void thread_register_daq (ThreadVars *tv)
 	control_server_connect(M2_LS_ID, "request_pulse", all_pid(M2_CODE_DAQ), BLOB_CALLBACK(request_pulse_csf), 0x10, tv);
 }
 
-gpointer run_gpib_thread (gpointer data)
+void * run_gpib_thread (void *data)
 {
 	ThreadVars *tv = data;
 	Timer *timer _timerfree_ = timer_new();
@@ -127,6 +127,8 @@ gpointer run_gpib_thread (gpointer data)
 	int sr_id, sr_pad, sr_eos;  // ignore "used uninitialized" warnings
 	bool sr_expect_reply;
 	char *sr_msg = NULL;
+
+	mt_mutex_lock(&tv->gpib_mutex);
 
 	do
 	{
@@ -175,7 +177,7 @@ gpointer run_gpib_thread (gpointer data)
 	return data;
 }
 
-gpointer run_daq_thread (gpointer data)
+void * run_daq_thread (void *data)
 {
 	ThreadVars *tv = data;
 
@@ -186,7 +188,10 @@ gpointer run_daq_thread (gpointer data)
 	// buffers setup
 
 	struct CircleBuffer cbuf;
-	init_circle_buffer(logger, &cbuf);
+	mt_mutex_lock(&logger->mutex);
+	init_circle_buffer(&cbuf, logger->cbuf_length);
+	logger->cbuf_dirty = 0;
+	mt_mutex_unlock(&logger->mutex);
 
 	double binsize       [M2_MAX_CHAN];  // index: vci
 	bool   binsize_valid [M2_MAX_CHAN];  // index: vci
@@ -217,7 +222,10 @@ gpointer run_daq_thread (gpointer data)
 	Timer *poll_timer  _timerfree_ = timer_new();
 
 	double poll_target  = 1.0 / M2_TERMINAL_POLLING_RATE;
+	mt_mutex_lock(&logger->mutex);
 	double limit_target = 1e-3 / logger->max_rate;
+	logger->max_rate_dirty = 0;
+	mt_mutex_unlock(&logger->mutex);
 
 	struct Clk clk[M2_MAX_CHAN];
 	for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++)
@@ -227,8 +235,6 @@ gpointer run_daq_thread (gpointer data)
 		clk[ici].bo_timer = timer_new();
 		clk[ici].bo_target = 0;
 	}
-
-	mt_mutex_unlock(&tv->rl_mutex);
 
 	// main data aquisition loops
 
@@ -240,16 +246,8 @@ gpointer run_daq_thread (gpointer data)
 	tv->gpib_paused = 0;
 	tv->gpib_msg = NULL;
 
-	mt_mutex_lock(&tv->gpib_mutex);
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	GThread *gpib_thread = g_thread_create(run_gpib_thread, tv, 1, NULL);
-#else
-	GThread *gpib_thread = g_thread_new("GPIB", run_gpib_thread, tv);
-#endif
+	MtThread gpib_thread = mt_thread_create(run_gpib_thread, tv);
 	f_print(F_UPDATE, "Created GPIB thread.\n");
-
-	mt_mutex_lock   (&tv->gpib_mutex);  // run_gpib_thread will unlock when everything is ready to go
-	mt_mutex_unlock (&tv->gpib_mutex);
 
 	long k_sleep = 1;
 	while (get_logger_rl(tv) != LOGGER_RL_STOP)
@@ -258,7 +256,7 @@ gpointer run_daq_thread (gpointer data)
 		if (wait_and_reset(limit_timer, limit_target)) k_sleep = 1;  // reset timer either way
 		else if (M2_SLEEP_MULT == k_sleep++)  // encourage os to switch back to outer thread occasionally if it isn't already
 		{
-			g_thread_yield();  // not appropriate for RT mode (needs fixing)
+			mt_thread_yield();  // not appropriate for RT mode (needs fixing)
 			k_sleep = 1;
 		}
 
@@ -281,7 +279,11 @@ gpointer run_daq_thread (gpointer data)
 					logger->max_rate_dirty = 0;
 				}
 
-				if (logger->cbuf_dirty) init_circle_buffer(logger, &cbuf);
+				if (logger->cbuf_dirty)
+				{
+					init_circle_buffer(&cbuf, logger->cbuf_length);
+					logger->cbuf_dirty = 0;
+				}
 
 				mt_mutex_unlock(&logger->mutex);
 			}
@@ -298,7 +300,7 @@ gpointer run_daq_thread (gpointer data)
 				daq_failed = 1;
 			}
 
-			run_recording(tv, &cbuf, clk, binsize_valid, binsize, logger, buffer);
+			run_recording(tv, &cbuf, clk, binsize_valid, binsize, buffer);
 		}
 
 		run_triggers(tv->panel);
@@ -348,7 +350,7 @@ gpointer run_daq_thread (gpointer data)
 	mt_mutex_lock(&tv->gpib_mutex);
 	tv->gpib_running = 0;
 	mt_mutex_unlock(&tv->gpib_mutex);
-	g_thread_join(gpib_thread);
+	mt_thread_join(gpib_thread);
 	f_print(F_UPDATE, "Joined GPIB thread.\n");
 
 	for (int ici = 0; ici < tv->chanset->N_inv_chan; ici++) timer_destroy(clk[ici].bo_timer);
