@@ -206,7 +206,7 @@ bool run_scope_continue (ThreadVars *tv, struct ScanVars *sv, Scope *scope, Buff
 
 void compute_intervals (struct ScanVars *sv, Scan *scan_array, double loop_interval)
 {
-	sv->prog_mult = floor_int(1.0/M2_SCOPE_PROGRESS_RATE / loop_interval);
+	sv->prog_mult = floor_int((1.0 / M2_SCOPE_PROGRESS_RATE) / loop_interval);
 
 	f_print(F_BENCH, "loop interval: %f ms\n", loop_interval * 1e3);
 	f_print(F_BENCH, "progress multiple: %d\n", sv->prog_mult);

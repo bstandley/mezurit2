@@ -37,7 +37,13 @@ typedef GStaticMutex MtMutex;
 typedef GMutex MtMutex;
 #endif
 
+typedef GThread *MtThread;
+
 void mt_mutex_init  (MtMutex *mutex);
 void mt_mutex_clear (MtMutex *mutex);
+
+MtThread mt_thread_create (void * (*f) (void *), void *data);
+void mt_thread_join (MtThread thread);
+void mt_thread_yield (void);
 
 #endif

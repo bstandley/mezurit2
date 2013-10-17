@@ -34,3 +34,22 @@ void mt_mutex_clear (MtMutex *mutex)
 	g_mutex_clear(mutex);
 #endif
 }
+
+MtThread mt_thread_create (void * (*f) (void *), void *data)
+{
+#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
+	return g_thread_create(f, data, 1, NULL);
+#else
+	return g_thread_new("mt", f, data);
+#endif
+}
+
+void mt_thread_join (MtThread thread)
+{
+	g_thread_join(thread);
+}
+
+void mt_thread_yield (void)
+{
+	g_thread_yield();
+}

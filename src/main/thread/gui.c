@@ -110,16 +110,16 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 
 	// timing
 
-	double primary_interval         = 0.8/M2_DEFAULT_GUI_RATE;
-	double secondary_interval       = 0.2/M2_DEFAULT_GUI_RATE;
-	double primary_boost_interval   = 0.8/M2_BOOST_GUI_RATE;
-	double secondary_boost_interval = 0.2/M2_BOOST_GUI_RATE;
+	double primary_interval         = 0.8 / M2_DEFAULT_GUI_RATE;
+	double secondary_interval       = 0.2 / M2_DEFAULT_GUI_RATE;
+	double primary_boost_interval   = 0.8 / M2_BOOST_GUI_RATE;
+	double secondary_boost_interval = 0.2 / M2_BOOST_GUI_RATE;
 
 	Timer *reader_timer = timer_new();
 	Timer *buffer_timer = timer_new();
 
-	double reader_target = 1.0/M2_MAX_READER_RATE;
-	double buffer_target = 1.0/M2_MAX_BUFFER_STATUS_RATE;
+	double reader_target = 1.0 / M2_MAX_READER_RATE;
+	double buffer_target = 1.0 / M2_MAX_BUFFER_STATUS_RATE;
 	
 	// in-flight plotting:
 	plot_reset(plot);
@@ -139,11 +139,7 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 
 	// start daq thread:
 	mt_mutex_lock(&tv->rl_mutex);
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	GThread *daq_thread = g_thread_create(run_daq_thread, tv, 1, NULL);
-#else
-	GThread *daq_thread = g_thread_new("DAQ", run_daq_thread, tv);
-#endif
+	MtThread daq_thread = mt_thread_create(run_daq_thread, tv);
 	f_print(F_UPDATE, "Created DAQ thread.\n");
 
 	// wait for daq_thread to unlock when it is ready to go:
@@ -207,7 +203,7 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 
 	plot_close(plot);
 
-	g_thread_join(daq_thread);
+	mt_thread_join(daq_thread);
 	f_print(F_UPDATE, "Joined DAQ thread.\n");
 
 	tv->panel = NULL;
