@@ -49,6 +49,7 @@ typedef uint64_t uInt64;
 #define DAQ_CONNECT_WARNING_MSG "Warning: Board not connected.\n"
 #define DAQ_AO_WARNING_MSG      "Warning: AO channel out of range.\n"
 #define DAQ_AI_WARNING_MSG      "Warning: AI channel out of range.\n"
+#define DAQ_VOLTAGE_WARNING_MSG "Warning: Voltage out of range.\n"
 
 enum
 {
@@ -88,7 +89,7 @@ struct DaqBoard
 	char *node;
 	bool is_real, is_connected, scan_prepared;
 
-	char *info_driver, *info_full_node, *info_board, *info_board_abrv, *info_input, *info_output;
+	char *info_driver, *info_full_node, *info_board, *info_board_abrv, *info_output, *info_input;
 
 	// device setup
 #if COMEDI
@@ -164,8 +165,8 @@ void daq_init (void)
 		daq_board[id].info_full_node  = cat1("∅");
 		daq_board[id].info_board      = cat1("∅");
 		daq_board[id].info_board_abrv = cat1("∅");
-		daq_board[id].info_input      = cat1("∅");
 		daq_board[id].info_output     = cat1("∅");
+		daq_board[id].info_input      = cat1("∅");
 	}
 
 	global_timer = timer_new();
@@ -184,8 +185,8 @@ void daq_final (void)
 		replace(daq_board[id].info_full_node,  NULL);
 		replace(daq_board[id].info_board,      NULL);
 		replace(daq_board[id].info_board_abrv, NULL);
-		replace(daq_board[id].info_input,      NULL);
 		replace(daq_board[id].info_output,     NULL);
+		replace(daq_board[id].info_input,      NULL);
 	}
 }
 
@@ -310,13 +311,13 @@ int daq_board_connect (int id, const char *node)
 
 	if (daq_board[id].is_real)
 	{
-		replace(daq_board[id].info_input,  (daq_board[id].ai.N_ch > 0) ? supercat("%d ch [%0.1f, %0.1f]", daq_board[id].ai.N_ch, daq_board[id].ai.ch[0].min, daq_board[id].ai.ch[0].max) : cat1("0 ch"));
 		replace(daq_board[id].info_output, (daq_board[id].ao.N_ch > 0) ? supercat("%d ch [%0.1f, %0.1f]", daq_board[id].ao.N_ch, daq_board[id].ao.ch[0].min, daq_board[id].ao.ch[0].max) : cat1("0 ch"));
+		replace(daq_board[id].info_input,  (daq_board[id].ai.N_ch > 0) ? supercat("%d ch [%0.1f, %0.1f]", daq_board[id].ai.N_ch, daq_board[id].ai.ch[0].min, daq_board[id].ai.ch[0].max) : cat1("0 ch"));
 	}
 	else
 	{
-		replace(daq_board[id].info_input,  supercat("%d ch [%s, %s]", daq_board[id].ai.N_ch, quote(M2_DAQ_VIRTUAL_MIN), quote(M2_DAQ_VIRTUAL_MAX)));
 		replace(daq_board[id].info_output, supercat("%d ch [%s, %s]", daq_board[id].ao.N_ch, quote(M2_DAQ_VIRTUAL_MIN), quote(M2_DAQ_VIRTUAL_MAX)));
+		replace(daq_board[id].info_input,  supercat("%d ch [%s, %s]", daq_board[id].ai.N_ch, quote(M2_DAQ_VIRTUAL_MIN), quote(M2_DAQ_VIRTUAL_MAX)));
 	}
 
 	return daq_board[id].is_connected;
@@ -338,7 +339,7 @@ void subdevice_connect (struct DaqBoard *board, struct SubDevice *subdev, int ty
 		if (board->is_real)
 		{
 #if COMEDI
-			subdev->num = comedi_find_subdevice_by_type(board->comedi_dev, type == DAQ_AO ? COMEDI_SUBD_AO : COMEDI_SUBD_AI, 0);
+			subdev->num = comedi_find_subdevice_by_type(board->comedi_dev, (type == DAQ_AO) ? COMEDI_SUBD_AO : COMEDI_SUBD_AI, 0);
 			if (subdev->num != -1)
 			{
 				subdev->N_ch = min_int(comedi_get_n_channels(board->comedi_dev, (unsigned int) subdev->num), M2_DAQ_MAX_CHAN);

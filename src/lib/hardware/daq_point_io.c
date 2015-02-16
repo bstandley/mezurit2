@@ -75,11 +75,13 @@ int daq_multi_tick (int id)
 	}
 	else
 	{
+		double t = timer_elapsed(global_timer);
+
 		for (int pci = 0; pci < board->multi_N_chan; pci++)
 		{
 			int chan = board->multi_chan[pci];
 			board->ai.ch[chan].known = 1;
-			board->ai.ch[chan].voltage = cos(2*U_PI * chan * timer_elapsed(global_timer));
+			board->ai.ch[chan].voltage = cos(2*U_PI * chan * t);
 		}
 	}
 
@@ -88,13 +90,13 @@ int daq_multi_tick (int id)
 
 int daq_AI_read (int id, int chan, double *voltage)
 {
-	// ------------------------------------------------------------
-	// bad id:         complain,                 return 0 (failure)
-	// not connected:  do nothing,               return 2 (unknown)
-	// bad chan:       complain,                 return 0
-	// no driver:      daq_AI_read(), add to MS, return ?
-	// dummy:          daq_AI_read(), add to MS, return ?
-	// ------------------------------------------------------------
+	// ------------------------------------------------------
+	// bad id:         complain,           return 0 (failure)
+	// not connected:  do nothing,         return 2 (unknown)
+	// bad chan:       complain,           return 0
+	// no driver:      add to MS, tick MS, return ?
+	// dummy:          add to MS, tick MS, return ?
+	// ------------------------------------------------------
 
 	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,            DAQ_ID_WARNING_MSG, return 0);
 	f_verify(daq_board[id].is_connected,                NULL,               return 2);
@@ -175,14 +177,13 @@ int daq_AO_write (int id, int chan, double voltage)
 	// no driver:      do nothing, return 0
 	// ----------------------------------------------
 
-	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,            DAQ_ID_WARNING_MSG, return 0);
-	f_verify(daq_board[id].is_connected,                NULL,               return 0);
-	f_verify(chan >= 0 && chan < daq_board[id].ao.N_ch, DAQ_AO_WARNING_MSG, return 0);
-
+	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,            DAQ_ID_WARNING_MSG,      return 0);
+	f_verify(daq_board[id].is_connected,                NULL,                    return 0);
+	f_verify(chan >= 0 && chan < daq_board[id].ao.N_ch, DAQ_AO_WARNING_MSG,      return 0);
 	f_verify(voltage >= daq_board[id].ao.ch[chan].min &&
-	         voltage <= daq_board[id].ao.ch[chan].max, "Warning: Voltage out of range.\n", return 0);
+	         voltage <= daq_board[id].ao.ch[chan].max,  DAQ_VOLTAGE_WARNING_MSG, return 0);
 
-	bool rv;
+	bool rv = 1;
 	if (daq_board[id].is_real)
 	{
 #if COMEDI
@@ -196,7 +197,6 @@ int daq_AO_write (int id, int chan, double voltage)
 		rv = 0;
 #endif
 	}
-	else rv = 1;
 
 	if (rv)
 	{

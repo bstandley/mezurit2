@@ -49,8 +49,8 @@ int daq_AI_valid (int id, int chan);
 
 // point I/O
 
-int daq_AI_read  (int id, int chan, double *voltage);  // if unknown, add to multi setup
 int daq_AO_read  (int id, int chan, double *voltage);
+int daq_AI_read  (int id, int chan, double *voltage);  // if unknown, add to multi setup
 int daq_AO_write (int id, int chan, double  voltage);
 
 int  daq_multi_tick  (int id);
@@ -64,7 +64,7 @@ double daq_SCAN_elapsed (int id);
 long   daq_SCAN_read    (int id);
 long   daq_SCAN_stop    (int id);
 
-int daq_AI_convert (int id, int chan, long pt, double *voltage);
 int daq_AO_convert (int id, int chan, long pt, double *voltage);
+int daq_AI_convert (int id, int chan, long pt, double *voltage);
 
 #endif
