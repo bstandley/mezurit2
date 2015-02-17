@@ -111,11 +111,11 @@ char * run_file_chooser (const char *title, int action, const char *stock_id, co
 
 	if (preset != NULL)
 	{
-		char *dirname  _strfree_ = extract_dir(preset);
-		char *basename _strfree_ = extract_base(preset);
+		char *dirname _strfree_ = extract_dir(preset);
+		char *basname _strfree_ = extract_base(preset);
 
-		if (dirname != NULL)                     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(chooser), dirname);
-		if (dirname != NULL && basename != NULL) gtk_file_chooser_set_current_name  (GTK_FILE_CHOOSER(chooser), basename);
+		if (dirname != NULL)                    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(chooser), dirname);
+		if (dirname != NULL && basname != NULL) gtk_file_chooser_set_current_name  (GTK_FILE_CHOOSER(chooser), basname);
 	}
 	else gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(chooser), last_dirname);
 
