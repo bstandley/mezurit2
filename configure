@@ -121,7 +121,8 @@ if [[ $driver_request == 'autodetect' ]] ; then
 		find $win32_path | grep NIDAQmx.h >> /dev/null && driver=nidaqmx
 		find $win32_path | grep nidaq.h   >> /dev/null && driver=nidaq  # choose Traditional NI-DAQ over NI-DAQmx
 	else
-		pkg-config --exists comedilib && driver=comedi
+		pc_path="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"  # user-installed comedilib could be here
+		PKG_CONFIG_PATH=$pc_path pkg-config --exists comedilib && driver=comedi
 	fi
 else
 	driver=$driver_request
@@ -133,8 +134,8 @@ if [[ $driver == 'none' ]] ; then
 elif [[ $driver == 'comedi' ]] ; then
 	opt_driver='comedi            '
 	option_flags="$option_flags -DCOMEDI"
-	extra_flags="$extra_flags $(pkg-config --cflags comedilib)"
-	ldlibs="$ldlibs $(pkg-config --libs comedilib)"
+	extra_flags="$extra_flags $(PKG_CONFIG_PATH=$pc_path pkg-config --cflags comedilib)"
+	ldlibs="$ldlibs $(PKG_CONFIG_PATH=$pc_path pkg-config --libs comedilib)"
 
 elif [[ $driver == 'nidaqmx' ]] ; then
 	opt_driver='NI-DAQmx          '

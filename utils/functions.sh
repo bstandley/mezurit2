@@ -82,7 +82,7 @@ detect_python ()
 		/bin/false
 		if [ $? != 0 ] ; then pyver=2.7 ; fi
 		which python$pyver-config > /dev/null
-		if [ $? != 0 ] ; then pyver=2.6 ; fi
+		if [ $? != 0 ] ; then pyver=2.6 ; EXTRA_FLAGS="$EXTRA_FLAGS -D_GNU_SOURCE" ; fi
 
 		EXTRA_FLAGS="$EXTRA_FLAGS $(python$pyver-config --includes ) -fPIC"
 		LDLIBS="$LDLIBS $(python$pyver-config --libs ) -L$(find /usr/lib/python$pyver -name libpython$pyver.a -printf %h)"
