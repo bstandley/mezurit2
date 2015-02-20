@@ -15,12 +15,12 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-static gboolean channel_string_cb (GtkWidget *widget, GdkEvent *event, char **str, Channel *channel_array);
+static gboolean channel_string_cb (GtkWidget *widget, GdkEvent *event, char **str);
 static void channel_prefix_cb (GtkComboBox *combo, Channel *channel);
 static gboolean channel_binsize_cb (GtkWidget *widget, GdkEvent *event, Channel *channel);
 static gboolean channel_save_cb (GtkWidget *widget, GdkEvent *event, Channel *channel);
 
-static void channel_string_mcf (char **str, const char *signal_name, MValue value, GtkWidget *widget, Channel *channel_array);
+static void channel_string_mcf (char **str, const char *signal_name, MValue value, GtkWidget *widget);
 static void channel_prefix_mcf (void *ptr, const char *signal_name, MValue value, Channel *channel);
 static void channel_binsize_mcf (void *ptr, const char *signal_name, MValue value, Channel *channel);
 static void channel_save_mcf (void *ptr, const char *signal_name, MValue value, Channel *channel);
@@ -98,7 +98,7 @@ void channel_save_mcf (void *ptr, const char *signal_name, MValue value, Channel
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(channel->save_widget), value.x_bool);
 }
 
-gboolean channel_string_cb (GtkWidget *widget, GdkEvent *event, char **str, Channel *channel_array)
+gboolean channel_string_cb (GtkWidget *widget, GdkEvent *event, char **str)
 {
 	if (entry_update_required(event, widget))
 	{
@@ -109,7 +109,7 @@ gboolean channel_string_cb (GtkWidget *widget, GdkEvent *event, char **str, Chan
 	return 0;
 }
 
-void channel_string_mcf (char **str, const char *signal_name, MValue value, GtkWidget *widget, Channel *channel_array)
+void channel_string_mcf (char **str, const char *signal_name, MValue value, GtkWidget *widget)
 {
 	f_start(F_MCF);
 

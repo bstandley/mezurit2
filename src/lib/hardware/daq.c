@@ -348,7 +348,7 @@ void subdevice_connect (struct DaqBoard *board, struct SubDevice *subdev, int ty
 				for (int chan = 0; chan < subdev->N_ch; chan++)
 				{
 					subdev->ch[chan].maxdata = comedi_get_maxdata (board->comedi_dev, (unsigned int) subdev->num, (unsigned int) chan);
-					subdev->ch[chan].crange = comedi_get_range    (board->comedi_dev, (unsigned int) subdev->num, (unsigned int) chan, subdev->range);
+					subdev->ch[chan].crange  = comedi_get_range   (board->comedi_dev, (unsigned int) subdev->num, (unsigned int) chan, subdev->range);
 
 					subdev->ch[chan].min = subdev->ch[chan].crange->min;
 					subdev->ch[chan].max = subdev->ch[chan].crange->max;
@@ -456,8 +456,8 @@ char * daq_board_info (int id, const char *info)
 	else if (str_equal(info, "full_node"))  return daq_board[id].info_full_node;
 	else if (str_equal(info, "board"))      return daq_board[id].info_board;
 	else if (str_equal(info, "board_abrv")) return daq_board[id].info_board_abrv;
-	else if (str_equal(info, "input"))      return daq_board[id].info_input;
 	else if (str_equal(info, "output"))     return daq_board[id].info_output;
+	else if (str_equal(info, "input"))      return daq_board[id].info_input;
 	else                                    return cat1("∅");
 }
 

@@ -131,18 +131,18 @@ void channel_array_register (Channel *channel_array, Section *sect, GtkWidget **
 		int save_var    = mcf_register(&channel->save,    atg(cat2(prefix, "save")),     MCF_BOOL   | MCF_W | MCF_DEFAULT, 1);
 		int binsize_var = mcf_register(&channel->binsize, atg(cat2(prefix, "bin_size")), MCF_DOUBLE | MCF_W | MCF_DEFAULT, 0.01);
 
-		mcf_connect(name_var,    "setup", BLOB_CALLBACK(channel_string_mcf),  0x20, channel->name_entry, channel_array);
+		mcf_connect(name_var,    "setup", BLOB_CALLBACK(channel_string_mcf),  0x10, channel->name_entry);
 		mcf_connect(prefix_var,  "setup", BLOB_CALLBACK(channel_prefix_mcf),  0x10, channel);
-		mcf_connect(unit_var,    "setup", BLOB_CALLBACK(channel_string_mcf),  0x20, channel->unit_entry, channel_array);
-		mcf_connect(expr_var,    "setup", BLOB_CALLBACK(channel_string_mcf),  0x20, channel->expr_entry, channel_array);
+		mcf_connect(unit_var,    "setup", BLOB_CALLBACK(channel_string_mcf),  0x10, channel->unit_entry);
+		mcf_connect(expr_var,    "setup", BLOB_CALLBACK(channel_string_mcf),  0x10, channel->expr_entry);
 		mcf_connect(save_var,    "setup", BLOB_CALLBACK(channel_save_mcf),    0x10, channel);
 		mcf_connect(binsize_var, "setup", BLOB_CALLBACK(channel_binsize_mcf), 0x10, channel);
 
-		snazzy_connect(channel->name_entry,            "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_string_cb),  0x20, &channel->name, channel_array);
+		snazzy_connect(channel->name_entry,            "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_string_cb),  0x10, &channel->name);
 		snazzy_connect(channel->prefix_combo,          "changed",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(channel_prefix_cb),  0x10, channel);
-		snazzy_connect(channel->unit_entry,            "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_string_cb),  0x20, &channel->unit, channel_array);
+		snazzy_connect(channel->unit_entry,            "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_string_cb),  0x10, &channel->unit);
 		snazzy_connect(channel->binsize_entry->widget, "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_binsize_cb), 0x10, channel);
-		snazzy_connect(channel->expr_entry,            "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_string_cb),  0x20, &channel->expr, channel_array);
+		snazzy_connect(channel->expr_entry,            "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_string_cb),  0x10, &channel->expr);
 		snazzy_connect(channel->save_widget,           "button-release-event",             SNAZZY_BOOL_PTR,  BLOB_CALLBACK(channel_save_cb),    0x10, channel);
 	}
 
