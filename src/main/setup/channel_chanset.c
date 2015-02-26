@@ -15,6 +15,11 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define INIT_APPEND_RETURN                                                         \
+    if (str_length(type) == 0) { replace(type, cat1(str));                       } \
+    else if (use_all)          { replace(type, cat3(type, ", ", str));           } \
+    else                       { replace(type, cat2(type, ",...")); return type; }
+
 char * build_type (ComputeFunc *cf, bool use_all)
 {
 	f_start(F_NONE);
@@ -23,17 +28,24 @@ char * build_type (ComputeFunc *cf, bool use_all)
 
 	for (int id = 0; id < M2_DAQ_MAX_BRD; id++) for (int chan = 0; chan < M2_DAQ_MAX_CHAN; chan++)
 	{
-		bool is_dac = (cf->parse_dac[id][chan] > 0);
-		bool is_adc = (cf->parse_adc[id][chan] > 0);
+		char *code = atg((id == 0) ? cat1("") : (id == M2_VDAQ_ID) ? cat1("V-") : supercat("%d-", id));  // whether we need it or not . . .
 
-		if (is_dac || is_adc)
+		if (cf->parse_dac[id][chan] > 0)
 		{
-			char *code = atg((id == 0) ? cat1("") : (id == M2_VDAQ_ID) ? cat1("V-") : supercat("%d-", id));
-			char *str  = atg(supercat("%s%s%d%s", is_adc ? "←" : "", code, chan, is_dac ? "→" : ""));
+			char *str = atg(supercat("%s%d→", code, chan));
+			INIT_APPEND_RETURN
+		}
 
-			if (str_length(type) == 0) { replace(type, cat1(str));                       }
-			else if (use_all)          { replace(type, cat3(type, ", ", str));           }
-			else                       { replace(type, cat2(type, ",...")); return type; }
+		if (cf->parse_adc[id][chan] > 0)
+		{
+			char *str = atg(supercat("←%s%d", code, chan));
+			INIT_APPEND_RETURN
+		}
+
+		if (cf->parse_dio[id][chan] > 0)
+		{
+			char *str = atg(supercat("%s%d↔", code, chan));
+			INIT_APPEND_RETURN
 		}
 	}
 
@@ -42,14 +54,13 @@ char * build_type (ComputeFunc *cf, bool use_all)
 		{
 			char *code = atg((id == 0) ? cat1("G") : (id == M2_VGPIB_ID) ? cat1("VG") : supercat("G%d-", id));
 			char *str  = atg(supercat("%s%d", code, pad));
-
-			if (str_length(type) == 0) { replace(type, cat1(str));                       }
-			else if (use_all)          { replace(type, cat3(type, ", ", str));           }
-			else                       { replace(type, cat2(type, ",...")); return type; }
+			INIT_APPEND_RETURN
 		}
 
 	return type;
 }
+
+#undef INIT_APPEND_RETURN
 
 void build_chanset (ChanSet *chanset, Channel *channel_array)
 {
@@ -77,7 +88,7 @@ void build_chanset (ChanSet *chanset, Channel *channel_array)
 		if (cf->parse_exec) status_add(0, supercat("X%d: Definition should not contain trigger instructions. This channel will be ignored.\n", vc));
 		else if (cf->py_f != NULL)
 		{
-			if (cf->invertible == COMPUTE_INVERTIBLE_DAC || cf->invertible == COMPUTE_INVERTIBLE_GPIB)
+			if (cf->invertible == COMPUTE_INVERTIBLE_DAC || cf->invertible == COMPUTE_INVERTIBLE_DIO || cf->invertible == COMPUTE_INVERTIBLE_GPIB)
 			{
 				chanset->vci_by_ici[ici] = vci;
 				chanset->ici_by_vc[vc] = ici;

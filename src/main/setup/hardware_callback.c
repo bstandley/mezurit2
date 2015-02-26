@@ -22,6 +22,8 @@ static void revis_cb (GtkWidget *widget, Hardware *hw);
 static void hardware_node_mcf (void *ptr, const char *signal_name, MValue value, Hardware *hw, int d);
 static void hardware_dummy_mcf (void *ptr, const char *signal_name, MValue value, Hardware *hw);
 
+static char * dio_config_csf (gchar **argv);
+
 gboolean hardware_node_cb (GtkWidget *widget, GdkEvent *event, Hardware *hw)
 {
 	if (entry_update_required(event, widget))
@@ -79,4 +81,20 @@ void revis_cb (GtkWidget *widget, Hardware *hw)
 
 	set_visibility(hw->mini_entry,   minimode);
 	set_visibility(hw->mini_spacer, !minimode);
+}
+
+char * dio_config_csf (gchar **argv)
+{
+	f_start(F_CONTROL);
+
+	int dev_id, chan, reset_to_input;
+	if (scan_arg_int(argv[1], "dev_id",         &dev_id)       &&
+	    scan_arg_int(argv[2], "chan",           &chan)         &&
+		scan_arg_int(argv[3], "reset_to_input", &reset_to_input))
+	{
+		int mode = daq_DIO_config(dev_id, chan, reset_to_input);
+		if (mode != 0) return supercat("%s;mode|%s", argv[0], mode == 1 ? "output" : "input");
+	}
+
+	return cat1("argument_error");
 }

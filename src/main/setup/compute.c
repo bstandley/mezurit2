@@ -63,6 +63,7 @@ static PyMethodDef compute_methods[] =
 	{"ch",              ch_cfunc,              METH_VARARGS, "Returns the specified channel's value."},
 	{"ADC",             ADC_cfunc,             METH_VARARGS, "Returns the specified ADC channel's value in Volts."},
 	{"DAC",             DAC_cfunc,             METH_VARARGS, "Returns the specified DAC channel's value in Volts."},
+	{"DIO",             DIO_cfunc,             METH_VARARGS, "Returns the specified DIO channel's value (0 or 1)."},
 	{"gpib_slot_add",   gpib_slot_add_cfunc,   METH_VARARGS, "Registers a gpib slot."},
 	{"gpib_slot_read",  gpib_slot_read_cfunc,  METH_VARARGS, "Reads a gpib slot."},
 	{"send_recv_local", send_recv_local_cfunc, METH_VARARGS, "Sends a local server command and receives the reply."},
@@ -182,6 +183,7 @@ void compute_read_expr (ComputeFunc *cf, const char *expr, double prefactor)
 	array_set(cf->parse_pad, M2_GPIB_MAX_BRD, M2_GPIB_MAX_PAD, 0);
 	array_set(cf->parse_dac, M2_DAQ_MAX_BRD,  M2_DAQ_MAX_CHAN, 0);
 	array_set(cf->parse_adc, M2_DAQ_MAX_BRD,  M2_DAQ_MAX_CHAN, 0);
+	array_set(cf->parse_dio, M2_DAQ_MAX_BRD,  M2_DAQ_MAX_CHAN, 0);
 
 	if (str_length(expr) > 0)
 	{
@@ -195,12 +197,13 @@ void compute_read_expr (ComputeFunc *cf, const char *expr, double prefactor)
 	// check for invertibility and linearize:
 	cf->invertible = 0;
 
-	int N_gpib_slot, N_dac_chan, N_adc_chan;
+	int N_gpib_slot, N_dac_chan, N_adc_chan, N_dio_chan;
 	array_sum(cf->parse_pad, M2_GPIB_MAX_BRD, M2_GPIB_MAX_PAD, &N_gpib_slot);
 	array_sum(cf->parse_dac, M2_DAQ_MAX_BRD,  M2_DAQ_MAX_CHAN, &N_dac_chan);
 	array_sum(cf->parse_adc, M2_DAQ_MAX_BRD,  M2_DAQ_MAX_CHAN, &N_adc_chan);
+	array_sum(cf->parse_dio, M2_DAQ_MAX_BRD,  M2_DAQ_MAX_CHAN, &N_dio_chan);
 
-	if (cf->py_f != NULL && !cf->parse_other && !cf->parse_exec && N_adc_chan == 0 && (N_dac_chan == 1 || N_gpib_slot == 1))
+	if (cf->py_f != NULL && !cf->parse_other && !cf->parse_exec && N_adc_chan == 0 && (N_dac_chan + N_dio_chan + N_gpib_slot) == 1)
 	{
 		double z0 = 0, z1 = 0;
 
@@ -213,7 +216,8 @@ void compute_read_expr (ComputeFunc *cf, const char *expr, double prefactor)
 
 		if (fabs(z1 - z0) > M2_COMPUTE_EPSILON)
 		{
-			cf->invertible = (N_dac_chan == 1)  ? COMPUTE_INVERTIBLE_DAC :
+			cf->invertible = (N_dac_chan  == 1) ? COMPUTE_INVERTIBLE_DAC  :
+			                 (N_dio_chan  == 1) ? COMPUTE_INVERTIBLE_DIO  :
 			                 (N_gpib_slot == 1) ? COMPUTE_INVERTIBLE_GPIB : 0;
 			cf->y0 = z0;
 			cf->dydx = z1 - z0;
@@ -249,6 +253,7 @@ bool compute_function_write (ComputeFunc *cf, double value)
 		double physical = compute_linear_compute(cf, COMPUTE_LINEAR_INVERSE, value);
 
 		if      (cf->invertible == COMPUTE_INVERTIBLE_DAC)  rv = (daq_AO_write    (cf->inv_id, cf->inv_chan_slot, physical) == 1);
+		else if (cf->invertible == COMPUTE_INVERTIBLE_DIO)  rv = (daq_DIO_write   (cf->inv_id, cf->inv_chan_slot, physical) == 1);
 		else if (cf->invertible == COMPUTE_INVERTIBLE_GPIB) rv = (gpib_slot_write (cf->inv_id, cf->inv_chan_slot, physical) == 1);
 
 		if (rv && cf->sub_cf != NULL)

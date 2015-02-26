@@ -29,6 +29,7 @@ void daq_multi_reset (int id)
 
 	for (int chan = 0; chan < M2_DAQ_MAX_CHAN; chan++) daq_board[id].ai.ch[chan].req = 0;
 	daq_board[id].multi_N_chan = 0;
+	daq_board[id].multi_dio    = 0;
 
 #if NIDAQMX	
 	mention_mx_error(DAQmxClearTask(daq_board[id].multi_task));  // also stops task, if necessary
@@ -42,35 +43,65 @@ int daq_multi_tick (int id)
 	// no channels:              do nothing,                 return 1 (success)
 	// not connected (w/ chan):  do nothing,                 return 0 (failure)
 	// no driver:                do nothing,                 return 1 (success)
-	// dummy:                    set voltages to sine waves, return ?
+	// dummy:                    set voltages to sine waves,
+	//                           toggle DIO at n-Hz,         return ?
 	// ------------------------------------------------------------------------
 
-	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD, DAQ_ID_WARNING_MSG, return 0);
-	f_verify(daq_board[id].multi_N_chan > 0, NULL,               return 1);
-	f_verify(daq_board[id].is_connected,     NULL,               return 0);
+	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,                            DAQ_ID_WARNING_MSG, return 0);
+	f_verify(daq_board[id].multi_N_chan > 0 || daq_board[id].multi_dio, NULL,               return 1);
+	f_verify(daq_board[id].is_connected,                                NULL,               return 0);
 
 	struct DaqBoard *board = &daq_board[id];
 	if (board->is_real)
 	{
+		if (board->multi_N_chan > 0)
+		{
 #if COMEDI
-		if (comedi_do_insnlist(board->comedi_dev, &board->multi_insnlist) != board->multi_N_chan) return 0;
+			if (comedi_do_insnlist(board->comedi_dev, &board->multi_insnlist) != board->multi_N_chan) return 0;
 #elif NIDAQ
-		if (AI_VRead_Scan(board->nidaq_num, board->multi_voltage) != 0) return 0;
+			if (AI_VRead_Scan(board->nidaq_num, board->multi_voltage) != 0) return 0;
 #elif NIDAQMX
-		if (mention_mx_error(DAQmxReadAnalogF64(board->multi_task, 1, -1, DAQmx_Val_GroupByScanNumber, board->multi_voltage, (uInt32) board->multi_N_chan, NULL, NULL)) != 0) return 0;
+			if (mention_mx_error(DAQmxReadAnalogF64(board->multi_task, 1, -1, DAQmx_Val_GroupByScanNumber, board->multi_voltage, (uInt32) board->multi_N_chan, NULL, NULL)) != 0) return 0;
 #endif
 
-		for (int pci = 0; pci < board->multi_N_chan; pci++)
-		{
-			int chan = board->multi_chan[pci];
-			board->ai.ch[chan].known = 1;
+			for (int pci = 0; pci < board->multi_N_chan; pci++)
+			{
+				int chan = board->multi_chan[pci];
+				board->ai.ch[chan].known = 1;
 #if COMEDI
-			board->ai.ch[chan].voltage = comedi_to_phys(board->multi_raw[pci], board->ai.ch[chan].crange, board->ai.ch[chan].maxdata);
+				board->ai.ch[chan].voltage = comedi_to_phys(board->multi_raw[pci], board->ai.ch[chan].crange, board->ai.ch[chan].maxdata);
 #elif NIDAQ || NIDAQMX
-			board->ai.ch[chan].voltage = board->multi_voltage[pci];
+				board->ai.ch[chan].voltage = board->multi_voltage[pci];
 #else
-			board->ai.ch[chan].known = 2;
+				board->ai.ch[chan].known = 2;
 #endif
+			}
+		}
+
+		if (board->multi_dio)
+		{
+#if COMEDI
+			for (int chan = 0; chan < board->dio.N_ch; chan += 16)  // also tested with 4 bit chunks
+				if (comedi_dio_bitfield2(board->comedi_dev, (unsigned int) board->dio.num, 0, &board->multi_bits[chan/16], (unsigned int) chan) != 0) return 0;
+#elif NIDAQ
+			;  // TODO: DIO
+#elif NIDAQMX
+			;  // TODO: DIO
+#endif
+
+			for (int chan = 0; chan < board->dio.N_ch; chan++)
+			{
+				board->dio.ch[chan].known = 1;
+#if COMEDI
+				board->dio.ch[chan].voltage = (board->multi_bits[chan/16] & (((unsigned int) 0x1) << (chan % 16))) ? 1.0 : 0.0;
+#elif NIDAQ
+				board->dio.ch[chan].known = 2;  // TODO: DIO
+#elif NIDAQMX
+				board->dio.ch[chan].known = 2;  // TODO: DIO
+#else
+				board->dio.ch[chan].known = 2;
+#endif
+			}
 		}
 	}
 	else
@@ -83,6 +114,13 @@ int daq_multi_tick (int id)
 			board->ai.ch[chan].known = 1;
 			board->ai.ch[chan].voltage = cos(2*U_PI * chan * t);
 		}
+
+		for (int chan = 0; chan < board->dio.N_ch; chan++)
+			if (!board->dio.ch[chan].writeable)
+			{
+				board->dio.ch[chan].known = 1;
+				board->dio.ch[chan].voltage = (fmod(chan * t, 1.0) < 0.5) ? 1.0 : 0.0;
+			}
 	}
 
 	return 1;
@@ -151,6 +189,35 @@ int daq_AI_read (int id, int chan, double *voltage)
 	return daq_board[id].ai.ch[chan].known;
 }
 
+int daq_DIO_read (int id, int chan, double *voltage)
+{
+	// ------------------------------------------------------
+	// bad id:         complain,           return 0 (failure)
+	// not connected:  do nothing,         return 2 (unknown)
+	// bad chan:       complain,           return 0
+	// no driver:      add to MS, tick MS, return ?
+	// dummy:          add to MS, tick MS, return ?
+	// ------------------------------------------------------
+
+	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,             DAQ_ID_WARNING_MSG,  return 0);
+	f_verify(daq_board[id].is_connected,                 NULL,                return 2);
+	f_verify(chan >= 0 && chan < daq_board[id].dio.N_ch, DAQ_DIO_WARNING_MSG, return 0);
+
+	if (!daq_board[id].dio.ch[chan].req)
+	{
+		// add this chan to multi config (only really needs to happen once, as all DIO channels are read if any one channel is requested)
+		daq_board[id].dio.ch[chan].req = 1;
+
+		// in this case multi config is just turning it on . . .
+		daq_board[id].multi_dio = 1;
+
+		daq_multi_tick(id);  // get complete set of values for immediate use
+	}
+
+	*voltage = daq_board[id].dio.ch[chan].voltage;
+	return daq_board[id].dio.ch[chan].known;
+}
+
 int daq_AO_read (int id, int chan, double *voltage)
 {
 	// ----------------------------------------------
@@ -202,6 +269,60 @@ int daq_AO_write (int id, int chan, double voltage)
 	{
 		daq_board[id].ao.ch[chan].known = 1;
 		daq_board[id].ao.ch[chan].voltage = voltage;
+	}
+
+	return rv ? 1 : 0;
+}
+
+int daq_DIO_write (int id, int chan, double voltage)
+{
+	// ----------------------------------------------
+	// bad id:         complain,   return 0 (failure)
+	// not connected:  do nothing, return 0
+	// bad chan:       complain,   return 0
+	// bad voltage:    complain,   return 0
+	// no driver:      do nothing, return 0
+	// ----------------------------------------------
+
+	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,             DAQ_ID_WARNING_MSG,      return 0);
+	f_verify(daq_board[id].is_connected,                 NULL,                    return 0);
+	f_verify(chan >= 0 && chan < daq_board[id].dio.N_ch, DAQ_DIO_WARNING_MSG,     return 0);
+	f_verify(voltage >= daq_board[id].dio.ch[chan].min &&
+	         voltage <= daq_board[id].dio.ch[chan].max,  DAQ_VOLTAGE_WARNING_MSG, return 0);
+
+	bool rv = 1;
+	if (daq_board[id].is_real)
+	{
+		if (!daq_board[id].dio.ch[chan].writeable)
+		{
+#if COMEDI
+			rv = (comedi_dio_config(daq_board[id].comedi_dev, (unsigned int) daq_board[id].dio.num, (unsigned int) chan, COMEDI_OUTPUT) == 0);
+#elif NIDAQ
+			rv = 0;  // TODO: DIO
+#elif NIDAQMX
+			rv = 0;  // TODO: DIO
+#else
+			rv = 0;
+#endif
+			if (rv) daq_board[id].dio.ch[chan].writeable = 1;
+		}
+
+#if COMEDI
+		if (rv) rv = (comedi_dio_write(daq_board[id].comedi_dev, (unsigned int) daq_board[id].dio.num, (unsigned int) chan, voltage >= 0.5) == 1);
+#elif NIDAQ
+		if (rv) rv = 0;  // TODO: DIO
+#elif NIDAQMX
+		if (rv) rv = 0;  // TODO: DIO
+#else
+		rv = 0;  // without a driver the channel can never be set writeable, so rv should already be 0 at this point . . .
+#endif
+	}
+	else daq_board[id].dio.ch[chan].writeable = 1;  // remind dummy boards to not generate a waveform for this particular channel
+
+	if (rv)
+	{
+		daq_board[id].dio.ch[chan].known = 1;
+		daq_board[id].dio.ch[chan].voltage = (voltage >= 0.5) ? 1.0 : 0.0;
 	}
 
 	return rv ? 1 : 0;

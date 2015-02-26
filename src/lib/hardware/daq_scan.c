@@ -385,6 +385,19 @@ int daq_AI_convert (int id, int chan, long pt, double *voltage)
 	return 1;
 }
 
+int daq_DIO_convert (int id, int chan, long pt, double *voltage)
+{
+	// no driver:  work normally, return ?
+	// dummy:      work normally, return ?
+
+	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,             DAQ_ID_WARNING_MSG, return 0);  // (failure)
+	f_verify(daq_board[id].is_connected,                 NULL,               return 2);  // (unknown)
+	f_verify(chan >= 0 && chan < daq_board[id].dio.N_ch, NULL,               return 0);
+
+	*voltage = (pt < daq_board[id].scan_saved) ? daq_board[id].dio.ch[chan].voltage : 0.0;
+	return daq_board[id].dio.ch[chan].known;
+}
+
 int daq_AO_convert (int id, int chan, long pt, double *voltage)
 {
 	// no driver:  work normally, return ?

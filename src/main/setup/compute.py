@@ -48,6 +48,7 @@ def nearest_index (l, x) :  # Use to 'invert' lookup tables. List 'l' must be pr
 #def ch    (chan)         : <built-in function>
 #def DAC   (dev_id, chan) : <built-in function>
 #def ADC   (dev_id, chan) : <built-in function>
+#def DIO   (dev_id, chan) : <built-in function>
 
 def DAC0 () : return DAC(0, 0)
 def DAC1 () : return DAC(0, 1)
@@ -113,6 +114,7 @@ def send_recv_local_check (cmd_full) :
 def set_recording    (on)         : return send_recv_local_check('set_recording;on|{0:d}'.format(on))
 
 def set_dac          (ch, target) : return send_recv_local_check('set_dac;channel|{0:d};target|{1:f}'.format(ch, target))
+def set_dio          (ch, target) : return set_dac(ch, target)  # uses same mechanism as above, i.e. setting an invertible channel's value
 def sweep_stop       (ch)         : return send_recv_local_check('sweep_stop;channel|{0:d}'.format(ch))
 def sweep_down       (ch)         : return send_recv_local_check('sweep_down;channel|{0:d}'.format(ch))
 def sweep_up         (ch)         : return send_recv_local_check('sweep_up;channel|{0:d}'.format(ch))

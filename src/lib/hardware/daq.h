@@ -44,14 +44,19 @@ void daq_final (void);
 int    daq_board_connect (int id, const char *node);
 char * daq_board_info    (int id, const char *info);
 
-int daq_AO_valid (int id, int chan);
-int daq_AI_valid (int id, int chan);
+int daq_DIO_config (int id, int chan, int reset_to_input);
+
+int daq_AO_valid  (int id, int chan);
+int daq_AI_valid  (int id, int chan);
+int daq_DIO_valid (int id, int chan);
 
 // point I/O
 
-int daq_AO_read  (int id, int chan, double *voltage);
-int daq_AI_read  (int id, int chan, double *voltage);  // if unknown, add to multi setup
-int daq_AO_write (int id, int chan, double  voltage);
+int daq_AO_read   (int id, int chan, double *voltage);
+int daq_AI_read   (int id, int chan, double *voltage);  // if unknown, add to multi setup
+int daq_DIO_read  (int id, int chan, double *voltage);  // if unknown, add to multi setup
+int daq_AO_write  (int id, int chan, double  voltage);
+int daq_DIO_write (int id, int chan, double  voltage);
 
 int  daq_multi_tick  (int id);
 void daq_multi_reset (int id);
@@ -64,7 +69,8 @@ double daq_SCAN_elapsed (int id);
 long   daq_SCAN_read    (int id);
 long   daq_SCAN_stop    (int id);
 
-int daq_AO_convert (int id, int chan, long pt, double *voltage);
-int daq_AI_convert (int id, int chan, long pt, double *voltage);
+int daq_AO_convert  (int id, int chan, long pt, double *voltage);
+int daq_AI_convert  (int id, int chan, long pt, double *voltage);
+int daq_DIO_convert (int id, int chan, long pt, double *voltage);
 
 #endif

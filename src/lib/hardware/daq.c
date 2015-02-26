@@ -49,18 +49,20 @@ typedef uint64_t uInt64;
 #define DAQ_CONNECT_WARNING_MSG "Warning: Board not connected.\n"
 #define DAQ_AO_WARNING_MSG      "Warning: AO channel out of range.\n"
 #define DAQ_AI_WARNING_MSG      "Warning: AI channel out of range.\n"
+#define DAQ_DIO_WARNING_MSG     "Warning: DIO channel out of range.\n"
 #define DAQ_VOLTAGE_WARNING_MSG "Warning: Voltage out of range.\n"
 
 enum
 {
-	DAQ_AO = 0,
-	DAQ_AI = 1
+	DAQ_AO  = 0,
+	DAQ_AI  = 1,
+	DAQ_DIO = 2
 };
 
 struct AnalogChannel
 {
-	bool req;
-	int known;
+	bool req, writeable;
+	int known, dir;
 	double voltage, min, max;
 #if COMEDI
 	lsampl_t maxdata;
@@ -89,7 +91,7 @@ struct DaqBoard
 	char *node;
 	bool is_real, is_connected, scan_prepared;
 
-	char *info_driver, *info_full_node, *info_board, *info_board_abrv, *info_output, *info_input;
+	char *info_driver, *info_full_node, *info_board, *info_board_abrv, *info_output, *info_input, *info_digital;
 
 	// device setup
 #if COMEDI
@@ -97,15 +99,17 @@ struct DaqBoard
 #elif NIDAQ
 	i16 nidaq_num, nidaq_bcode;
 #endif
-	struct SubDevice ao, ai;
+	struct SubDevice ao, ai, dio;
 
-	// multi setup (AI only)
+	// multi setup (AI and DIO, only)
 	int multi_chan[M2_DAQ_MAX_CHAN];
 	int multi_N_chan;
+	bool multi_dio;
 #if COMEDI
 	lsampl_t multi_raw[M2_DAQ_MAX_CHAN];
 	comedi_insn multi_insn[M2_DAQ_MAX_CHAN];
 	comedi_insnlist multi_insnlist;
+	unsigned int multi_bits[M2_DAQ_MAX_CHAN/16];  // assume unsigned int has >= 16 bits
 #elif NIDAQ
 	f64 multi_voltage[M2_DAQ_MAX_CHAN];
 #elif NIDAQMX
@@ -167,6 +171,7 @@ void daq_init (void)
 		daq_board[id].info_board_abrv = cat1("∅");
 		daq_board[id].info_output     = cat1("∅");
 		daq_board[id].info_input      = cat1("∅");
+		daq_board[id].info_digital    = cat1("∅");
 	}
 
 	global_timer = timer_new();
@@ -187,6 +192,7 @@ void daq_final (void)
 		replace(daq_board[id].info_board_abrv, NULL);
 		replace(daq_board[id].info_output,     NULL);
 		replace(daq_board[id].info_input,      NULL);
+		replace(daq_board[id].info_digital,    NULL);
 	}
 }
 
@@ -218,6 +224,7 @@ int daq_board_connect (int id, const char *node)
 
 	// multi setup:
 	daq_board[id].multi_N_chan = 0;
+	daq_board[id].multi_dio    = 0;
 
 	// scan setup:
 	daq_board[id].scan_prepared = 0;
@@ -306,19 +313,13 @@ int daq_board_connect (int id, const char *node)
 		}
 	}
 
-	subdevice_connect(&daq_board[id], &daq_board[id].ao, DAQ_AO);
-	subdevice_connect(&daq_board[id], &daq_board[id].ai, DAQ_AI);
+	subdevice_connect(&daq_board[id], &daq_board[id].ao,  DAQ_AO);
+	subdevice_connect(&daq_board[id], &daq_board[id].ai,  DAQ_AI);
+	subdevice_connect(&daq_board[id], &daq_board[id].dio, DAQ_DIO);
 
-	if (daq_board[id].is_real)
-	{
-		replace(daq_board[id].info_output, (daq_board[id].ao.N_ch > 0) ? supercat("%d ch [%0.1f, %0.1f]", daq_board[id].ao.N_ch, daq_board[id].ao.ch[0].min, daq_board[id].ao.ch[0].max) : cat1("0 ch"));
-		replace(daq_board[id].info_input,  (daq_board[id].ai.N_ch > 0) ? supercat("%d ch [%0.1f, %0.1f]", daq_board[id].ai.N_ch, daq_board[id].ai.ch[0].min, daq_board[id].ai.ch[0].max) : cat1("0 ch"));
-	}
-	else
-	{
-		replace(daq_board[id].info_output, supercat("%d ch [%s, %s]", daq_board[id].ao.N_ch, quote(M2_DAQ_VIRTUAL_MIN), quote(M2_DAQ_VIRTUAL_MAX)));
-		replace(daq_board[id].info_input,  supercat("%d ch [%s, %s]", daq_board[id].ai.N_ch, quote(M2_DAQ_VIRTUAL_MIN), quote(M2_DAQ_VIRTUAL_MAX)));
-	}
+	replace(daq_board[id].info_output, (daq_board[id].ao.N_ch  > 0) ? supercat(daq_board[id].is_real ? "%d ch [%0.1f, %0.1f]" : "%d ch [%0.0e, %0.0e]", daq_board[id].ao.N_ch, daq_board[id].ao.ch[0].min, daq_board[id].ao.ch[0].max) : cat1("0 ch"));
+	replace(daq_board[id].info_input,  (daq_board[id].ai.N_ch  > 0) ? supercat(daq_board[id].is_real ? "%d ch [%0.1f, %0.1f]" : "%d ch [%0.0e, %0.0e]", daq_board[id].ai.N_ch, daq_board[id].ai.ch[0].min, daq_board[id].ai.ch[0].max) : cat1("0 ch"));
+	replace(daq_board[id].info_digital,                               supercat("%d ch", daq_board[id].dio.N_ch));
 
 	return daq_board[id].is_connected;
 }
@@ -331,15 +332,17 @@ void subdevice_connect (struct DaqBoard *board, struct SubDevice *subdev, int ty
 	{
 		subdev->ch[chan].req = 0;
 		subdev->ch[chan].voltage = 0.0;
-		subdev->ch[chan].known = (type == DAQ_AO) ? 2 : 0;
+		subdev->ch[chan].known = (type == DAQ_AO) ? 2 : 0;  // treat DIO as input where knownness is concerned
+		subdev->ch[chan].writeable = (type == DAQ_AO);      // DIO can be made writeable later
 	}
 
+	subdev->N_ch = 0;
 	if (board->is_connected)
 	{
 		if (board->is_real)
 		{
 #if COMEDI
-			subdev->num = comedi_find_subdevice_by_type(board->comedi_dev, (type == DAQ_AO) ? COMEDI_SUBD_AO : COMEDI_SUBD_AI, 0);
+			subdev->num = comedi_find_subdevice_by_type(board->comedi_dev, (type == DAQ_DIO) ? COMEDI_SUBD_DIO : ((type == DAQ_AO) ? COMEDI_SUBD_AO : COMEDI_SUBD_AI), 0);
 			if (subdev->num != -1)
 			{
 				subdev->N_ch = min_int(comedi_get_n_channels(board->comedi_dev, (unsigned int) subdev->num), M2_DAQ_MAX_CHAN);
@@ -352,49 +355,69 @@ void subdevice_connect (struct DaqBoard *board, struct SubDevice *subdev, int ty
 
 					subdev->ch[chan].min = subdev->ch[chan].crange->min;
 					subdev->ch[chan].max = subdev->ch[chan].crange->max;
+
+					if (type == DAQ_DIO)
+					{
+						if (comedi_dio_config(board->comedi_dev, (unsigned int) subdev->num, (unsigned int) chan, COMEDI_INPUT))
+							status_add(0, cat1("Error: Cannot configure DIO channel.\n"));  // assumption that writeable == 0 is good
+						else
+						{
+							unsigned int dir;
+							if (comedi_dio_get_config(board->comedi_dev, (unsigned int) subdev->num, (unsigned int) chan, &dir))
+								status_add(0, cat1("Error: Cannot read DIO channel configuration.\n"));  // leave writeable == 0 in this case
+							else subdev->ch[chan].writeable = (dir == COMEDI_OUTPUT);  // channel is stuck in one mode
+						}
+					}
 				}
 
-				int page_size = (int) sysconf(_SC_PAGE_SIZE);
-				int size_request = (M2_DAQ_COMEDI_BUFFER_SIZE / page_size) * page_size;
-				if (size_request != M2_DAQ_COMEDI_BUFFER_SIZE)
-					f_print(F_ERROR, "default_size: %d, page_size: %d, size_request: %d\n", M2_DAQ_COMEDI_BUFFER_SIZE, page_size, size_request);
+				int max_buffer_size = 0;  // quiet "used uninitialized" warning
+				if (type != DAQ_DIO)
+				{
+					int flags = comedi_get_subdevice_flags(board->comedi_dev, (unsigned int) subdev->num);
+					subdev->use_lsampl = flags & SDF_LSAMPL;
+					subdev->b_sampl = subdev->use_lsampl ? sizeof(lsampl_t) : sizeof(sampl_t);
 
-				int max_buffer_size = comedi_get_max_buffer_size (board->comedi_dev, (unsigned int) subdev->num);
-				/**/                  comedi_set_buffer_size     (board->comedi_dev, (unsigned int) subdev->num, (unsigned int) min_int(size_request, max_buffer_size));
-				subdev->buffer_size = comedi_get_buffer_size     (board->comedi_dev, (unsigned int) subdev->num);
+					int page_size = (int) sysconf(_SC_PAGE_SIZE);
+					int size_request = (M2_DAQ_COMEDI_BUFFER_SIZE / page_size) * page_size;
+					if (size_request != M2_DAQ_COMEDI_BUFFER_SIZE)
+						f_print(F_ERROR, "default_size: %d, page_size: %d, size_request: %d\n", M2_DAQ_COMEDI_BUFFER_SIZE, page_size, size_request);
 
-				int flags = comedi_get_subdevice_flags(board->comedi_dev, (unsigned int) subdev->num);
-				subdev->use_lsampl = flags & SDF_LSAMPL;
-				subdev->b_sampl = subdev->use_lsampl ? sizeof(lsampl_t) : sizeof(sampl_t);
+					max_buffer_size     = comedi_get_max_buffer_size (board->comedi_dev, (unsigned int) subdev->num);
+					/**/                  comedi_set_buffer_size     (board->comedi_dev, (unsigned int) subdev->num, (unsigned int) min_int(size_request, max_buffer_size));
+					subdev->buffer_size = comedi_get_buffer_size     (board->comedi_dev, (unsigned int) subdev->num);
+				}
 
-				f_print(F_VERBOSE, "Subdevice %d: %s\n", subdev->num, type == DAQ_AO ? "AO" : "AI");
-				f_print(F_VERBOSE, "\tbuffer_size: %d max_buffer_size: %d\n", subdev->buffer_size, max_buffer_size);
+				f_print(F_VERBOSE, "Subdevice %d: %s\n",   subdev->num, (type == DAQ_DIO) ? "DIO" : ((type == DAQ_AO) ? "AO" : "AI"));
+				if (type != DAQ_DIO)
+					f_print(F_VERBOSE, "\tbuffer_size: %d max_buffer_size: %d\n", subdev->buffer_size, max_buffer_size);
 				f_print(F_VERBOSE, "\tnum channels: %d\n", subdev->N_ch);
 				if (subdev->N_ch > 0)
 				{
-					f_print(F_VERBOSE, "\tch0 maxdata: %d (%s channel specific)\n",                         subdev->ch[0].maxdata,                                comedi_maxdata_is_chan_specific (board->comedi_dev, (unsigned int) subdev->num) == 0 ? "not" : "");
+					f_print(F_VERBOSE, "\tch0 maxdata: %d (%s channel specific)\n",           subdev->ch[0].maxdata,                                comedi_maxdata_is_chan_specific (board->comedi_dev, (unsigned int) subdev->num) == 0 ? "not" : "");
 					f_print(F_VERBOSE, "\tch0 range: [%0.3f, %0.3f] (%s channel specific)\n", subdev->ch[0].crange->min, subdev->ch[0].crange->max, comedi_range_is_chan_specific   (board->comedi_dev, (unsigned int) subdev->num) == 0 ? "not" : "");
 				}
 			}
 			else status_add(0, cat1("Warning: Cannot find a valid subdevice.\n"));
 #elif NIDAQ
-			subdev->N_ch = (type == DAQ_AO) ? 2 : 16;
+			subdev->N_ch = (type == DAQ_DIO) ? 8 : ((type == DAQ_AO) ? 2 : 16);
 			for (int chan = 0; chan < subdev->N_ch; chan++)
 			{
-				subdev->ch[chan].min = -10.0;
-				subdev->ch[chan].max =  10.0;
+				// TODO: configure DIO
+				subdev->ch[chan].min = (type == DAQ_DIO) ? 0.0 : -10.0;
+				subdev->ch[chan].max = (type == DAQ_DIO) ? 5.0 :  10.0;
 			}
 #elif NIDAQMX
-
 			for (subdev->N_ch = 0; subdev->N_ch < M2_DAQ_MAX_CHAN; subdev->N_ch++)
 			{
 				TaskHandle task;
 				DAQmxCreateTask("", &task);
-				int32 rv = (type == DAQ_AO) ? DAQmxCreateAOVoltageChan(task, atg(supercat("%s/ao%d", board->node, subdev->N_ch)), "",     -1.0, 1.0, DAQmx_Val_Volts, NULL) :
-				                              DAQmxCreateAIVoltageChan(task, atg(supercat("%s/ai%d", board->node, subdev->N_ch)), "", -1, -1.0, 1.0, DAQmx_Val_Volts, NULL);
+				int32 rv = (type == DAQ_DIO) ? -1                                                                                                                            :  // TODO: DIO test channel
+				           (type == DAQ_AO)  ? DAQmxCreateAOVoltageChan(task, atg(supercat("%s/ao%d", board->node, subdev->N_ch)), "",     -1.0, 1.0, DAQmx_Val_Volts, NULL) :
+				                               DAQmxCreateAIVoltageChan(task, atg(supercat("%s/ai%d", board->node, subdev->N_ch)), "", -1, -1.0, 1.0, DAQmx_Val_Volts, NULL);
 				DAQmxClearTask(task);
 				if (rv != 0) break;
 			}
+			// TODO: configure DIO
 
 			for (int chan = 0; chan < subdev->N_ch; chan++)
 			{
@@ -419,15 +442,14 @@ void subdevice_connect (struct DaqBoard *board, struct SubDevice *subdev, int ty
 		}
 		else
 		{
-			subdev->N_ch = (type == DAQ_AO) ? M2_DAQ_VIRTUAL_NUM_DAC : M2_DAQ_VIRTUAL_NUM_ADC;
+			subdev->N_ch = (type == DAQ_DIO) ? M2_DAQ_VIRTUAL_NUM_DIO : ((type == DAQ_AO) ? M2_DAQ_VIRTUAL_NUM_DAC : M2_DAQ_VIRTUAL_NUM_ADC);
 			for (int chan = 0; chan < subdev->N_ch; chan++)
 			{
-				subdev->ch[chan].min = M2_DAQ_VIRTUAL_MIN;
-				subdev->ch[chan].max = M2_DAQ_VIRTUAL_MAX;
+				subdev->ch[chan].min = (type == DAQ_DIO) ? 0.0 : M2_DAQ_VIRTUAL_MIN;
+				subdev->ch[chan].max = (type == DAQ_DIO) ? 1.0 : M2_DAQ_VIRTUAL_MAX;
 			}
 		}
 	}
-	else subdev->N_ch = 0;
 }
 
 int daq_AO_valid (int id, int chan)
@@ -448,6 +470,44 @@ int daq_AI_valid (int id, int chan)
 	return 1;
 }
 
+int daq_DIO_valid (int id, int chan)
+{
+	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,             NULL, return 0);
+	f_verify(daq_board[id].is_connected,                 NULL, return 0);
+	f_verify(chan >= 0 && chan < daq_board[id].dio.N_ch, NULL, return 0);
+
+	return 1;
+}
+
+int daq_DIO_config (int id, int chan, int reset_to_input)
+{
+	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD,             DAQ_ID_WARNING_MSG,  return 0);
+	f_verify(daq_board[id].is_connected,                 NULL,                return 0);
+	f_verify(chan >= 0 && chan < daq_board[id].dio.N_ch, DAQ_DIO_WARNING_MSG, return 0);
+
+	if (reset_to_input && daq_board[id].dio.ch[chan].writeable)
+	{
+		bool rv = 1;
+		if (daq_board[id].is_real)
+		{
+#if COMEDI
+			rv = (comedi_dio_config(daq_board[id].comedi_dev, (unsigned int) daq_board[id].dio.num, (unsigned int) chan, COMEDI_INPUT) == 0);
+#elif NIDAQ
+			rv = 0;  // TODO: DIO
+#elif NIDAQMX
+			rv = 0;  // TODO: DIO
+#else
+			rv = 0;
+#endif
+		}
+
+		if (rv) daq_board[id].dio.ch[chan].writeable = 0;  // successfully changed back
+		else status_add(0, cat1("Error: Cannot configure DIO channel.\n"));
+	}
+
+	return daq_board[id].dio.ch[chan].writeable ? 1 : -1;
+}
+
 char * daq_board_info (int id, const char *info)
 {
 	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD, DAQ_ID_WARNING_MSG, return NULL);
@@ -458,6 +518,7 @@ char * daq_board_info (int id, const char *info)
 	else if (str_equal(info, "board_abrv")) return daq_board[id].info_board_abrv;
 	else if (str_equal(info, "output"))     return daq_board[id].info_output;
 	else if (str_equal(info, "input"))      return daq_board[id].info_input;
+	else if (str_equal(info, "digital"))    return daq_board[id].info_digital;
 	else                                    return cat1("∅");
 }
 

@@ -41,7 +41,8 @@ enum
 enum
 {
 	COMPUTE_INVERTIBLE_DAC  = 1,
-	COMPUTE_INVERTIBLE_GPIB = 2
+	COMPUTE_INVERTIBLE_DIO  = 2,
+	COMPUTE_INVERTIBLE_GPIB = 3
 };
 
 typedef struct
@@ -50,7 +51,7 @@ typedef struct
 
 		double prefactor;
 		double y0, dydx;
-		int inv_id, inv_chan_slot;  // chan for DAQ, slot for GPIB
+		int inv_id, inv_chan_slot;  // chan for DAQ/DIO, slot for GPIB
 		void *sub_py_f;
 
 		bool parse_other;
@@ -66,6 +67,7 @@ typedef struct
 
 		int parse_dac [M2_DAQ_MAX_BRD][M2_DAQ_MAX_CHAN];
 		int parse_adc [M2_DAQ_MAX_BRD][M2_DAQ_MAX_CHAN];
+		int parse_dio [M2_DAQ_MAX_BRD][M2_DAQ_MAX_CHAN];
 		int parse_pad [M2_GPIB_MAX_BRD][M2_GPIB_MAX_PAD];
 
 } ComputeFunc;

@@ -103,9 +103,10 @@ def get_sweep_id (channel) :
 	reply = send_recv('get_sweep_id;channel|{0:d}'.format(channel))
 	return int(arg(reply, 0)) if cmd(reply) == 'get_sweep_id' else -2
 
-######################  DAC Control  ########################
+####################  DAC/DIO Control  ######################
 
 def set_dac    (channel, target) : return send_recv_check('set_dac;channel|{0:d};target|{1:f}'.format(channel, target))
+def set_dio    (channel, target) : return set_dac(channel, target)  # uses same mechanism as above, i.e. setting an invertible channel's value
 def sweep_stop (channel)         : return send_recv_check('sweep_stop;channel|{0:d}'.format(channel))
 def sweep_down (channel)         : return send_recv_check('sweep_down;channel|{0:d}'.format(channel))
 def sweep_up   (channel)         : return send_recv_check('sweep_up;channel|{0:d}'.format(channel))
@@ -118,6 +119,10 @@ def remove_follower (leader)                 : return send_recv_check('set_follo
 def show_followers  ()                       : return send_recv_check('show_followers')
 
 def catch_sweep (event, channel) : return send_recv_check('catch_sweep_' + event + ';channel|{0:d}'.format(channel))
+
+def dio_config (board_id, board_chan, reset_to_input=False) :
+    reply = send_recv('dio_config;dev_id|{0:d};chan|{1:d};reset_to_input|{2:d}'.format(board_id, board_chan, reset_to_input))
+    return arg(reply, 0) if cmd(reply) == 'dio_config' else ''
 
 #########################  Scope  ###########################
 

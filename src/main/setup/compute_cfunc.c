@@ -20,6 +20,7 @@ static PyObject * time_cfunc (PyObject *py_self, PyObject *py_args);
 static PyObject * ch_cfunc (PyObject *py_self, PyObject *py_args);
 static PyObject * ADC_cfunc (PyObject *py_self, PyObject *py_args);
 static PyObject * DAC_cfunc (PyObject *py_self, PyObject *py_args);
+static PyObject * DIO_cfunc (PyObject *py_self, PyObject *py_args);
 static PyObject * gpib_slot_add_cfunc (PyObject *py_self, PyObject *py_args);
 static PyObject * gpib_slot_read_cfunc (PyObject *py_self, PyObject *py_args);
 static PyObject * send_recv_local_cfunc (PyObject *py_self, PyObject *py_args);
@@ -98,6 +99,31 @@ PyObject * DAC_cfunc (PyObject *py_self, PyObject *py_args)
 		compute_cf->inv_id = id;
 		compute_cf->inv_chan_slot = chan;
 		replace(compute_cf->info, supercat("%s\n   DAQ %d, DAC %d", compute_cf->info, id, chan));
+	}
+
+	return PyFloat_FromDouble(x);
+}
+
+PyObject * DIO_cfunc (PyObject *py_self, PyObject *py_args)
+{
+	int id = -1, chan = -1;
+	PyArg_ParseTuple(py_args, "ii", &id, &chan);
+
+	double x = 0;
+
+	if      (compute_mode & COMPUTE_MODE_POINT) { if (daq_DIO_read(id, chan, &x) != 1) compute_known = 0; }
+	else if (compute_mode & COMPUTE_MODE_SCAN)  { daq_DIO_convert(id, chan, compute_point, &x); }
+	else if (compute_mode & COMPUTE_MODE_SOLVE)
+	{
+		if (daq_DIO_valid(id, chan)) x = compute_x;
+		else                         compute_known = 0;
+	}
+	else if ((compute_mode & COMPUTE_MODE_PARSE) && daq_DIO_valid(id, chan))
+	{
+		compute_cf->parse_dio[id][chan]++;
+		compute_cf->inv_id = id;
+		compute_cf->inv_chan_slot = chan;
+		replace(compute_cf->info, supercat("%s\n   DAQ %d, DIO %d", compute_cf->info, id, chan));
 	}
 
 	return PyFloat_FromDouble(x);

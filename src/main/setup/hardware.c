@@ -23,6 +23,7 @@
 #include <lib/entry.h>
 #include <lib/util/str.h>
 #include <lib/util/fs.h>
+#include <control/server.h>
 #include <lib/hardware/daq.h>
 #include <lib/hardware/gpib.h>
 
@@ -153,9 +154,10 @@ void hardware_update (Hardware *hw)
 			                                                   daq_board_info(hw->id, "driver"),
 			                                                   c ? "Connected" : "Not connected",
 			                                                   daq_board_info(hw->id, "board"),
-			                                                   c ? atg(supercat("\nInput:\t%s\nOutput:\t%s",
+			                                                   c ? atg(supercat("\nInput:\t%s\nOutput:\t%s\nDigital:\t%s",
 			                                                                    daq_board_info(hw->id, "input"),
-			                                                                    daq_board_info(hw->id, "output"))) : "")), -1);
+			                                                                    daq_board_info(hw->id, "output"),
+			                                                                    daq_board_info(hw->id, "digital"))) : "")), -1);
 
 			gtk_entry_set_text(GTK_ENTRY(hw->mini_entry), atg(supercat("%s (%s)", daq_board_info(hw->id, "board_abrv"), daq_board_info(hw->id, "full_node"))));
 		}
@@ -227,8 +229,10 @@ void hardware_array_register (Hardware *hw_array, GtkWidget **apt)
 			snazzy_connect(hw->dummy_button, "button-release-event",             SNAZZY_BOOL_PTR, BLOB_CALLBACK(hardware_dummy_cb), 0x10, hw);
 		}
 
-		snazzy_connect(gtk_widget_get_parent(hw->sect.box), "show, hide", SNAZZY_VOID_VOID, BLOB_CALLBACK(revis_cb),          0x10, hw);
+		snazzy_connect(gtk_widget_get_parent(hw->sect.box), "show, hide", SNAZZY_VOID_VOID, BLOB_CALLBACK(revis_cb), 0x10, hw);
 	}
+
+	control_server_connect(M2_TS_ID, "dio_config", M2_CODE_SETUP | all_pid(M2_CODE_DAQ), BLOB_CALLBACK(dio_config_csf), 0x00);
 }
 
 void hardware_register_legacy (Hardware *hw)
