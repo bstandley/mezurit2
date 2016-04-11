@@ -94,7 +94,8 @@ void hardware_array_init (Hardware *hw_array, GtkWidget **apt)
 		set_padding(hw->mini_spacer, 2);
 
 		for (int d = 0; d < 4; d++) hw->node[d] = cat1("");
-		hw->dummy = 1;  // set default for non-real boards which are not registered and therefore omitted from mcf_load_defaults()
+		hw->dummy  = 1;  // set defaults for non-real boards which are not registered and therefore omitted from mcf_load_defaults()
+		hw->settle = 0;
 
 		GtkWidget *textview = container_add(new_text_view(4, 4),
 		                      pack_start(fix_shadow(gtk_frame_new(NULL)),        1, hw->sect.box));
@@ -147,15 +148,16 @@ void hardware_update (Hardware *hw)
 
 		if (hw->type == HW_DAQ)
 		{
-			bool c = daq_board_connect(hw->id, hw->dummy ? "dummy" : hw->node[HW_DAQ_DRIVER_ID]);
+			bool c = daq_board_connect(hw->id, hw->dummy ? "dummy" : hw->node[HW_DAQ_DRIVER_ID], hw->settle);
 
 			gtk_text_buffer_set_text(hw->textbuf, atg(supercat("Driver:\t%s\nMode:\t%s\nBoard:\t%s%s",
 			                                                   daq_board_info(hw->id, "driver"),
 			                                                   c ? "Connected" : "Not connected",
 			                                                   daq_board_info(hw->id, "board"),
-			                                                   c ? atg(supercat("\nInput:\t%s\nOutput:\t%s",
+			                                                   c ? atg(supercat("\nInput:\t%s\nOutput:\t%s\nSettling:\t%s",
 			                                                                    daq_board_info(hw->id, "input"),
-			                                                                    daq_board_info(hw->id, "output"))) : "")), -1);
+			                                                                    daq_board_info(hw->id, "output"),
+			                                                                    daq_board_info(hw->id, "settle"))) : "")), -1);
 
 			gtk_entry_set_text(GTK_ENTRY(hw->mini_entry), atg(supercat("%s (%s)", daq_board_info(hw->id, "board_abrv"), daq_board_info(hw->id, "full_node"))));
 		}
@@ -190,17 +192,18 @@ void hardware_array_register (Hardware *hw_array, GtkWidget **apt)
 	{
 		Hardware *hw = &hw_array[n];
 
-		int dummy_var = -1, node_var0 = -1, node_var1 = -1, node_var2 = -1;
+		int dummy_var = -1, settle_var = -1, node_var0 = -1, node_var1 = -1, node_var2 = -1;
 		if (hw->type == HW_DAQ)
 		{
 			section_register(&hw->sect, atg(supercat("daq%d_", hw->id)), SECTION_RIGHT, apt);
 
 			if (hw->real)
 			{
-				dummy_var = mcf_register(&hw->dummy,   atg(supercat("daq%d_dummy",        hw->id)), MCF_BOOL   | MCF_W | MCF_DEFAULT, hw->id != 0);
-				node_var0 = mcf_register(&hw->node[0], atg(supercat("daq%d_node_comedi",  hw->id)), MCF_STRING | MCF_W | MCF_DEFAULT, atg(supercat("/dev/comedi%d", hw->id)));
-				node_var1 = mcf_register(&hw->node[1], atg(supercat("daq%d_node_nidaq",   hw->id)), MCF_STRING | MCF_W | MCF_DEFAULT, atg(supercat("%d",            hw->id + 1)));
-				node_var2 = mcf_register(&hw->node[2], atg(supercat("daq%d_node_nidaqmx", hw->id)), MCF_STRING | MCF_W | MCF_DEFAULT, atg(supercat("Dev%d",         hw->id + 1)));
+				dummy_var  = mcf_register(&hw->dummy,   atg(supercat("daq%d_dummy",        hw->id)), MCF_BOOL   | MCF_W | MCF_DEFAULT, hw->id != 0);
+				settle_var = mcf_register(&hw->settle,  atg(supercat("daq%d_settling",     hw->id)), MCF_INT    | MCF_W | MCF_DEFAULT, 0);
+				node_var0  = mcf_register(&hw->node[0], atg(supercat("daq%d_node_comedi",  hw->id)), MCF_STRING | MCF_W | MCF_DEFAULT, atg(supercat("/dev/comedi%d", hw->id)));
+				node_var1  = mcf_register(&hw->node[1], atg(supercat("daq%d_node_nidaq",   hw->id)), MCF_STRING | MCF_W | MCF_DEFAULT, atg(supercat("%d",            hw->id + 1)));
+				node_var2  = mcf_register(&hw->node[2], atg(supercat("daq%d_node_nidaqmx", hw->id)), MCF_STRING | MCF_W | MCF_DEFAULT, atg(supercat("Dev%d",         hw->id + 1)));
 			}
 		}
 		else if (hw->type == HW_GPIB)
@@ -215,10 +218,11 @@ void hardware_array_register (Hardware *hw_array, GtkWidget **apt)
 			}
 		}
 	
-		if (dummy_var != -1) mcf_connect(dummy_var, "setup", BLOB_CALLBACK(hardware_dummy_mcf), 0x10, hw);
-		if (node_var0 != -1) mcf_connect(node_var0, "setup", BLOB_CALLBACK(hardware_node_mcf),  0x11, hw, 0);
-		if (node_var1 != -1) mcf_connect(node_var1, "setup", BLOB_CALLBACK(hardware_node_mcf),  0x11, hw, 1);
-		if (node_var2 != -1) mcf_connect(node_var2, "setup", BLOB_CALLBACK(hardware_node_mcf),  0x11, hw, 2);
+		if (dummy_var  != -1) mcf_connect(dummy_var,  "setup", BLOB_CALLBACK(hardware_dummy_mcf),  0x10, hw);
+		if (settle_var != -1) mcf_connect(settle_var, "setup", BLOB_CALLBACK(hardware_settle_mcf), 0x10, hw);
+		if (node_var0  != -1) mcf_connect(node_var0,  "setup", BLOB_CALLBACK(hardware_node_mcf),   0x11, hw, 0);
+		if (node_var1  != -1) mcf_connect(node_var1,  "setup", BLOB_CALLBACK(hardware_node_mcf),   0x11, hw, 1);
+		if (node_var2  != -1) mcf_connect(node_var2,  "setup", BLOB_CALLBACK(hardware_node_mcf),   0x11, hw, 2);
 		// don't connect the "no driver" node
 
 		if (hw->real)

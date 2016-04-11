@@ -50,7 +50,6 @@ int  ceil_int   (double x);
 long floor_long (double x);
 long ceil_long  (double x);
 
-double window_double (double x, double x_min, double x_max);
 double round_down_double (double x, double d);
 
 #endif

@@ -21,6 +21,7 @@ static void revis_cb (GtkWidget *widget, Hardware *hw);
 
 static void hardware_node_mcf (void *ptr, const char *signal_name, MValue value, Hardware *hw, int d);
 static void hardware_dummy_mcf (void *ptr, const char *signal_name, MValue value, Hardware *hw);
+static void hardware_settle_mcf (void *ptr, const char *signal_name, MValue value, Hardware *hw);
 
 gboolean hardware_node_cb (GtkWidget *widget, GdkEvent *event, Hardware *hw)
 {
@@ -40,7 +41,7 @@ void hardware_node_mcf (void *ptr, const char *signal_name, MValue value, Hardwa
 {
 	f_start(F_MCF);
 
-	replace(hw->node[d], cat1(value.string));
+	replace(hw->node[d], cat1(value.string));  // preserve alternative driver nodes
 
 	if ((hw->type == HW_DAQ  && d == HW_DAQ_DRIVER_ID) ||
 	    (hw->type == HW_GPIB && d == HW_GPIB_DRIVER_ID))
@@ -67,6 +68,15 @@ void hardware_dummy_mcf (void *ptr, const char *signal_name, MValue value, Hardw
 
 	hw->dummy = value.x_bool;
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(hw->dummy_button), value.x_bool);
+
+	hardware_update(hw);
+}
+
+void hardware_settle_mcf (void *ptr, const char *signal_name, MValue value, Hardware *hw)
+{
+	f_start(F_MCF);
+
+	hw->settle = value.x_int;
 
 	hardware_update(hw);
 }

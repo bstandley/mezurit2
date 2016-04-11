@@ -15,6 +15,11 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if COMEDI
+lsampl_t dev_null;
+lsampl_t ten_us_in_ns = 10000;
+#endif
+
 void daq_multi_reset (int id)
 {
 	// -----------------------------
@@ -53,7 +58,12 @@ int daq_multi_tick (int id)
 	if (board->is_real)
 	{
 #if COMEDI
-		if (comedi_do_insnlist(board->comedi_dev, &board->multi_insnlist) != 2*board->multi_N_chan) return 0;
+		int rv = comedi_do_insnlist(board->comedi_dev, &board->multi_insnlist);
+		if (rv != (int) board->multi_insnlist.n_insns)
+		{
+			f_print(F_ERROR, "comedi_do_insnlist() returned %d\n", rv);
+			return 0;
+		}
 #elif NIDAQ
 		if (AI_VRead_Scan(board->nidaq_num, board->multi_voltage) != 0) return 0;
 #elif NIDAQMX
@@ -65,9 +75,9 @@ int daq_multi_tick (int id)
 			int chan = board->multi_chan[pci];
 			board->ai.ch[chan].known = 1;
 #if COMEDI
-			board->ai.ch[chan].voltage = comedi_to_phys(board->multi_raw[2*pci + 1], board->ai.ch[chan].crange, board->ai.ch[chan].maxdata);
+			board->ai.ch[chan].voltage = comedi_to_phys(board->multi_raw[pci], board->ai.ch[chan].crange, board->ai.ch[chan].maxdata);
 #elif NIDAQ
-			board->ai.ch[chan].voltage = board->multi_voltage[2*pci + 1];
+			board->ai.ch[chan].voltage = board->multi_voltage[pci * (board->multi_settle + 1) + board->multi_settle];  // board->multi_settle + 1 = increment, use last sample of the "bunch"
 #elif NIDAQMX
 			board->ai.ch[chan].voltage = board->multi_voltage[pci];
 #else
@@ -118,26 +128,41 @@ int daq_AI_read (int id, int chan, double *voltage)
 		if (board->is_real && board->multi_N_chan > 0)
 		{
 #if COMEDI
+			int inc = board->multi_settle + 2;
 			for (int pci = 0; pci < board->multi_N_chan; pci++)
 			{
-				board->multi_insn[2*pci].insn     = board->multi_insn[2*pci + 1].insn     = INSN_READ;  // second time around should be more accurate now that the (multiplexed) ADC has settled
-				board->multi_insn[2*pci].n        = board->multi_insn[2*pci + 1].n        = 1;          // could also try setting this to "2", but that would require a more complex data buffer
-				board->multi_insn[2*pci].subdev   = board->multi_insn[2*pci + 1].subdev   = (unsigned int) board->ai.num;
-				board->multi_insn[2*pci].chanspec = board->multi_insn[2*pci + 1].chanspec = CR_PACK((unsigned int) board->multi_chan[pci], board->ai.range, AREF_GROUND);
+				board->multi_insn[pci*inc].insn     = INSN_READ;
+				board->multi_insn[pci*inc].n        = 0;
+				board->multi_insn[pci*inc].subdev   = (unsigned int) board->ai.num;
+				board->multi_insn[pci*inc].chanspec = CR_PACK((unsigned int) board->multi_chan[pci], board->ai.range, AREF_GROUND);
+				board->multi_insn[pci*inc].data     = &dev_null;
 
-				board->multi_insn[2*pci].data     = &board->multi_raw[2*pci];
-				board->multi_insn[2*pci + 1].data = &board->multi_raw[2*pci + 1];
+				for (int s = 1; s <= board->multi_settle; s++)
+				{
+					board->multi_insn[pci*inc + s].insn = INSN_WAIT;
+					board->multi_insn[pci*inc + s].n    = 1;
+					board->multi_insn[pci*inc + s].data = &ten_us_in_ns;
+				}
+
+				board->multi_insn[pci*inc + board->multi_settle + 1].insn     = INSN_READ;  // second time around should be more accurate now that the (multiplexed) ADC has settled
+				board->multi_insn[pci*inc + board->multi_settle + 1].n        = 1;
+				board->multi_insn[pci*inc + board->multi_settle + 1].subdev   = (unsigned int) board->ai.num;
+				board->multi_insn[pci*inc + board->multi_settle + 1].chanspec = CR_PACK((unsigned int) board->multi_chan[pci], board->ai.range, AREF_GROUND);
+				board->multi_insn[pci*inc + board->multi_settle + 1].data     = &board->multi_raw[pci];
 			}
-			board->multi_insnlist.n_insns = (unsigned int) (2*board->multi_N_chan);
-			board->multi_insnlist.insns = board->multi_insn;  // always the same, but why not do it near where it's used?
+			board->multi_insnlist.n_insns = (unsigned int) (board->multi_N_chan * inc);  // board->multi_insnlist.insns already set to board->multi_insn
 #elif NIDAQ
-			i16 local_phys_chan[2*M2_DAQ_MAX_CHAN], local_phys_gain[2*M2_DAQ_MAX_CHAN];
+			int inc = board->multi_settle + 1;
+			i16 local_phys_chan[M2_DAQ_MAX_CHAN * inc], local_phys_gain[M2_DAQ_MAX_CHAN * inc];
 			for (int pci = 0; pci < board->multi_N_chan; pci++)
 			{
-				local_phys_chan[2*pci] = local_phys_chan[2*pci + 1] = (i16) board->multi_chan[pci];
-				local_phys_gain[2*pci] = local_phys_gain[2*pci + 1] = NIDAQ_ADC_GAIN;
+				for (int s = 0; s <= board->multi_settle; s++)
+				{
+					local_phys_chan[pci*inc + s] = (i16) board->multi_chan[pci];
+					local_phys_gain[pci*inc + s] = NIDAQ_ADC_GAIN;
+				}
 			}
-			SCAN_Setup(board->nidaq_num, (i16) (2*board->multi_N_chan), local_phys_chan, local_phys_gain);
+			SCAN_Setup(board->nidaq_num, (i16) (board->multi_N_chan * inc), local_phys_chan, local_phys_gain);
 #elif NIDAQMX
 
 			mention_mx_error(DAQmxClearTask(board->multi_task));
@@ -148,9 +173,9 @@ int daq_AI_read (int id, int chan, double *voltage)
 			mention_mx_error(DAQmxGetAIConvMaxRate(board->multi_task, &conv_max_rate));
 			if (conv_rate > 0 && conv_max_rate > 0)
 			{
-				double tau = 1.0 / conv_max_rate + window_double(160e-6 / board->multi_N_chan, 20e-6, 40e-6);
+				double tau = 1.0 / conv_max_rate + board->multi_settle * 10e-6;
 				if (mention_mx_error(DAQmxSetAIConvRate(board->multi_task, 1.0 / tau)) == 0)
-					status_add(1, supercat("ADC conversion time increased from %1.1f us to %1.1f us.\n", 1e6 / conv_rate, 1e6 * tau));
+					status_add(1, supercat("ADC conversion time changed from %1.1f µs to %1.1f µs.\n", 1e6 / conv_rate, 1e6 * tau));
 			}
 
 			mention_mx_error(DAQmxStartTask(board->multi_task));  // starts task so it will be ready for OnDemand reads in the future

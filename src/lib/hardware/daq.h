@@ -41,7 +41,7 @@ typedef struct
 void daq_init  (void);
 void daq_final (void);
 
-int    daq_board_connect (int id, const char *node);
+int    daq_board_connect (int id, const char *node, int settle);
 char * daq_board_info    (int id, const char *info);
 
 int daq_AO_valid (int id, int chan);
