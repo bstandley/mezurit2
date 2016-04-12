@@ -27,6 +27,7 @@ typedef struct  // Note: All members are accessed by only the GUI thread.
 		int type;          // HW_DAQ or HW_GPIB
 		int id;            // board id to use with *_board_connect()
 		bool real, dummy;  // real is set once at init, dummy can change in callbacks
+		int settle;        // DAQ-only
 		char *node[4];
 
 		Section sect;

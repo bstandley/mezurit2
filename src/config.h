@@ -98,6 +98,7 @@
 // hardware:
 #define M2_DAQ_MAX_BRD  6
 #define M2_DAQ_MAX_CHAN 16
+#define M2_DAQ_MAX_SETTLE 50  // extra samples for NIDAQ, units of 10µs otherwise
 #define M2_DAQ_VIRTUAL_NUM_DAC 4
 #define M2_DAQ_VIRTUAL_NUM_ADC 16
 #define M2_DAQ_VIRTUAL_MIN -1e18

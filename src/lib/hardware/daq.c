@@ -46,6 +46,7 @@ typedef uint64_t uInt64;
 #define NIDAQ_ADC_OFFSET 0.0
 
 #define DAQ_ID_WARNING_MSG      "Warning: Board id out of range.\n"
+#define DAQ_SETTLE_WARNING_MSG  "Warning: Requested ADC settling value out of range.\n"
 #define DAQ_CONNECT_WARNING_MSG "Warning: Board not connected.\n"
 #define DAQ_AO_WARNING_MSG      "Warning: AO channel out of range.\n"
 #define DAQ_AI_WARNING_MSG      "Warning: AI channel out of range.\n"
@@ -89,7 +90,7 @@ struct DaqBoard
 	char *node;
 	bool is_real, is_connected, scan_prepared;
 
-	char *info_driver, *info_full_node, *info_board, *info_board_abrv, *info_output, *info_input;
+	char *info_driver, *info_full_node, *info_board, *info_board_abrv, *info_output, *info_input, *info_settle;
 
 	// device setup
 #if COMEDI
@@ -99,15 +100,16 @@ struct DaqBoard
 #endif
 	struct SubDevice ao, ai;
 
-	// multi setup (AI only)
+	// multi setup (AI only, slightly complicated to avoid ghosting on multiplexed ADCs)
 	int multi_chan[M2_DAQ_MAX_CHAN];
 	int multi_N_chan;
+	int multi_settle;
 #if COMEDI
 	lsampl_t multi_raw[M2_DAQ_MAX_CHAN];
-	comedi_insn multi_insn[M2_DAQ_MAX_CHAN];
+	comedi_insn multi_insn[M2_DAQ_MAX_CHAN * (M2_DAQ_MAX_SETTLE + 2)];  // setup + wait(s) + read == total instructions per channel
 	comedi_insnlist multi_insnlist;
 #elif NIDAQ
-	f64 multi_voltage[M2_DAQ_MAX_CHAN];
+	f64 multi_voltage[M2_DAQ_MAX_CHAN * (M2_DAQ_MAX_SETTLE + 1)];  // pre-read(s) + final read == total samples per channel
 #elif NIDAQMX
 	float64 multi_voltage[M2_DAQ_MAX_CHAN];
 	TaskHandle multi_task;
@@ -167,6 +169,10 @@ void daq_init (void)
 		daq_board[id].info_board_abrv = cat1("∅");
 		daq_board[id].info_output     = cat1("∅");
 		daq_board[id].info_input      = cat1("∅");
+		daq_board[id].info_settle     = cat1("∅");
+#if COMEDI
+		daq_board[id].multi_insnlist.insns = daq_board[id].multi_insn;
+#endif
 	}
 
 	global_timer = timer_new();
@@ -187,6 +193,7 @@ void daq_final (void)
 		replace(daq_board[id].info_board_abrv, NULL);
 		replace(daq_board[id].info_output,     NULL);
 		replace(daq_board[id].info_input,      NULL);
+		replace(daq_board[id].info_settle,     NULL);
 	}
 }
 
@@ -206,9 +213,10 @@ void daq_board_close (struct DaqBoard *board)
 	}
 }
 
-int daq_board_connect (int id, const char *node)
+int daq_board_connect (int id, const char *node, int settle)
 {
 	f_verify(id >= 0 && id < M2_DAQ_MAX_BRD, DAQ_ID_WARNING_MSG, return 0);
+	f_verify(settle >= 0 && settle <= M2_DAQ_MAX_SETTLE, DAQ_SETTLE_WARNING_MSG, return 0);
 	f_start(F_UPDATE);
 
 	daq_board_close(&daq_board[id]);
@@ -218,6 +226,7 @@ int daq_board_connect (int id, const char *node)
 
 	// multi setup:
 	daq_board[id].multi_N_chan = 0;
+	daq_board[id].multi_settle = settle;
 
 	// scan setup:
 	daq_board[id].scan_prepared = 0;
@@ -232,6 +241,7 @@ int daq_board_connect (int id, const char *node)
 		replace(daq_board[id].info_full_node,  cat1("N/A"));
 		replace(daq_board[id].info_board,      cat1("<Virtual>"));
 		replace(daq_board[id].info_board_abrv, cat1("<Virt.>"));
+		replace(daq_board[id].info_settle,     cat1("N/A"));
 	}
 	else
 	{
@@ -239,8 +249,9 @@ int daq_board_connect (int id, const char *node)
 		daq_board[id].is_connected = 0;  // assume the worst...
 
 #if COMEDI
-		replace(daq_board[id].info_driver, cat1("comedi"));
+		replace(daq_board[id].info_driver,    cat1("comedi"));
 		replace(daq_board[id].info_full_node, cat1(node));
+		replace(daq_board[id].info_settle,    supercat("%d µs", daq_board[id].multi_settle*10));
 
 		daq_board[id].comedi_dev = comedi_open(node);
 		if (daq_board[id].comedi_dev != NULL)
@@ -257,6 +268,7 @@ int daq_board_connect (int id, const char *node)
 #elif NIDAQ
 		u32 version = 0;  Get_NI_DAQ_Version(&version);
 		replace(daq_board[id].info_driver, supercat("Traditional NI-DAQ %d.%d%d", (version & 0x0F00) >> 8, (version & 0x00F0) >> 4, version & 0x000F));
+		replace(daq_board[id].info_settle, supercat("+%d samps", daq_board[id].multi_settle));
 
 		int num;
 		if (sscanf(node, "%d", &num) == 1)
@@ -281,8 +293,9 @@ int daq_board_connect (int id, const char *node)
 #elif NIDAQMX
 		uInt32 major = 0;  DAQmxGetSysNIDAQMajorVersion(&major);
 		uInt32 minor = 0;  DAQmxGetSysNIDAQMinorVersion(&minor);
-		replace(daq_board[id].info_driver, supercat("NI-DAQmx %u.%u", major, minor));
+		replace(daq_board[id].info_driver,    supercat("NI-DAQmx %u.%u", major, minor));
 		replace(daq_board[id].info_full_node, cat2("NI-DAQmx:", node));
+		replace(daq_board[id].info_settle,    supercat("+%d µs", daq_board[id].multi_settle*10));
 
 		if (DAQmxResetDevice(node) == 0)
 		{
@@ -297,6 +310,7 @@ int daq_board_connect (int id, const char *node)
 #else
 		replace(daq_board[id].info_driver,    cat1("∅"));
 		replace(daq_board[id].info_full_node, cat1("∅"));
+		replace(daq_board[id].info_settle,    cat1("∅"));
 #endif
 
 		if (!daq_board[id].is_connected)
@@ -458,6 +472,7 @@ char * daq_board_info (int id, const char *info)
 	else if (str_equal(info, "board_abrv")) return daq_board[id].info_board_abrv;
 	else if (str_equal(info, "output"))     return daq_board[id].info_output;
 	else if (str_equal(info, "input"))      return daq_board[id].info_input;
+	else if (str_equal(info, "settle"))     return daq_board[id].info_settle;
 	else                                    return cat1("∅");
 }
 
