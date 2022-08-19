@@ -1,9 +1,0 @@
-style "m2_dark_style"   { bg[NORMAL] = "#606060" }
-style "m2_black_style"  { bg[NORMAL] = "#000000" }
-style "m2_button_style" { GtkButton::inner-border       = {0, 0, 0, 0}
-                          GtkToggleButton::inner-border = {0, 0, 0, 0} }
-
-widget "m2_main.*.m2_worktop" style "m2_dark_style"
-widget "m2_main.*.m2_border"  style "m2_black_style"
-widget "m2_main.*.m2_buffer"  style "m2_black_style"
-widget "m2_main.*.m2_button"  style "m2_button_style"

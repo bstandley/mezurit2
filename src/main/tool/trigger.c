@@ -45,27 +45,26 @@ void trigger_array_init (Trigger *trigger_array, GtkWidget **apt, Section *sect)
 	{
 		Trigger *trigger = &trigger_array[id];
 
-		trigger->vbox = pack_start(set_no_show_all(new_box(GTK_ORIENTATION_VERTICAL, 4)), 0, sect->box);
+		trigger->vbox = pack_start(set_no_show_all(gtk_box_new(GTK_ORIENTATION_VERTICAL, 4)), 0, sect->box);
 
-		GtkWidget *hbox0 = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 4), 0, trigger->vbox);  // "if" section
-		trigger->hbox1   = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 4), 0, trigger->vbox);  // "then" section
+		GtkWidget *hbox0 = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4), 0, trigger->vbox);  // "if" section
+		trigger->hbox1   = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4), 0, trigger->vbox);  // "then" section
 
 		/**/                     pack_start(new_label("IF:", 0.5),                   0, hbox0);
 		trigger->line_entry[0] = pack_start(new_entry(0, 12),                        1, hbox0);
 		trigger->arm_button    = pack_start(gtk_toggle_button_new_with_label("ARM"), 0, hbox0);
 
-		GtkWidget *vbox10 = pack_start(new_box(GTK_ORIENTATION_VERTICAL, 0), 0, trigger->hbox1);
-		GtkWidget *vbox11 = pack_start(new_box(GTK_ORIENTATION_VERTICAL, 0), 1, trigger->hbox1);
+		GtkWidget *vbox10 = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, trigger->hbox1);
+		GtkWidget *vbox11 = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 1, trigger->hbox1);
 
 		trigger->force_button = pack_start(gtk_toggle_button_new(), 0, vbox10);
-		GtkWidget *image = container_add(gtk_image_new_from_pixbuf(lookup_pixbuf(PIXBUF_ICON_ACTION)), trigger->force_button);
-		set_draw_on_expose(sect->full, image);
+		container_add(gtk_image_new_from_pixbuf(lookup_pixbuf(PIXBUF_ICON_ACTION)), trigger->force_button);
 
 		for (int l = 0; l < M2_TRIGGER_LINES; l++)
 		{
 			if (l > 0)
 			{
-				GtkWidget *line_hbox = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox11);
+				GtkWidget *line_hbox = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox11);
 				if (l > 1) set_no_show_all(line_hbox);
 
 				/**/        trigger->line_entry[l] = pack_start(new_entry(0, 10),               1, line_hbox);

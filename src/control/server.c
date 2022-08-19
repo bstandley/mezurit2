@@ -20,8 +20,7 @@
 #include <stdlib.h>  // malloc()
 #include <stdio.h>   // sscanf()
 #include <string.h>  // strlen()
-#define HEADER_SANS_WARNINGS <gio/gio.h>
-#include <sans_warnings.h>
+#include <gio/gio.h>
 
 #include <lib/pile.h>
 #include <lib/status.h>

@@ -35,17 +35,12 @@ void section_init (Section *sect, const char *icon_filename, const char *label_s
 	sect->location = sect->old_location = SECTION_NOWHERE;
 	sect->expand_fill = 0;  // default
 
-	sect->full = pack_start(set_no_show_all(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE)), sect->expand_fill, apt[sect->location]);
+	sect->full = pack_start(set_no_show_all(set_margins(gtk_frame_new(NULL), M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE)), sect->expand_fill, apt[sect->location]);
+	gtk_widget_set_name(sect->full, "m2_section");
+	GtkWidget *vbox = container_add(set_margins(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 2, 2, 2, 2), sect->full);
 
-	GtkWidget *vbox = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0),
-	                  container_add(new_alignment(1, 1, 1, 1),
-	                  container_add(name_widget(gtk_event_box_new(), "m2_section"),
-	                  container_add(new_alignment(1, 1, 1, 1),
-	                  container_add(name_widget(gtk_event_box_new(), "m2_border"), sect->full)))));
-
-	sect->heading = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0),                         0, vbox);
-	sect->box     = container_add(new_box(GTK_ORIENTATION_VERTICAL, 4),
-	                pack_start(set_no_show_all(new_alignment(3, 3, 6, 3)), 1, vbox));
+	sect->heading = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),                                         0, vbox);
+	sect->box     = pack_start(set_no_show_all(set_margins(gtk_box_new(GTK_ORIENTATION_VERTICAL, 4), 3, 3, 6, 3)), 1, vbox);
 
 	GtkWidget *icon  = pack_start(gtk_image_new_from_file(icon_filename),                      0, sect->heading);
 	GtkWidget *label = pack_start(new_label(atg(supercat(M2_HEADING_FORMAT, label_str)), 0.0), 0, sect->heading);
@@ -62,39 +57,36 @@ void add_orient_button (Section *sect)
 {
 	f_start(F_INIT);
 
-	sect->orient_button = pack_end(name_widget(flatten_button(gtk_button_new()), "m2_button"), 0, sect->heading);
+	sect->orient_button = pack_end(flatten_button(gtk_button_new()), 0, sect->heading);
 
 	container_add(gtk_image_new(), sect->orient_button);
-	set_draw_on_expose(sect->full, sect->orient_button);
 }
 
 void add_rollup_button (Section *sect)
 {
 	f_start(F_INIT);
 	
-	sect->rollup_button = pack_end(name_widget(flatten_button(gtk_button_new()), "m2_button"), 0, sect->heading);
+	sect->rollup_button = pack_end(flatten_button(gtk_button_new()), 0, sect->heading);
 
 	container_add(gtk_image_new(), sect->rollup_button);
-	set_draw_on_expose(sect->full, sect->rollup_button);
 }
 
 void add_loc_menu (Section *sect, ...)
 {
 	f_start(F_INIT);
 
-	sect->loc_button = pack_end(name_widget(flatten_button(gtk_button_new()), "m2_button"), 0, sect->heading);
+	sect->loc_button = pack_end(flatten_button(gtk_button_new()), 0, sect->heading);
 
 	container_add(gtk_image_new(), sect->loc_button);
-	set_draw_on_expose(sect->full, sect->loc_button);
 	gtk_widget_set_tooltip_markup(sect->loc_button, "Move tool");
 
-	sect->loc_menu = attach_window(new_box(GTK_ORIENTATION_HORIZONTAL, 0), sect->full);  // any parent will do
+	sect->loc_menu = attach_window(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), sect->full);  // any parent will do
 
 	va_list vl;
 	va_start(vl, sect);
 	for (int loc = va_arg(vl, int); loc >= 0 && loc < M2_NUM_LOCATION; loc = va_arg(vl, int))
 	{
-		sect->loc_item[loc] = pack_start(flatten_button(name_widget(gtk_button_new(), "m2_button")), 0, sect->loc_menu);
+		sect->loc_item[loc] = pack_start(flatten_button(gtk_button_new()), 0, sect->loc_menu);
 		container_add(gtk_image_new_from_pixbuf(lookup_icon(loc)), sect->loc_item[loc]);
 	}
 	va_end(vl);

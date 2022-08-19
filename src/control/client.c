@@ -17,8 +17,7 @@
 
 #define HEADER_SANS_WARNINGS <Python.h>
 #include <sans_warnings.h>
-#define HEADER_SANS_WARNINGS <gio/gio.h>
-#include <sans_warnings.h>
+#include <gio/gio.h>
 
 #include <lib/util/str.h>
 #include <lib/hardware/timing.h>
@@ -43,9 +42,6 @@ PyMODINIT_FUNC init_mezurit2control (void)
 {
 	PyObject *module = Py_InitModule("_mezurit2control", control_methods);
 	PyModule_AddStringConstant(module, "VERSION", quote(VERSION));
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 36
-	g_type_init();
-#endif
 
 	char *str = getenv("M2_CONTROLPORT");
 	int port;

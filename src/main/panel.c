@@ -64,19 +64,17 @@ void setup_init (Setup *setup, GtkWidget *flipbook)
 	GtkWidget *hbox_main, *vbox_main;
 	make_page(flipbook, &hbox_main, &vbox_main, &setup->terminal_scroll);
 
-	setup->apt[SECTION_RIGHT] = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0),
-	                            add_with_viewport(name_widget(gtk_event_box_new(), "m2_worktop"),
-	                            container_add(name_widget(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), "m2_scroll"),
-	                            pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main))));
+	setup->apt[SECTION_RIGHT] = add_with_viewport(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0),
+	                            pack_start(set_margins(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main));
 
-	setup->apt[SECTION_TOP]    = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
-	setup->apt[SECTION_LEFT]   = pack_start(new_box(GTK_ORIENTATION_VERTICAL,   0), 1, vbox_main);
-	setup->apt[SECTION_BOTTOM] = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
+	setup->apt[SECTION_TOP]    = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
+	setup->apt[SECTION_LEFT]   = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL,   0), 1, vbox_main);
+	setup->apt[SECTION_BOTTOM] = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
 
 	setup->apt[SECTION_WAYLEFT]  = NULL;
 	setup->apt[SECTION_WAYRIGHT] = NULL;
 
-	setup->apt[SECTION_NOWHERE] = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0), gtk_offscreen_window_new());
+	setup->apt[SECTION_NOWHERE] = container_add(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), gtk_offscreen_window_new());
 
 	scrollfix_connect(setup->apt[SECTION_RIGHT]);
 
@@ -150,28 +148,25 @@ void panel_init (Panel *panel, int pid, GtkWidget *flipbook)
 	GtkWidget *hbox_main, *vbox_main;
 	make_page(flipbook, &hbox_main, &vbox_main, &panel->terminal_scroll);
 
-	GtkWidget *hbox_right = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
-	                        add_with_viewport(name_widget(gtk_event_box_new(), "m2_worktop"),
-	                        container_add(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS),
-	                        pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main))));
+	GtkWidget *hbox_right = add_with_viewport(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
+	                        pack_start(set_margins(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main));
 
-	panel->apt[SECTION_TOP]    = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
-	GtkWidget *hbox_middle     = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 1, vbox_main);
-	panel->apt[SECTION_BOTTOM] = pack_start(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
+	panel->apt[SECTION_TOP]    = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
+	GtkWidget *hbox_middle     = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, vbox_main);
+	panel->apt[SECTION_BOTTOM] = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
 
-	GtkWidget *hbox_left   = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
-	                         add_with_viewport(name_widget(gtk_event_box_new(), "m2_worktop"),
-	                         pack_start(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS),              0, hbox_middle)));
-	GtkWidget *vbox_middle = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0),
-	                         pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE), 1, hbox_middle));
+	GtkWidget *hbox_left   = add_with_viewport(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
+	                         pack_start(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS),                                                      0, hbox_middle));
+	GtkWidget *vbox_middle = pack_start(set_margins(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE), 1, hbox_middle);
+	gtk_widget_set_name(vbox_middle, "m2_plotbuffer");
 
-	panel->apt[SECTION_WAYLEFT] = pack_start(new_box(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_left);
-	panel->apt[SECTION_LEFT]    = pack_start(new_box(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_left);
+	panel->apt[SECTION_WAYLEFT] = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_left);
+	panel->apt[SECTION_LEFT]    = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_left);
 
-	panel->apt[SECTION_RIGHT]    = pack_start(new_box(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_right);
-	panel->apt[SECTION_WAYRIGHT] = pack_start(new_box(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_right);
+	panel->apt[SECTION_RIGHT]    = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_right);
+	panel->apt[SECTION_WAYRIGHT] = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, hbox_right);
 
-	panel->apt[SECTION_NOWHERE] = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0), gtk_offscreen_window_new());
+	panel->apt[SECTION_NOWHERE] = container_add(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), gtk_offscreen_window_new());
 
 	scrollfix_connect(hbox_left);
 	scrollfix_connect(hbox_right);
@@ -242,11 +237,7 @@ void scrollfix_cb (GtkWidget *widget, GdkRectangle *rect, GtkWidget *scroll, Gtk
 	f_start(F_CALLBACK);
 
 	GtkRequisition req;
-#if GTK_MAJOR_VERSION < 3
-	gtk_widget_size_request(widget, &req);
-#else
 	gtk_widget_get_preferred_size(widget, NULL, &req);
-#endif
 	int vis_height = (int) gtk_adjustment_get_page_size(adj);
 
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, vis_height < req.height + 2 * M2_HALFSPACE ? GTK_POLICY_ALWAYS : GTK_POLICY_NEVER);
@@ -255,22 +246,15 @@ void scrollfix_cb (GtkWidget *widget, GdkRectangle *rect, GtkWidget *scroll, Gtk
 
 void make_page (GtkWidget *flipbook, GtkWidget **hbox_main, GtkWidget **vbox_main, GtkWidget **terminal_scroll)
 {
-	*hbox_main = pack_start(set_no_show_all(new_box(GTK_ORIENTATION_HORIZONTAL, 0)), 1, flipbook);
+	*hbox_main = pack_start(set_no_show_all(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)), 1, flipbook);
 #ifndef MINGW
-#if GTK_MAJOR_VERSION < 3
-	GtkWidget *panes = pack_start(gtk_vpaned_new(), 1, *hbox_main);
-#else
 	GtkWidget *panes = pack_start(gtk_paned_new(GTK_ORIENTATION_VERTICAL), 1, *hbox_main);
-#endif
 
-	GtkWidget *align_main = container_add(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, 0),
-	                        paned_pack(name_widget(gtk_event_box_new(), "m2_worktop"), 1, 1, panes));
-	*terminal_scroll      = container_add(new_scrolled_window(GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS),
-							container_add(new_alignment(M2_HALFSPACE, M2_HALFSPACE*2, M2_HALFSPACE*2, M2_HALFSPACE),
-	                        paned_pack(name_widget(gtk_event_box_new(), "m2_worktop"), 2, 0, panes)));
+	*vbox_main       = paned_pack(set_margins(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, 0), 1, 1, panes);
+	*terminal_scroll = paned_pack(set_margins(new_scrolled_window(GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS), M2_HALFSPACE, M2_HALFSPACE*2, M2_HALFSPACE*2, M2_HALFSPACE), 2, 0, panes);
+	gtk_widget_set_name(*terminal_scroll, "m2_section");
 #else
-	GtkWidget *align_main = pack_start(new_alignment(M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, 0), 1, *hbox_main);
-	*terminal_scroll      = NULL;
+	*vbox_main       = pack_start(set_margins(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, 0), 1, *hbox_main);
+	*terminal_scroll = NULL;
 #endif
-	*vbox_main = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0), align_main);
 }

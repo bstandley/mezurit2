@@ -28,9 +28,7 @@
 #define M2_NUM_PIXBUF 23
 static GdkPixbuf *pixbuf_array[M2_NUM_PIXBUF];
 static char *last_dirname;
-#if GTK_MAJOR_VERSION > 2
 static GtkCssProvider *css_provider;
-#endif
 
 static void destroy_snazzy_var (Blob *blob, GClosure *closure);
 static GtkWidget * deparent (GtkWidget *widget);
@@ -57,10 +55,6 @@ void snazzy_connect (GtkWidget *widget, const char *signal_list, int type, BlobC
 	char *str _strfree_ = cat1(signal_list);
 	for (char *signal_name = strtok(str, ", "); signal_name != NULL; signal_name = strtok(NULL, ", "))
 	{
-#if GTK_MAJOR_VERSION < 3
-		char *alt_name _strfree_ = NULL;
-		if (str_equal(signal_name, "draw")) signal_name = alt_name = cat1("expose-event");  // swap-in correct (old) signal
-#endif
 		Blob *blob = malloc(sizeof(Blob));
 		fill_blob(blob, cb, sig);
 		g_signal_connect_data(widget, signal_name, gcb, blob, (GClosureNotify) destroy_snazzy_var, 0);
@@ -87,13 +81,6 @@ void show_all (GtkWidget *widget, void *ptr)
 	if (!gtk_widget_get_no_show_all(widget)) gtk_widget_show(widget);
 }
 
-void set_draw_on_expose (GtkWidget *widget, GtkWidget *child)
-{
-#if GTK_MAJOR_VERSION < 3
-	g_signal_connect(widget, "expose-event", G_CALLBACK(draw_on_expose_cb), child);
-#endif
-}
-
 GtkWidget * set_text_view_text (GtkWidget *widget, const char *str)
 {
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
@@ -101,13 +88,13 @@ GtkWidget * set_text_view_text (GtkWidget *widget, const char *str)
 	return widget;
 }
 
-char * run_file_chooser (const char *title, int action, const char *stock_id, const char *preset)
+char * run_file_chooser (const char *title, int action, const char *preset)
 {
-	GtkWidget *chooser = gtk_file_chooser_dialog_new(title, NULL, action,
-	                                                 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-	                                                 stock_id,         GTK_RESPONSE_ACCEPT, NULL);
+	GtkWidget *chooser = gtk_file_chooser_dialog_new(title, NULL, action == FILE_CHOOSER_OPEN ? GTK_FILE_CHOOSER_ACTION_OPEN : GTK_FILE_CHOOSER_ACTION_SAVE,
+	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
+	                                                 "_OK",     GTK_RESPONSE_ACCEPT, NULL);
 
-	if (str_equal(stock_id, GTK_STOCK_SAVE)) gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER(chooser), 1);
+	if (action == FILE_CHOOSER_SAVE) gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER(chooser), 1);
 
 	if (preset != NULL)
 	{
@@ -170,13 +157,23 @@ GtkWidget * size_widget (GtkWidget *widget, gint x, gint y)
 GtkWidget * flatten_button (GtkWidget *widget)
 {
 	gtk_button_set_relief(GTK_BUTTON(widget), GTK_RELIEF_NONE);
-	gtk_button_set_focus_on_click(GTK_BUTTON(widget), 0);
+	gtk_widget_set_focus_on_click(widget, 0);
 	return widget;
 }
 
-GtkWidget * set_padding (GtkWidget *widget, guint padding)
+GtkWidget * set_padding (GtkWidget *widget, guint padding)  // TODO: redundant with set_margins?
 {
 	gtk_container_child_set(GTK_CONTAINER(gtk_widget_get_parent(widget)), widget, "padding", padding, NULL);
+	return widget;
+}
+
+GtkWidget * set_margins (GtkWidget *widget, gint top, gint bottom, gint left, gint right)
+{
+	gtk_widget_set_margin_top   (widget, top);
+	gtk_widget_set_margin_bottom(widget, bottom);
+	gtk_widget_set_margin_start (widget, left);
+	gtk_widget_set_margin_end   (widget, right);
+
 	return widget;
 }
 
@@ -214,12 +211,6 @@ GtkWidget * set_submenu (GtkWidget *submenu, GtkWidget *item)
 GtkWidget * set_no_show_all (GtkWidget *widget)
 {
 	gtk_widget_set_no_show_all(widget, 1);
-	return widget;
-}
-
-GtkWidget * name_widget (GtkWidget *widget, const char *name)
-{
-	gtk_widget_set_name(widget, name);
 	return widget;
 }
 
@@ -264,19 +255,16 @@ void scroll_down (GtkWidget *widget)
 {
 	GtkAdjustment *adjust = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(widget));
 	gtk_adjustment_set_value(adjust, gtk_adjustment_get_upper(adjust));
-	gtk_adjustment_value_changed(adjust);
 }
 
 // Persistent state for run_file_chooser(), lookup_pixbuf():
 
-void gui_init (bool darkpanel)
+void gui_init (void)
 {
 	f_start(F_INIT);
 
 	last_dirname = catg(g_get_current_dir());
 
-#if GTK_MAJOR_VERSION > 2
-	if (darkpanel) f_print(F_WARNING, "The dark panel theme is not available in GTK3. Sorry!\n");
 	css_provider = gtk_css_provider_new();
 #ifndef MINGW
 	gtk_css_provider_load_from_path(css_provider, atg(sharepath("themes/light.css")),     NULL);
@@ -284,9 +272,6 @@ void gui_init (bool darkpanel)
 	gtk_css_provider_load_from_path(css_provider, atg(sharepath("themes/light-win.css")), NULL);
 #endif
 	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-#else
-	gtk_rc_parse(atg(sharepath(darkpanel ? "themes/gtkrc-dark" : "themes/gtkrc-light")));
-#endif
 
 	// Pre-loaded images:
 
@@ -321,10 +306,8 @@ void gui_final (void)
 
 	free(last_dirname);
 
-#if GTK_MAJOR_VERSION > 2
 	gtk_style_context_remove_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider));
 	g_object_unref(G_OBJECT(css_provider));
-#endif
 
 	for (int id = 0; id < M2_NUM_PIXBUF; id++) g_object_unref(pixbuf_array[id]);
 }

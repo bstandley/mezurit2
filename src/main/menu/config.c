@@ -39,23 +39,23 @@ void config_init (Config *config, GtkWidget *menubar)
 {
 	f_start(F_INIT);
 
-	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(new_item(new_label("_Config", 0.0), NULL), menubar));
+	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Config"), menubar));
 
-	config->load_item[MENU_FILE] = menu_append(new_item(new_label("Load from file...", 0.0), gtk_image_new_from_stock(GTK_STOCK_OPEN, GTK_ICON_SIZE_MENU)), menu);
-	config->load_item[MENU_LAST] = menu_append(new_item(new_label("Load last",         0.0), gtk_image_new_from_stock(GTK_STOCK_UNDO, GTK_ICON_SIZE_MENU)), menu);
-	config->load_preset_item     = menu_append(new_item(new_label("Load preset",       0.0), NULL),                                                         menu);
+	config->load_item[MENU_FILE] = menu_append(gtk_menu_item_new_with_label("Load from file..."), menu);
+	config->load_item[MENU_LAST] = menu_append(gtk_menu_item_new_with_label("Load last"),         menu);
+	config->load_preset_item     = menu_append(gtk_menu_item_new_with_label("Load preset"),       menu);
 
 	GtkWidget *preset_menu = set_submenu(gtk_menu_new(), config->load_preset_item);
 
-	config->load_item[MENU_USER_DEFAULT]     = menu_append(new_item(new_label("User defaults",     0.0), NULL), preset_menu);
-	config->load_item[MENU_SYS_DEFAULT]      = menu_append(new_item(new_label("System defaults",   0.0), NULL), preset_menu);
-	config->load_item[MENU_INTERNAL_DEFAULT] = menu_append(new_item(new_label("Internal defaults", 0.0), NULL), preset_menu);
-	config->load_item[MENU_EXAMPLE_FILE]     = menu_append(new_item(new_label("Example...",        0.0), NULL), preset_menu);
+	config->load_item[MENU_USER_DEFAULT]     = menu_append(gtk_menu_item_new_with_label("User defaults"),     preset_menu);
+	config->load_item[MENU_SYS_DEFAULT]      = menu_append(gtk_menu_item_new_with_label("System defaults"),   preset_menu);
+	config->load_item[MENU_INTERNAL_DEFAULT] = menu_append(gtk_menu_item_new_with_label("Internal defaults"), preset_menu);
+	config->load_item[MENU_EXAMPLE_FILE]     = menu_append(gtk_menu_item_new_with_label("Example..."),        preset_menu);
 
 	menu_append(gtk_separator_menu_item_new(), menu);
 
-	config->save_item[MENU_FILE]         = menu_append(new_item(new_label("Save to file...",    0.0), gtk_image_new_from_stock(GTK_STOCK_SAVE, GTK_ICON_SIZE_MENU)), menu);
-	config->save_item[MENU_USER_DEFAULT] = menu_append(new_item(new_label("Save user defaults", 0.0), NULL),                                                         menu);
+	config->save_item[MENU_FILE]         = menu_append(gtk_menu_item_new_with_label("Save to file..."),    menu);
+	config->save_item[MENU_USER_DEFAULT] = menu_append(gtk_menu_item_new_with_label("Save user defaults"), menu);
 }
 
 void config_register (Config *config, Hardware *hw_array, Panel **tv_panel, OldVars *oldvars)

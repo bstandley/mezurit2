@@ -19,14 +19,13 @@
 #define _LIB_GUI_H 1
 
 #include <stdbool.h>
-#define HEADER_SANS_WARNINGS <gtk/gtk.h>
-#include <sans_warnings.h>
+#include <gtk/gtk.h>
 
 #include <lib/blob.h>
 
 // Persistent state for run_file_chooser(), lookup_pixbuf():
 
-void gui_init  (bool darkpanel);
+void gui_init  (void);
 void gui_final (void);
 
 // Snazzy callbacks:
@@ -44,36 +43,39 @@ void snazzy_connect (GtkWidget *widget, const char *signal_list, int type, BlobC
 // Utilities:
 
 void show_all           (GtkWidget *widget, void *ptr);
-void set_draw_on_expose (GtkWidget *widget, GtkWidget *child);
 void set_flipbook_page  (GtkWidget *widget, int page);
 void scroll_down        (GtkWidget *widget);
 
 int get_N_children     (GtkWidget *widget);
 int get_N_vis_children (GtkWidget *widget);
 
-GtkWidget * name_widget        (GtkWidget *widget, const char *name);
 GtkWidget * set_no_show_all    (GtkWidget *widget);
 GtkWidget * set_visibility     (GtkWidget *widget, bool visible);
 GtkWidget * size_widget        (GtkWidget *widget, gint x, gint y);
 GtkWidget * fix_shadow         (GtkWidget *widget);
 GtkWidget * flatten_button     (GtkWidget *widget);
 GtkWidget * set_padding        (GtkWidget *widget, guint padding);
+GtkWidget * set_margins        (GtkWidget *widget, gint top, gint bottom, gint left, gint right);
 GtkWidget * set_expand_fill    (GtkWidget *widget, bool expand_fill);
 GtkWidget * set_text_view_text (GtkWidget *widget, const char *str);
 GtkWidget * set_item_checked   (GtkWidget *widget, bool checked);
 GtkWidget * get_child          (GtkWidget *widget, int n);
 GtkWidget * attach_window      (GtkWidget *target, GtkWidget *parent);
 
-char * run_file_chooser  (const char *title, int action, const char *stock_id, const char *preset);
+enum
+{
+	FILE_CHOOSER_OPEN,
+	FILE_CHOOSER_SAVE,
+	FILE_CHOOSER_PRESAVE
+};
+
+char * run_file_chooser  (const char *title, int action, const char *preset);
 bool   run_yes_no_dialog (const char *message);
 
 // Custom constructors:
 
-GtkWidget * new_box (GtkOrientation orientation, gint spacing);
 GtkWidget * new_label (const char *str, double xalign);
-GtkWidget * new_alignment (guint top, guint bottom, guint left, guint right);
 GtkWidget * new_entry (int max, int width);
-GtkWidget * new_combo_text (void);
 GtkWidget * new_text_view (gint left_margin, gint right_margin);
 GtkWidget * new_button_with_icon (const char *label_str, const char *icon);
 GtkWidget * new_toggle_button_with_icon (const char *label_str, const char *icon, GtkPositionType pos);
@@ -86,11 +88,10 @@ GtkWidget * new_scrolled_window (GtkPolicyType hpolicy, GtkPolicyType vpolicy);
 GtkWidget * pack_start        (GtkWidget *widget, bool expand_fill, GtkWidget *box);
 GtkWidget * pack_end          (GtkWidget *widget, bool expand_fill, GtkWidget *box);
 GtkWidget * container_add     (GtkWidget *widget, GtkWidget *container);
-GtkWidget * combo_text_append (GtkWidget *widget, const char *text);
 GtkWidget * paned_pack        (GtkWidget *widget, int spot, bool resize, GtkWidget *paned);
 GtkWidget * add_with_viewport (GtkWidget *widget, GtkWidget *parent);
-GtkWidget * table_attach      (GtkWidget *widget, int left, int top,                        GtkAttachOptions h_opts,                                                      GtkWidget *table);
-GtkWidget * table_attach_full (GtkWidget *widget, int left, int top, int width, int height, GtkAttachOptions h_opts, GtkAttachOptions v_opts, int xpadding, int ypadding, GtkWidget *table);
+GtkWidget * table_attach      (GtkWidget *widget, int left, int top,                        GtkWidget *table);
+GtkWidget * table_attach_full (GtkWidget *widget, int left, int top, int width, int height, GtkWidget *table);
 GtkWidget * menu_append       (GtkWidget *widget, GtkWidget *menu);
 GtkWidget * set_submenu       (GtkWidget *submenu, GtkWidget *item);
 

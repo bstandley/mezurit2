@@ -101,7 +101,7 @@ void choose_file_cb (GtkWidget *widget, Buffer *buffer)
 {
 	f_start(F_CALLBACK);
 
-	char *filename = run_file_chooser("Specify save filename", GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_OK, buffer->filename);
+	char *filename = run_file_chooser("Select filename", FILE_CHOOSER_PRESAVE, buffer->filename);
 	if (filename != NULL)
 	{
 		replace(buffer->filename, filename);
@@ -123,7 +123,7 @@ void save_cb (GtkWidget *widget, Buffer *buffer)
 	}
 	else if (str_length(buffer->filename) == 0 || run_yes_no_dialog("The specified filename is unusable.\nDo you want to choose a new filename now?"))
 	{
-		char *filename = run_file_chooser("Save data", GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_SAVE, buffer->filename);
+		char *filename = run_file_chooser("Save data", FILE_CHOOSER_SAVE, buffer->filename);
 
 		if (filename != NULL)
 		{

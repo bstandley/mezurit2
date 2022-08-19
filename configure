@@ -37,11 +37,12 @@ option_flags='-DSTATUS'  # use lib/status.h
 rules="copy:src/main/setup/${prog1}compute.py:src/main/setup/compute.py \
        copy:src/control/${prog1}control.py:src/control/client.py"
 
-shares="COPYING:COPYING                                       \
-        terminal_startup.py:resource/terminal_startup.py      \
-        $(find resource -name '*.pdf'       -printf '%P:%p ') \
-        $(find resource -name '*.mcf'       -printf '%P:%p ') \
-        $(find resource -name '*.png'       -printf '%P:%p ')"
+shares="COPYING:COPYING                                  \
+        terminal_startup.py:resource/terminal_startup.py \
+        $(find resource -name '*.pdf' -printf '%P:%p ')  \
+        $(find resource -name '*.mcf' -printf '%P:%p ')  \
+        $(find resource -name '*.png' -printf '%P:%p ')  \
+        $(find resource -name '*.css' -printf '%P:%p ')"
 
 if ! $mingw ; then
 	rules="$rules app:src/main/$prog1:src/main/main.c \
@@ -65,20 +66,15 @@ else
 	dlls="libglib libgdk_pixbuf libgobject libgmodule libgio libatk libpango libfontconfig libpng    \
 	      zlib intl freetype libcairo-2 libcairo-gobject libgthread libexpat libxml libffi libjasper \
 	      liblzma libtiff libjpeg libpixman libiconv-2"
-	if [[ $gtk_type == 'gtk3' ]] ; then
+	if [[ $gtk_type == 'gtk4' ]] ; then
+		:  # TODO
+	else
 		dlls="$dlls libgdk-3 libgtk-3"
 		shares="$shares $(find $gtk_win32_path -name 'gschemas.compiled' -printf 'share/glib-2.0/schemas/%f:%p ')"
-	else
-		dlls="$dlls libgdk-win32-2 libgtk-win32-2"
-	    shares="$shares $(find $gtk_win32_path -name 'gtkrc'       -printf 'etc/gtk-2.0/%f:%p\n' | grep 'MS-Windows') \
-	                    $(find $gtk_win32_path -name 'libwimp.dll' -printf 'lib/gtk-2.0/2.10.0/engines/%f:%p')"
 	fi
 
 	for x in $dlls ; do shares="$shares $(find $gtk_win32_path -name '*.dll' -printf '%f:%p\n' | grep $x)" ; done
 fi
-
-if [[ $gtk_type == 'gtk3' ]] ; then shares="$shares $(find resource -name '*.css'   -printf '%P:%p ')"
-else                                shares="$shares $(find resource -name 'gtkrc-*' -printf '%P:%p ')" ; fi
 
 ###################  system detection  ####################
 

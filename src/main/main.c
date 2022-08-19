@@ -15,8 +15,7 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define HEADER_SANS_WARNINGS <glib/gstdio.h>
-#include <sans_warnings.h>
+#include <glib/gstdio.h>
 #ifdef MINGW
 #include <windows.h>  // FreeConsole()
 #endif
@@ -63,23 +62,18 @@ int main (int argc, char *argv[])
 {
 	remember_argv0(argv[0]);
 
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	g_thread_init(NULL);
-#endif
 	gtk_init(&argc, &argv);
 	Timer *bench_timer _timerfree_ = timer_new();
 
 	int f_mode = M2_F_MODE_DEFAULT;
-	bool darkpanel = 0;
 
 	int i = 1;
 	while (i < argc)
 	{
-		if      (str_equal(argv[i], "--debug") && (i + 1) < argc && scan_hex(argv[i + 1], &f_mode)) i++;
-		else if (str_equal(argv[i], "--darkpanel")) darkpanel = 1;
+		if (str_equal(argv[i], "--debug") && (i + 1) < argc && scan_hex(argv[i + 1], &f_mode)) i++;
 		else 
 		{
-			printf("\nUsage: %s [--darkpanel] [--debug mode]\n\n", argv[0]);
+			printf("\nUsage: %s [--debug mode]\n\n", argv[0]);
 			printf("  Modes:    0x%X  error      0x%X  run         0x%X  verbose\n", F_ERROR,   F_RUN,      F_VERBOSE);
 			printf("            0x%X  warning    0x%X  callback    0x%X  bench\n",   F_WARNING, F_CALLBACK, F_BENCH);
 			printf("            0x%X  init       0x%X  mcf         0x%X  profile\n", F_INIT,    F_MCF,      F_PROFILE);
@@ -112,7 +106,7 @@ int main (int argc, char *argv[])
 	control_init();
 	compute_init();
 	mcf_init();
-	gui_init(darkpanel);
+	gui_init();
 	entry_init();
 
 	struct Mezurit2 m2;
@@ -206,14 +200,14 @@ void mezurit2_init (struct Mezurit2 *m2)
 {
 	f_start(F_INIT);
 
-	m2->page.main_window = name_widget(gtk_window_new(GTK_WINDOW_TOPLEVEL), "m2_main");
+	m2->page.main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(GTK_WINDOW(m2->page.main_window), -1, M2_DEFAULT_HEIGHT);
 
-	GtkWidget *vbox = container_add(new_box(GTK_ORIENTATION_VERTICAL, 0), m2->page.main_window);
+	GtkWidget *vbox = container_add(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), m2->page.main_window);
 
-	GtkWidget *menubar = pack_start(gtk_menu_bar_new(),                             0, vbox);
-	m2->page.flipbook  = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
-	                     pack_start(name_widget(gtk_event_box_new(), "m2_worktop"), 1, vbox));
+	GtkWidget *menubar = pack_start(gtk_menu_bar_new(),                         0, vbox);
+	m2->page.flipbook  = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, vbox);
+	gtk_widget_set_name(m2->page.flipbook, "m2_worktop");
 
 	int port = control_server_listen(M2_TS_ID);
 

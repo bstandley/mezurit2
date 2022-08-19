@@ -19,8 +19,7 @@
 #define _LIB_HARDWARE_TIMING_H 1
 
 #include <stdbool.h>
-#define HEADER_SANS_WARNINGS <glib.h>
-#include <sans_warnings.h>
+#include <glib.h>
 
 #ifndef MINGW
 typedef GTimer Timer;

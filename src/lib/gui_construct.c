@@ -15,28 +15,12 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-GtkWidget * new_box (GtkOrientation orientation, gint spacing)
-{
-#if GTK_MAJOR_VERSION < 3
-	GtkWidget *widget = (orientation == GTK_ORIENTATION_HORIZONTAL) ? gtk_hbox_new(0, spacing) : gtk_vbox_new(0, spacing);
-#else
-	GtkWidget *widget = gtk_box_new(orientation, spacing);
-#endif
-	return widget;
-}
-
 GtkWidget * new_label (const char *str, double xalign)
 {
 	GtkWidget *widget = gtk_label_new(str);
 	gtk_label_set_use_markup(GTK_LABEL(widget), 1);
-	gtk_misc_set_alignment(GTK_MISC(widget), (gfloat) xalign, 0.5);
-	return widget;
-}
-
-GtkWidget * new_alignment (guint top, guint bottom, guint left, guint right)
-{
-	GtkWidget *widget = gtk_alignment_new(0.5, 0.5, 1, 1);
-	gtk_alignment_set_padding(GTK_ALIGNMENT(widget), top, bottom, left, right);
+	gtk_label_set_xalign(GTK_LABEL(widget), (gfloat) xalign);
+	gtk_label_set_yalign(GTK_LABEL(widget), 0.5);
 	return widget;
 }
 
@@ -60,15 +44,9 @@ GtkWidget * new_text_view (gint left_margin, gint right_margin)
 
 GtkWidget * new_table (guint row_spacing, guint col_spacing)
 {
-#if GTK_MAJOR_VERSION < 3
-	GtkWidget *widget = gtk_table_new(1, 1, 0);
-	gtk_table_set_row_spacings(GTK_TABLE(widget), row_spacing);
-	gtk_table_set_col_spacings(GTK_TABLE(widget), col_spacing);
-#else
 	GtkWidget *widget = gtk_grid_new();
 	gtk_grid_set_row_spacing   (GTK_GRID(widget), row_spacing);
 	gtk_grid_set_column_spacing(GTK_GRID(widget), col_spacing);
-#endif
 	return widget;
 }
 
@@ -77,7 +55,7 @@ GtkWidget * new_toggle_button_with_icon (const char *label_str, const char *icon
 	GtkWidget *widget = gtk_toggle_button_new_with_label(label_str);
 	if (icon != NULL)
 	{
-		gtk_button_set_image(GTK_BUTTON(widget), gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU));
+		gtk_button_set_image(GTK_BUTTON(widget), gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_MENU));
 		gtk_button_set_image_position(GTK_BUTTON(widget), pos);
 	}
 	return widget;
@@ -86,7 +64,7 @@ GtkWidget * new_toggle_button_with_icon (const char *label_str, const char *icon
 GtkWidget * new_button_with_icon (const char *label_str, const char *icon)
 {
 	GtkWidget *widget = (label_str != NULL) ? gtk_button_new_with_label(label_str) : gtk_button_new();
-	gtk_button_set_image(GTK_BUTTON(widget), gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU));
+	gtk_button_set_image(GTK_BUTTON(widget), gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_MENU));
 	return widget;
 }
 
@@ -114,13 +92,4 @@ GtkWidget * new_scrolled_window (GtkPolicyType hpolicy, GtkPolicyType vpolicy)
 	GtkWidget *widget = gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(widget), hpolicy, vpolicy);
 	return widget;
-}
-
-GtkWidget * new_combo_text (void)
-{
-#if GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION < 24
-	return gtk_combo_box_new_text();
-#else
-	return gtk_combo_box_text_new();
-#endif
 }

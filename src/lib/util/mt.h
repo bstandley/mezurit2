@@ -18,25 +18,13 @@
 #ifndef _LIB_UTIL_MT_H
 #define _LIB_UTIL_MT_H 1
 
-#define HEADER_SANS_WARNINGS <glib.h>
-#include <sans_warnings.h>
+#include <glib.h>
 
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	#define mt_mutex_lock(_mt_mutex_ptr)    g_static_mutex_lock(_mt_mutex_ptr)
-	#define mt_mutex_trylock(_mt_mutex_ptr) g_static_mutex_trylock(_mt_mutex_ptr)
-	#define mt_mutex_unlock(_mt_mutex_ptr)  g_static_mutex_unlock(_mt_mutex_ptr)
-#else
-	#define mt_mutex_lock(_mt_mutex_ptr)    g_mutex_lock(_mt_mutex_ptr)
-	#define mt_mutex_trylock(_mt_mutex_ptr) g_mutex_trylock(_mt_mutex_ptr)
-	#define mt_mutex_unlock(_mt_mutex_ptr)  g_mutex_unlock(_mt_mutex_ptr)
-#endif
+#define mt_mutex_lock(_mt_mutex_ptr)    g_mutex_lock(_mt_mutex_ptr)
+#define mt_mutex_trylock(_mt_mutex_ptr) g_mutex_trylock(_mt_mutex_ptr)
+#define mt_mutex_unlock(_mt_mutex_ptr)  g_mutex_unlock(_mt_mutex_ptr)
 
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-typedef GStaticMutex MtMutex;
-#else
 typedef GMutex MtMutex;
-#endif
-
 typedef GThread *MtThread;
 
 void mt_mutex_init  (MtMutex *mutex);

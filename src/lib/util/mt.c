@@ -19,29 +19,17 @@
 
 void mt_mutex_init (MtMutex *mutex)
 {
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	g_static_mutex_init(mutex);
-#else
 	g_mutex_init(mutex);
-#endif
 }
 
 void mt_mutex_clear (MtMutex *mutex)
 {
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	g_static_mutex_free(mutex);  // for completeness (not required because no MtMutexes in Mezurit2 are part of dynamically-allocated structures)
-#else
-	g_mutex_clear(mutex);
-#endif
+	g_mutex_clear(mutex);  // for completeness (not required because no MtMutexes in Mezurit2 are part of dynamically-allocated structures)
 }
 
 MtThread mt_thread_create (void * (*f) (void *), void *data)
 {
-#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
-	return g_thread_create(f, data, 1, NULL);
-#else
 	return g_thread_new("mt", f, data);
-#endif
 }
 
 void mt_thread_join (MtThread thread)

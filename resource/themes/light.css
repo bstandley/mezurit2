@@ -1,3 +1,3 @@
-#m2_worktop            { background-color: #606060 }
-#m2_border, #m2_buffer { background-color: #000000 }
-#m2_section            { background-color: inherit }
+#m2_worktop    { background-color: shade (@theme_bg_color, 0.4) }
+#m2_plotbuffer { background-color: #000000 }
+#m2_section    { background-color: @theme_bg_color }

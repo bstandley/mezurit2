@@ -17,8 +17,7 @@
 
 #include "fs.h"
 
-#define HEADER_SANS_WARNINGS <glib/gstdio.h>
-#include <sans_warnings.h>
+#include <glib/gstdio.h>
 #ifdef MINGW
 #include <windows.h>
 #endif

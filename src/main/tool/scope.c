@@ -51,23 +51,20 @@ void scope_init (Scope *scope, GtkWidget **apt)
 	set_entry_unit (scope->time_entry, "s");
 	set_entry_min  (scope->time_entry, 0);
 
-	table_attach(new_label("f<sub>DAQ</sub>", 0.0),    0, 0, GTK_FILL, table);
-	table_attach(scope->rate_entry->widget,            1, 0, 0,        table);
-	table_attach(new_label("t<sub>sample</sub>", 0.0), 0, 1, GTK_FILL, table);
-	table_attach(scope->time_entry->widget,            1, 1, 0,        table);
+	table_attach(new_label("f<sub>DAQ</sub>", 0.0),    0, 0, table);
+	table_attach(scope->rate_entry->widget,            1, 0, table);
+	table_attach(new_label("t<sub>sample</sub>", 0.0), 0, 1, table);
+	table_attach(scope->time_entry->widget,            1, 1, table);
 
 	// controls:
-	GtkWidget *control_vbox = table_attach_full(new_box(GTK_ORIENTATION_VERTICAL, 2), 2, 0, 1, 2, 0, 0, 0, 0, table);
+	GtkWidget *control_vbox = table_attach_full(gtk_box_new(GTK_ORIENTATION_VERTICAL, 2), 2, 0, 1, 2, table);
 
 	scope->button = pack_start(gtk_button_new(), 0, control_vbox);
 	scope->image  = pack_start(gtk_image_new(),  0, control_vbox);
 
-	set_draw_on_expose(scope->sect.full, scope->image);
-
 	// status:
-	GtkWidget *status_hbox = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
-	                         container_add(fix_shadow(gtk_frame_new(NULL)),
-	                         pack_start(name_widget(gtk_event_box_new(), "m2_align"), 0, scope->sect.box)));
+	GtkWidget *status_hbox = container_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
+	                         pack_start(fix_shadow(gtk_frame_new(NULL)), 0, scope->sect.box));
 
 	scope->status_left  = pack_start(new_text_view(1, 4), 0, status_hbox);
 	scope->status_right = pack_start(new_text_view(0, 0), 1, status_hbox);

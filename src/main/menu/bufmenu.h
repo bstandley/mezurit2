@@ -19,8 +19,7 @@
 #define _MAIN_MENU_BUFMENU_H 1
 
 #include <stdbool.h>
-#define HEADER_SANS_WARNINGS <gtk/gtk.h>
-#include <sans_warnings.h>
+#include <gtk/gtk.h>
 
 typedef struct
 {

@@ -82,10 +82,10 @@ gboolean plot_click_cb (GtkWidget *widget, GdkEventButton *event, Plot *plot)
 		int region = detect_region(event->x, event->y, plot->region);
 		f_print(F_RUN, "X: %f, Y: %f, Region: %d\n", event->x, event->y, region);
 
-		if      (region == REGION_INSIDE) gtk_menu_popup(GTK_MENU(plot->main_rc_menu),          NULL, NULL, NULL, NULL, 0, event->time);
-		else if (region == REGION_BOTTOM) gtk_menu_popup(GTK_MENU(plot->axis[X_AXIS].rc_menu),  NULL, NULL, NULL, NULL, 0, event->time);
-		else if (region == REGION_LEFT)   gtk_menu_popup(GTK_MENU(plot->axis[Y1_AXIS].rc_menu), NULL, NULL, NULL, NULL, 0, event->time);
-		else if (region == REGION_RIGHT)  gtk_menu_popup(GTK_MENU(plot->axis[Y2_AXIS].rc_menu), NULL, NULL, NULL, NULL, 0, event->time);
+		if      (region == REGION_INSIDE) gtk_menu_popup_at_pointer(GTK_MENU(plot->main_rc_menu),          (GdkEvent *) event);
+		else if (region == REGION_BOTTOM) gtk_menu_popup_at_pointer(GTK_MENU(plot->axis[X_AXIS].rc_menu),  (GdkEvent *) event);
+		else if (region == REGION_LEFT)   gtk_menu_popup_at_pointer(GTK_MENU(plot->axis[Y1_AXIS].rc_menu), (GdkEvent *) event);
+		else if (region == REGION_RIGHT)  gtk_menu_popup_at_pointer(GTK_MENU(plot->axis[Y2_AXIS].rc_menu), (GdkEvent *) event);
 	}
 
 	return 0;

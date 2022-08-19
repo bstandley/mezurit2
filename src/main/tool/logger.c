@@ -43,21 +43,20 @@ void logger_init (Logger *logger, GtkWidget **apt)
 	set_entry_unit(logger->max_rate_entry, "kHz");
 	set_entry_min (logger->max_rate_entry, 0.010);
 
-	table_attach(new_label("f<sub>max</sub>", 0.0), 0, 0, GTK_FILL, table);
-	table_attach(logger->max_rate_entry->widget,    1, 0, 0,        table);
-	table_attach(new_label("N<sub>ave</sub>", 0.0), 0, 1, GTK_FILL, table);
+	table_attach(new_label("f<sub>max</sub>", 0.0), 0, 0, table);
+	table_attach(logger->max_rate_entry->widget,    1, 0, table);
+	table_attach(new_label("N<sub>ave</sub>", 0.0), 0, 1, table);
 
 	logger->cbuf_length_widget = pack_start(fix_shadow(gtk_spin_button_new_with_range(1, M2_MAX_CBUF_LENGTH, 1)), 0,
-	                             table_attach(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 1, 1, GTK_FILL, table));
+	                             table_attach(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, 1, table));
 
 	gtk_spin_button_set_digits(GTK_SPIN_BUTTON(logger->cbuf_length_widget), 0);
 	gtk_entry_set_width_chars(GTK_ENTRY(logger->cbuf_length_widget), 2);
 
-	GtkWidget *lower_vbox = pack_start(new_box(GTK_ORIENTATION_VERTICAL, 0), 0, logger->sect.box);
+	GtkWidget *lower_vbox = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, logger->sect.box);
 
-	GtkWidget *reader_hbox = container_add(new_box(GTK_ORIENTATION_HORIZONTAL, 0),
-	                         container_add(fix_shadow(gtk_frame_new(NULL)),
-	                         pack_start(name_widget(gtk_event_box_new(), "m2_align"), 0, lower_vbox)));
+	GtkWidget *reader_hbox = container_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
+	                         pack_start(fix_shadow(gtk_frame_new(NULL)), 0, lower_vbox));
 
 	logger->reader_labels = pack_start(new_text_view(1, 8), 0, reader_hbox);
 	logger->reader_values = pack_start(new_text_view(0, 0), 1, reader_hbox);
@@ -80,15 +79,13 @@ void logger_init (Logger *logger, GtkWidget **apt)
 	pango_layout_set_text(layout, "5", -1); pango_layout_get_pixel_size(layout, &logger->digit_width,  NULL);
 	g_object_unref(layout);
 
-	GtkWidget *control_vbox = table_attach_full(new_box(GTK_ORIENTATION_VERTICAL, 2), 2, 0, 1, 2, 0, 0, 0, 0, table);
+	GtkWidget *control_vbox = table_attach_full(gtk_box_new(GTK_ORIENTATION_VERTICAL, 2), 2, 0, 1, 2, table);
 
 	logger->button = pack_start(gtk_button_new(), 0, control_vbox);
 	logger->image  = pack_start(gtk_image_new(),  0, control_vbox);
 
-	set_draw_on_expose(logger->sect.full, logger->image);
-
 	logger->gpib_button = pack_end(size_widget(gtk_check_button_new_with_label("Pause GPIB"), -1, 22), 0,
-	                      pack_end(new_box(GTK_ORIENTATION_HORIZONTAL, 0), 0, lower_vbox));
+	                      pack_end(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, lower_vbox));
 
 	mt_mutex_init(&logger->mutex);
 	logger->block_cbuf_length_cb = 0;

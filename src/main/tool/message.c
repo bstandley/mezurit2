@@ -57,8 +57,8 @@ void message_register (Message *message, int pid, GtkWidget **apt)
 	mcf_register(NULL, "# Message", MCF_W);
 	section_register(&message->sect, (pid == -1) ? "setup_message_" : atg(supercat("panel%d_message_", pid)), SECTION_TOP, apt);
 	
-	snazzy_connect(gtk_widget_get_parent(message->sect.box), "show, hide", SNAZZY_VOID_VOID, BLOB_CALLBACK(revis_cb),    0x10, message);  // turn mini-readout entry on/off
-	snazzy_connect(message->sect.full,                       "parent-set", SNAZZY_VOID_PTR,  BLOB_CALLBACK(reparent_cb), 0x10, message);  // set sect->expand_fill where appropriate
+	snazzy_connect(message->sect.box,  "show, hide", SNAZZY_VOID_VOID, BLOB_CALLBACK(revis_cb),    0x10, message);  // turn mini-readout entry on/off
+	snazzy_connect(message->sect.full, "parent-set", SNAZZY_VOID_PTR,  BLOB_CALLBACK(reparent_cb), 0x10, message);  // set sect->expand_fill where appropriate
 }
 
 void message_update (Message *message)

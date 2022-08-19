@@ -53,16 +53,15 @@ void channel_array_init (Channel *channel_array, Section *sect, GtkWidget **apt)
 	section_init(sect, atg(sharepath("pixmaps/tool_channel.png")), "Channels", apt);
 	sect->expand_fill = 1;
 
-	GtkWidget *table = container_add(new_table(0, 2),
-	                   add_with_viewport(new_alignment(4, 4, 8, 4),
-	                   pack_start(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC), 1, sect->box)));
+	GtkWidget *table = container_add(set_margins(new_table(0, 2), 4, 4, 8, 4),
+	                   pack_start(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC), 1, sect->box));
 
-	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Name")),       0.0), 1, 0, GTK_FILL, table);
-	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Prefix")),     0.0), 2, 0, GTK_FILL, table);
-	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Unit")),       0.0), 3, 0, GTK_FILL, table);
-	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Bin Size")),   0.0), 4, 0, GTK_FILL, table);
-	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Expression")), 0.0), 5, 0, GTK_FILL, table);
-	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Save")),       0.0), 6, 0, GTK_FILL, table);
+	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Name")),       0.0), 1, 0, table);
+	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Prefix")),     0.0), 2, 0, table);
+	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Unit")),       0.0), 3, 0, table);
+	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Bin Size")),   0.0), 4, 0, table);
+	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Expression")), 0.0), 5, 0, table);
+	table_attach(new_label(atg(supercat(M2_CHANNEL_FORMAT, "Save")),       0.0), 6, 0, table);
 
 	for (int vc = 0; vc < M2_MAX_CHAN; vc++)
 	{
@@ -72,23 +71,25 @@ void channel_array_init (Channel *channel_array, Section *sect, GtkWidget **apt)
 		set_entry_min(channel->binsize_entry, 0.0);
 
 		// widgets:
-		channel->label        = table_attach(new_label(atg(supercat("X<sub>%d</sub> ", vc)), 0.0), 0, vc + 1, GTK_FILL,              table);
-		channel->name_entry   = table_attach(new_entry(0, 10),                                     1, vc + 1, 0,                     table);
-		channel->prefix_combo = table_attach(new_combo_text(),                                     2, vc + 1, 0,                     table);
-		channel->unit_entry   = table_attach(new_entry(0, 5),                                      3, vc + 1, 0,                     table);
-		/**/                    table_attach(channel->binsize_entry->widget,                       4, vc + 1, 0,                     table);
-		channel->expr_entry   = table_attach(new_entry(0, -1),                                     5, vc + 1, GTK_FILL | GTK_EXPAND, table);
-		channel->save_widget  = table_attach(gtk_check_button_new(),                               6, vc + 1, 0,                     table);
+		channel->label        = table_attach(new_label(atg(supercat("X<sub>%d</sub> ", vc)), 0.0), 0, vc + 1, table);
+		channel->name_entry   = table_attach(new_entry(0, 10),                                     1, vc + 1, table);
+		channel->prefix_combo = table_attach(gtk_combo_box_text_new(),                             2, vc + 1, table);
+		channel->unit_entry   = table_attach(new_entry(0, 5),                                      3, vc + 1, table);
+		/**/                    table_attach(channel->binsize_entry->widget,                       4, vc + 1, table);
+		channel->expr_entry   = table_attach(new_entry(0, -1),                                     5, vc + 1, table);
+		channel->save_widget  = table_attach(gtk_check_button_new(),                               6, vc + 1, table);
+
+		gtk_widget_set_hexpand(channel->expr_entry, 1);
 
 		// prefixes:
-		combo_text_append(channel->prefix_combo, atg(lookup_SI_symbol(PREFIX_giga)));
-		combo_text_append(channel->prefix_combo, atg(lookup_SI_symbol(PREFIX_mega)));
-		combo_text_append(channel->prefix_combo, atg(lookup_SI_symbol(PREFIX_kilo)));
-		combo_text_append(channel->prefix_combo, "-");
-		combo_text_append(channel->prefix_combo, atg(lookup_SI_symbol(PREFIX_milli)));
-		combo_text_append(channel->prefix_combo, atg(lookup_SI_symbol(PREFIX_micro)));
-		combo_text_append(channel->prefix_combo, atg(lookup_SI_symbol(PREFIX_nano)));
-		combo_text_append(channel->prefix_combo, atg(lookup_SI_symbol(PREFIX_pico)));
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), atg(lookup_SI_symbol(PREFIX_giga)));
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), atg(lookup_SI_symbol(PREFIX_mega)));
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), atg(lookup_SI_symbol(PREFIX_kilo)));
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), "-");
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), atg(lookup_SI_symbol(PREFIX_milli)));
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), atg(lookup_SI_symbol(PREFIX_micro)));
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), atg(lookup_SI_symbol(PREFIX_nano)));
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(channel->prefix_combo), atg(lookup_SI_symbol(PREFIX_pico)));
 
 		// initialize:
 		channel->name = NULL;
@@ -107,7 +108,7 @@ void channel_array_init (Channel *channel_array, Section *sect, GtkWidget **apt)
 		compute_func_init(&channel->cf);
 	}
 
-	gtk_widget_show(gtk_widget_get_parent(sect->box));
+	gtk_widget_show(sect->box);
 }
 
 void channel_array_register (Channel *channel_array, Section *sect, GtkWidget **apt)

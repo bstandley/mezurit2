@@ -61,13 +61,13 @@ void axis_init (Axis *axis, int i, GtkWidget *parent)
 	axis->rc_menu = gtk_menu_new();
 	char *text = atg(cat1(i == X_AXIS ? "X" : (i == Y1_AXIS ? "Y1" : "Y2")));
 
-	axis->zoom_auto_item                 = menu_append(new_item(new_label(atg(cat3("Zoom ", text, ": Auto")),    0.0), gtk_image_new_from_stock(GTK_STOCK_ZOOM_FIT,   GTK_ICON_SIZE_MENU)), axis->rc_menu);
-	axis->zoom_back_item                 = menu_append(new_item(new_label(atg(cat3("Zoom ", text, ": Back")),    0.0), gtk_image_new_from_stock(GTK_STOCK_GO_BACK,    GTK_ICON_SIZE_MENU)), axis->rc_menu);
-	axis->zoom_forward_item              = menu_append(new_item(new_label(atg(cat3("Zoom ", text, ": Forward")), 0.0), gtk_image_new_from_stock(GTK_STOCK_GO_FORWARD, GTK_ICON_SIZE_MENU)), axis->rc_menu);
-	if (i != 0) axis->lines.enable_item  = menu_append(new_item(new_label("Show lines",                          0.0), gtk_image_new()),                                                    axis->rc_menu);
-	if (i != 0) axis->points.enable_item = menu_append(new_item(new_label("Show points",                         0.0), gtk_image_new()),                                                    axis->rc_menu);
+	axis->zoom_auto_item                 = menu_append(gtk_menu_item_new_with_label(atg(cat3("Zoom ", text, ": Auto"))),    axis->rc_menu);
+	axis->zoom_back_item                 = menu_append(gtk_menu_item_new_with_label(atg(cat3("Zoom ", text, ": Back"))),    axis->rc_menu);
+	axis->zoom_forward_item              = menu_append(gtk_menu_item_new_with_label(atg(cat3("Zoom ", text, ": Forward"))), axis->rc_menu);
+	if (i != 0) axis->lines.enable_item  = menu_append(new_item(new_label("Show lines",  0.0), gtk_image_new()),            axis->rc_menu);
+	if (i != 0) axis->points.enable_item = menu_append(new_item(new_label("Show points", 0.0), gtk_image_new()),            axis->rc_menu);
 
-	axis->ch_menu = set_submenu(gtk_menu_new(), menu_append(new_item(new_label("Channel", 0.0), NULL), axis->rc_menu));
+	axis->ch_menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Channel"), axis->rc_menu));
 	show_all(axis->rc_menu, NULL);
 }
 

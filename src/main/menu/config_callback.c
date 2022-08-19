@@ -50,14 +50,13 @@ void config_cb (GtkWidget *widget, Hardware *hw_array, Panel **tv_panel, OldVars
 	if (load && mode == MENU_INTERNAL_DEFAULT) mcf_load_defaults("setup");
 	else
 	{
-		char *filename = (mode == MENU_USER_DEFAULT) ? atg(configpath("default.mcf"))                                                                  :
-		                 (mode == MENU_SYS_DEFAULT)  ? atg(sharepath("default.mcf"))                                                                   :
-		                 (mode == MENU_LAST)         ? atg(configpath("last.mcf"))                                                                     :
+		char *filename = (mode == MENU_USER_DEFAULT) ? atg(configpath("default.mcf"))                                            :
+		                 (mode == MENU_SYS_DEFAULT)  ? atg(sharepath("default.mcf"))                                             :
+		                 (mode == MENU_LAST)         ? atg(configpath("last.mcf"))                                               :
 		                 (mode == MENU_FILE)         ? atg(run_file_chooser(atg(cat2(load ? "Load" : "Save", " configuration")),
-		                                                                    load ? GTK_FILE_CHOOSER_ACTION_OPEN : GTK_FILE_CHOOSER_ACTION_SAVE,
-		                                                                    load ? GTK_STOCK_OPEN               : GTK_STOCK_SAVE, NULL))               :
+		                                                                    load ? FILE_CHOOSER_OPEN : FILE_CHOOSER_SAVE, NULL)) :
 		                 (mode == MENU_EXAMPLE_FILE) ? atg(run_file_chooser("Load example configuration",
-		                                                                    GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_OPEN, atg(sharepath("examples")))) : NULL;
+		                                                                    FILE_CHOOSER_OPEN, atg(sharepath("examples"))))      : NULL;
 
 		if (filename != NULL)
 		{

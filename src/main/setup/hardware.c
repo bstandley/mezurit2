@@ -98,17 +98,14 @@ void hardware_array_init (Hardware *hw_array, GtkWidget **apt)
 		hw->settle = 0;
 
 		GtkWidget *textview = container_add(new_text_view(4, 4),
-		                      pack_start(fix_shadow(gtk_frame_new(NULL)),        1, hw->sect.box));
-		GtkWidget *hbox     = pack_end  (new_box(GTK_ORIENTATION_HORIZONTAL, 4), 0, hw->sect.box);
+		                      pack_start(fix_shadow(gtk_frame_new(NULL)),            1, hw->sect.box));
+		GtkWidget *hbox     = pack_end  (gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4), 0, hw->sect.box);
 
 		g_object_set(G_OBJECT(textview), "border-width", 1, NULL);
 		hw->textbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
 
 		hw->node_entry   = hw->real ? pack_start(new_entry(0, -1),                         1, hbox) : NULL;
 		hw->dummy_button =            pack_end  (gtk_check_button_new_with_label("Dummy"), 0, hbox);
-
-		if (hw->real) set_draw_on_expose(textview, hw->node_entry);
-		/**/          set_draw_on_expose(textview, hw->dummy_button);
 
 		if (!hw->real)
 		{
@@ -231,7 +228,7 @@ void hardware_array_register (Hardware *hw_array, GtkWidget **apt)
 			snazzy_connect(hw->dummy_button, "button-release-event",             SNAZZY_BOOL_PTR, BLOB_CALLBACK(hardware_dummy_cb), 0x10, hw);
 		}
 
-		snazzy_connect(gtk_widget_get_parent(hw->sect.box), "show, hide", SNAZZY_VOID_VOID, BLOB_CALLBACK(revis_cb),          0x10, hw);
+		snazzy_connect(hw->sect.box, "show, hide", SNAZZY_VOID_VOID, BLOB_CALLBACK(revis_cb), 0x10, hw);
 	}
 }
 

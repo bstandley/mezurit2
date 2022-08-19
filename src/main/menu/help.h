@@ -18,8 +18,7 @@
 #ifndef _MAIN_MENU_HELP_H
 #define _MAIN_MENU_HELP_H 1
 
-#define HEADER_SANS_WARNINGS <gtk/gtk.h>
-#include <sans_warnings.h>
+#include <gtk/gtk.h>
 
 typedef struct
 {

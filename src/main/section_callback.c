@@ -31,7 +31,7 @@ static void locate_section (Section *sect, GtkWidget **apt);
 
 void rollup_section (Section *sect)
 {
-	set_visibility(gtk_widget_get_parent(sect->box), sect->visible);
+	set_visibility(sect->box, sect->visible);
 
 	gtk_widget_set_tooltip_text(sect->rollup_button, sect->visible ? "Hide tool" : "Show tool");
 	gtk_image_set_from_pixbuf(GTK_IMAGE(get_child(sect->rollup_button, 0)), lookup_pixbuf(sect->visible ? PIXBUF_ICON_ROLLUP : PIXBUF_ICON_ROLLDOWN));

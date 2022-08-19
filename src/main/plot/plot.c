@@ -55,10 +55,10 @@ void plot_init (Plot *plot, GtkWidget *parent)
 
 	// make the main right-click menu:
 	plot->main_rc_menu = gtk_menu_new();
-	plot->zoom_auto_item    = menu_append(new_item(new_label("Zoom All: Auto",    0.0), gtk_image_new_from_stock(GTK_STOCK_ZOOM_FIT,   GTK_ICON_SIZE_MENU)), plot->main_rc_menu);
-	plot->zoom_back_item    = menu_append(new_item(new_label("Zoom All: Back",    0.0), gtk_image_new_from_stock(GTK_STOCK_GO_BACK,    GTK_ICON_SIZE_MENU)), plot->main_rc_menu);
-	plot->zoom_forward_item = menu_append(new_item(new_label("Zoom All: Forward", 0.0), gtk_image_new_from_stock(GTK_STOCK_GO_FORWARD, GTK_ICON_SIZE_MENU)), plot->main_rc_menu);
-	plot->enable_item       = menu_append(new_item(new_label("Enable plot",       0.0), gtk_image_new()),                                                    plot->main_rc_menu);
+	plot->zoom_auto_item    = menu_append(gtk_menu_item_new_with_label("Zoom All: Auto"),           plot->main_rc_menu);
+	plot->zoom_back_item    = menu_append(gtk_menu_item_new_with_label("Zoom All: Back"),           plot->main_rc_menu);  // TODO initially inactive?
+	plot->zoom_forward_item = menu_append(gtk_menu_item_new_with_label("Zoom All: Forward"),        plot->main_rc_menu);  // TODO initially inactive?
+	plot->enable_item       = menu_append(new_item(new_label("Enable plot", 0.0), gtk_image_new()), plot->main_rc_menu);
 	show_all(plot->main_rc_menu, NULL);
 
 	// make axes:

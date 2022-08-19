@@ -51,10 +51,10 @@ void terminal_init (Terminal *terminal, GtkWidget *menubar, GtkWidget *scroll, i
 	g_setenv("M2_CONTROLPORT",      atg(supercat("%d", port)),             1);
 	g_setenv("M2_LIBPATH",          atg(libpath(NULL)),                    1);
 
-	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(new_item(new_label("_Terminal", 0.0), NULL), menubar));
+	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Terminal"), menubar));
 
-	terminal->restart_item = menu_append(new_item(new_label("Restart process", 0.0), gtk_image_new_from_stock(GTK_STOCK_REFRESH, GTK_ICON_SIZE_MENU)), menu);
-	terminal->abort_item   = menu_append(new_item(new_label("Abort command",   0.0), gtk_image_new_from_stock(GTK_STOCK_STOP,    GTK_ICON_SIZE_MENU)), menu);
+	terminal->restart_item = menu_append(gtk_menu_item_new_with_label("Restart process"), menu);
+	terminal->abort_item   = menu_append(gtk_menu_item_new_with_label("Abort command"),   menu);
 }
 
 void terminal_register (Terminal *terminal, ThreadVars *tv)
@@ -76,15 +76,10 @@ void spawn_terminal (Terminal *terminal)
 	system(atg(supercat("start \"%s %s: Terminal\" \"%s\" -O -B", quote(PROG2), quote(VERSION), atg(libpath("python.exe")))));
 #else
 
-char *argv[2];
-argv[0] = atg(supercat("python%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION));
-argv[1] = NULL;
-
-#if VTE_MINOR_VERSION < 26
-	vte_terminal_fork_command(VTE_TERMINAL(terminal->vte), argv[0], NULL, NULL, NULL, 0, 0, 0);
-#else
-	vte_terminal_fork_command_full(VTE_TERMINAL(terminal->vte), 0, NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
-#endif
+	char *argv[2];
+	argv[0] = atg(supercat("python%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION));
+	argv[1] = NULL;
+	vte_terminal_spawn_async(VTE_TERMINAL(terminal->vte), VTE_PTY_DEFAULT, NULL, argv, NULL, G_SPAWN_DEFAULT, NULL, NULL, NULL, -1, NULL, NULL, NULL);
 #endif
 }
 

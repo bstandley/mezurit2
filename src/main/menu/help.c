@@ -55,11 +55,11 @@ void help_init (Help *help, GtkWidget *menubar)
 	if (license_text != NULL) gtk_about_dialog_set_license(GTK_ABOUT_DIALOG(help->about_dialog), license_text);
 	g_free(license_text);
 
-	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(new_item(new_label("_Help", 0.0), NULL), menubar));
+	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Help"), menubar));
 
-	help->online_item  = menu_append(new_item(new_label("Online documentation", 0.0), gtk_image_new_from_stock(GTK_STOCK_HELP,  GTK_ICON_SIZE_MENU)), menu);
-	help->offline_item = menu_append(new_item(new_label("Manual (PDF)",         0.0), gtk_image_new_from_stock(GTK_STOCK_HELP,  GTK_ICON_SIZE_MENU)), menu);
-	help->about_item   = menu_append(new_item(new_label("About",                0.0), gtk_image_new_from_stock(GTK_STOCK_ABOUT, GTK_ICON_SIZE_MENU)), menu);
+	help->online_item  = menu_append(gtk_menu_item_new_with_label("Documentation (Online)"), menu);
+	help->offline_item = menu_append(gtk_menu_item_new_with_label("Manual (PDF)"),           menu);
+	help->about_item   = menu_append(gtk_menu_item_new_with_label("About"),                  menu);
 }
 
 void help_register (Help *help)
