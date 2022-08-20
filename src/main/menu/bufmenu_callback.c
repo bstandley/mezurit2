@@ -15,15 +15,17 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-static void check_item_cb (GtkWidget *widget, bool *var);
+static gboolean check_item_cb (GtkWidget *widget, GdkEvent *event, bool *var);
 static void check_item_mcf (bool *var, const char *signal_name, MValue value, GtkWidget *widget);
 
-void check_item_cb (GtkWidget *widget, bool *var)
+gboolean check_item_cb (GtkWidget *widget, GdkEvent *event, bool *var)
 {
 	f_start(F_CALLBACK);
 
-	*var = !(*var);
-	set_item_checked(widget, *var);
+	bool was_active = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+	*var = !was_active;
+
+	return 0;
 }
 
 void check_item_mcf (bool *var, const char *signal_name, MValue value, GtkWidget *widget)
@@ -31,6 +33,5 @@ void check_item_mcf (bool *var, const char *signal_name, MValue value, GtkWidget
 	f_start(F_MCF);
 
 	*var = value.x_bool;
-	set_item_checked(widget, value.x_bool);
+	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(widget), value.x_bool);
 }
-

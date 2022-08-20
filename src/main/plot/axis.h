@@ -80,7 +80,7 @@ void axis_final (Axis *axis);
 
 void update_tick      (Axis *axis, double span);
 bool zoom_axis        (Axis *axis, SVSP svs, int mode);
-void set_axis_channel (Axis *axis, VSP vs, int vci);
+void set_axis_channel (Axis *axis, VSP vs);
 void set_axis_color   (Axis *axis, ColorScheme *colorscheme, int offset);
 
 double scale_point   (double point, Axis *axis, double min_px, double max_px);

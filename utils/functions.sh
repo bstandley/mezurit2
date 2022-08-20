@@ -103,7 +103,7 @@ detect_gtk ()
 	glib_version=$(PKG_CONFIG_PATH=$pc_path pkg-config --modversion glib-2.0)
 	gtk_version=$(PKG_CONFIG_PATH=$pc_path pkg-config --modversion $gtk_pkg)
 
-	EXTRA_FLAGS="$EXTRA_FLAGS $(PKG_CONFIG_PATH=$pc_path pkg-config --cflags $gtk_pkg gthread-2.0 $vte_pkg) -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGTK_MULTIHEAD_SAFE"
+	EXTRA_FLAGS="$EXTRA_FLAGS $(PKG_CONFIG_PATH=$pc_path pkg-config --cflags $gtk_pkg gthread-2.0 $vte_pkg) -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED -DGTK_MULTIHEAD_SAFE"
 	LDLIBS="$LDLIBS $(PKG_CONFIG_PATH=$pc_path pkg-config --libs $gtk_pkg gthread-2.0 $vte_pkg)"
 }
 

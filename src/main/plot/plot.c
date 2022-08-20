@@ -55,10 +55,10 @@ void plot_init (Plot *plot, GtkWidget *parent)
 
 	// make the main right-click menu:
 	plot->main_rc_menu = gtk_menu_new();
-	plot->zoom_auto_item    = menu_append(gtk_menu_item_new_with_label("Zoom All: Auto"),           plot->main_rc_menu);
-	plot->zoom_back_item    = menu_append(gtk_menu_item_new_with_label("Zoom All: Back"),           plot->main_rc_menu);  // TODO initially inactive?
-	plot->zoom_forward_item = menu_append(gtk_menu_item_new_with_label("Zoom All: Forward"),        plot->main_rc_menu);  // TODO initially inactive?
-	plot->enable_item       = menu_append(new_item(new_label("Enable plot", 0.0), gtk_image_new()), plot->main_rc_menu);
+	plot->zoom_auto_item    = menu_append(gtk_menu_item_new_with_label("Zoom All: Auto"),    plot->main_rc_menu);
+	plot->zoom_back_item    = menu_append(gtk_menu_item_new_with_label("Zoom All: Back"),    plot->main_rc_menu);  // TODO initially inactive?
+	plot->zoom_forward_item = menu_append(gtk_menu_item_new_with_label("Zoom All: Forward"), plot->main_rc_menu);  // TODO initially inactive?
+	plot->enable_item       = menu_append(gtk_check_menu_item_new_with_label("Enable plot"), plot->main_rc_menu);
 	show_all(plot->main_rc_menu, NULL);
 
 	// make axes:
@@ -99,12 +99,12 @@ void plot_register (Plot *plot, int pid)
 	/**/              mcf_register(NULL,          "# Plot",                     MCF_W);
 	int enabled_var = mcf_register(&plot->enabled, atg(cat2(prefix, "enable")), MCF_BOOL | MCF_W | MCF_DEFAULT, 1);
 
-	mcf_connect(enabled_var, "setup, panel", BLOB_CALLBACK(plot_enable_mcf), 0x10, plot);
+	mcf_connect(enabled_var, "setup, panel", BLOB_CALLBACK(plot_enable_mcf), 0x20, plot->enable_item, plot);
 
-	snazzy_connect(plot->enable_item,       "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_enable_cb), 0x10, plot);
-	snazzy_connect(plot->zoom_auto_item,    "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_AUTO);
-	snazzy_connect(plot->zoom_back_item,    "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_BACK);
-	snazzy_connect(plot->zoom_forward_item, "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_FORWARD);
+	snazzy_connect(plot->zoom_auto_item,    "activate",             SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_AUTO);
+	snazzy_connect(plot->zoom_back_item,    "activate",             SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_BACK);
+	snazzy_connect(plot->zoom_forward_item, "activate",             SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_FORWARD);
+	snazzy_connect(plot->enable_item,       "button-release-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(plot_enable_cb), 0x20, &plot->enabled, plot);
 
 	snazzy_connect(plot->area_widget, "draw",               SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_draw_cb),  0x10, plot);
 	snazzy_connect(plot->area_widget, "button-press-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_click_cb), 0x10, plot);
@@ -140,11 +140,11 @@ void plot_register (Plot *plot, int pid)
 			int lines_var  = mcf_register(&axis->lines.enabled,  atg(cat3(prefix, name, "lines")),  MCF_BOOL | MCF_W | MCF_DEFAULT, 1);
 			int points_var = mcf_register(&axis->points.enabled, atg(cat3(prefix, name, "points")), MCF_BOOL | MCF_W | MCF_DEFAULT, 0);
 
-			mcf_connect(lines_var,  "setup, panel", BLOB_CALLBACK(plot_style_mcf), 0x20, axis->lines.enable_item,  plot);
-			mcf_connect(points_var, "setup, panel", BLOB_CALLBACK(plot_style_mcf), 0x20, axis->points.enable_item, plot);
+			mcf_connect(lines_var,  "setup, panel", BLOB_CALLBACK(plot_enable_mcf), 0x20, axis->lines.enable_item,  plot);
+			mcf_connect(points_var, "setup, panel", BLOB_CALLBACK(plot_enable_mcf), 0x20, axis->points.enable_item, plot);
 
-			snazzy_connect(axis->lines.enable_item,  "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_style_cb), 0x20, &axis->lines.enabled,  plot);
-			snazzy_connect(axis->points.enable_item, "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_style_cb), 0x20, &axis->points.enabled, plot);
+			snazzy_connect(axis->lines.enable_item,  "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_enable_cb), 0x20, &axis->lines.enabled,  plot);
+			snazzy_connect(axis->points.enable_item, "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_enable_cb), 0x20, &axis->points.enabled, plot);
 		}
 	}
 }
@@ -212,8 +212,8 @@ void update_axis_channels (Plot *plot, Axis *axis, int *vc_by_vci)
 	{
 		char *label_str = atg(vci == -1 ? cat1("none") : supercat("X<sub>%d</sub>: %s", vc_by_vci[vci], get_colname(vs, vci)));
 
-		GtkWidget *item = menu_append(new_item(new_label(label_str, 0.0), gtk_image_new()), axis->ch_menu);
-		snazzy_connect(item, "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_vci_cb), 0x21, plot, axis, vci);
+		GtkWidget *item = menu_append(new_radio_item(label_str), axis->ch_menu);
+		snazzy_connect(item, "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_vci_cb), 0x21, plot, axis, vci);
 	}
 	show_all(axis->ch_menu, NULL);
 
@@ -230,8 +230,9 @@ void update_axis_channels (Plot *plot, Axis *axis, int *vc_by_vci)
 				break;  // match the first one
 			}
 	}
-	set_axis_channel(axis, vs, vci_request);
+	axis->vci = vci_request;  // TODO is vci_request var actually necessary?
 	axis->keep_vci = 0;
+	set_axis_channel(axis, vs);
 }
 
 void place_marker (Plot *plot, double XM, double YM)

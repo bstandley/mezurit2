@@ -15,24 +15,30 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-static void set_page_cb (GtkWidget *widget, Page *page, Config *config, ThreadVars *tv, int pid);
+static gboolean set_page_cb (GtkWidget *widget, GdkEvent *event, Page *page, Config *config, ThreadVars *tv, int pid);
 static gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv, Terminal *terminal);
 static char * set_panel_csf (gchar **argv, Page *page, Config *config, ThreadVars *tv);
 static char * get_panel_csf (gchar **argv, ThreadVars *tv);
 static char * hello_csf (gchar **argv);
 
-void set_page_cb (GtkWidget *widget, Page *page, Config *config, ThreadVars *tv, int pid)
+gboolean set_page_cb (GtkWidget *widget, GdkEvent *event, Page *page, Config *config, ThreadVars *tv, int pid)
 {
 	f_start(F_CALLBACK);
 
-	cleanup_dirty_entry();  // Emit focus-out-event on dirty entry, if necessary.
+	if (pid != tv->pid)
+	{
+		cleanup_dirty_entry();  // Emit focus-out-event on dirty entry, if necessary.
 
-	if (tv->pid >= 0) stop_threads(tv);
+		if (tv->pid >= 0) stop_threads(tv);
+		tv->pid = pid;
 
-	tv->pid = pid;
-	set_page(page, config, pid);
+		set_page(page, config, pid);
 
-	if (pid >= 0) page->panel_array[pid].plot.exposure_blocked = 1;
+		if (pid >= 0) page->panel_array[pid].plot.exposure_blocked = 1;
+	}
+
+	gtk_widget_hide(gtk_widget_get_parent(gtk_widget_get_parent(widget)));
+	return 1;  // prevent event propagation, since the radios were toggled explicity by set_page(), and we just re-hid the menu
 }
 
 gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv, Terminal *terminal)
@@ -58,14 +64,17 @@ char * set_panel_csf (gchar **argv, Page *page, Config *config, ThreadVars *tv)
 	int pid;
 	if (scan_arg_int(argv[1], "pid", &pid) && pid >= -1 && pid < M2_NUM_PANEL)
 	{
-		cleanup_dirty_entry();  // Emit focus-out-event on dirty entry, if necessary.
+		if (pid != tv->pid)
+		{
+			cleanup_dirty_entry();  // Emit focus-out-event on dirty entry, if necessary.
 
-		if (tv->pid >= 0) stop_threads(tv);
+			if (tv->pid >= 0) stop_threads(tv);
+			tv->pid = pid;
 
-		tv->pid = pid;
-		set_page(page, config, pid);
+			set_page(page, config, pid);
 
-		if (pid >= 0) page->panel_array[pid].plot.exposure_blocked = 1;
+			if (pid >= 0) page->panel_array[pid].plot.exposure_blocked = 1;
+		}
 
 		return cat1(argv[0]);
 	}

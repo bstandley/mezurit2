@@ -58,7 +58,6 @@ GtkWidget * set_padding        (GtkWidget *widget, guint padding);
 GtkWidget * set_margins        (GtkWidget *widget, gint top, gint bottom, gint left, gint right);
 GtkWidget * set_expand_fill    (GtkWidget *widget, bool expand_fill);
 GtkWidget * set_text_view_text (GtkWidget *widget, const char *str);
-GtkWidget * set_item_checked   (GtkWidget *widget, bool checked);
 GtkWidget * get_child          (GtkWidget *widget, int n);
 GtkWidget * attach_window      (GtkWidget *target, GtkWidget *parent);
 
@@ -80,7 +79,7 @@ GtkWidget * new_text_view (gint left_margin, gint right_margin);
 GtkWidget * new_button_with_icon (const char *label_str, const char *icon);
 GtkWidget * new_toggle_button_with_icon (const char *label_str, const char *icon, GtkPositionType pos);
 GtkWidget * new_table (guint row_spacing, guint col_spacing);
-GtkWidget * new_item (GtkWidget *child, GtkWidget *image);
+GtkWidget * new_radio_item (const char *label_str);
 GtkWidget * new_scrolled_window (GtkPolicyType hpolicy, GtkPolicyType vpolicy);
 
 // Custom packing:
@@ -99,10 +98,7 @@ GtkWidget * set_submenu       (GtkWidget *submenu, GtkWidget *item);
 
 enum
 {
-	PIXBUF_ICON_CHECK = 0,
-	PIXBUF_ICON_BLANK,
-	PIXBUF_ICON_PAGE,
-	PIXBUF_ICON_ACTION,
+	PIXBUF_ICON_ACTION = 0,
 	PIXBUF_ICON_ROLLUP,
 	PIXBUF_ICON_ROLLDOWN,
 	PIXBUF_ICON_HORIZONTAL,

@@ -19,13 +19,11 @@ static gboolean plot_draw_cb (GtkWidget *widget, void *ptr, Plot *plot);
 static gboolean plot_click_cb (GtkWidget *widget, GdkEventButton *event, Plot *plot);
 static gboolean plot_minmax_cb (GtkWidget *widget, GdkEvent *event, Plot *plot, Axis *axis, int side);
 static void plot_zoom_cb (GtkWidget *widget, Plot *plot, Axis *axis, int zoom);
-static void plot_enable_cb (GtkWidget *widget, Plot *plot);
-static void plot_style_cb (GtkWidget *widget, bool *var, Plot *plot);
-static void plot_vci_cb (GtkWidget *widget, Plot *plot, Axis *axis, int vci);
+static gboolean plot_enable_cb (GtkWidget *widget, GdkEvent *event, bool *enabled, Plot *plot);
+static gboolean plot_vci_cb (GtkWidget *widget, GdkEvent *event, Plot *plot, Axis *axis, int vci);
 
-static void plot_enable_mcf (void *ptr, const char *signal_name, MValue value, Plot *plot);
-static void plot_style_mcf (bool *enabled, const char *signal_name, MValue value, GtkWidget *widget, Plot *plot);
-static void plot_vci_mcf (int *vci, const char *signal_name, MValue value, Plot *plot, Axis *axis);
+static void plot_enable_mcf (bool *enabled, const char *signal_name, MValue value, GtkWidget *widget, Plot *plot);
+static void plot_vci_mcf (int *var, const char *signal_name, MValue value, Plot *plot, Axis *axis);
 static void plot_minmax_mcf (double *var, const char *signal_name, MValue value, Plot *plot, Axis *axis, int side);
 
 gboolean plot_draw_cb (GtkWidget *widget, void *ptr, Plot *plot)  // ptr may be a CairoContext* or a GdkEvent*, but we don't care
@@ -136,42 +134,24 @@ void plot_minmax_mcf (double *var, const char *signal_name, MValue value, Plot *
 	}
 }
 
-void plot_enable_cb (GtkWidget *widget, Plot *plot)
+gboolean plot_enable_cb (GtkWidget *widget, GdkEvent *event, bool *enabled, Plot *plot)
 {
 	f_start(F_CALLBACK);
 
-	plot->enabled = !plot->enabled;
-	set_item_checked(plot->enable_item, plot->enabled);
+	bool was_active = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+	*enabled = !was_active;
 
 	full_plot(plot);
+
+	return 0;
 }
 
-void plot_enable_mcf (void *ptr, const char *signal_name, MValue value, Plot *plot)
-{
-	f_start(F_MCF);
-
-	plot->enabled = value.x_bool;
-	set_item_checked(plot->enable_item, value.x_bool);
-
-	if (str_equal(signal_name, "panel")) full_plot(plot);
-}
-
-void plot_style_cb (GtkWidget *widget, bool *enabled, Plot *plot)
-{
-	f_start(F_CALLBACK);
-
-	*enabled = !(*enabled);
-	set_item_checked(widget, *enabled);
-
-	full_plot(plot);
-}
-
-void plot_style_mcf (bool *enabled, const char *signal_name, MValue value, GtkWidget *widget, Plot *plot)
+void plot_enable_mcf (bool *enabled, const char *signal_name, MValue value, GtkWidget *widget, Plot *plot)
 {
 	f_start(F_MCF);
 
 	*enabled = value.x_bool;
-	set_item_checked(widget, value.x_bool);
+	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(widget), value.x_bool);
 
 	if (str_equal(signal_name, "panel")) full_plot(plot);
 }
@@ -192,26 +172,40 @@ void plot_zoom_cb (GtkWidget *widget, Plot *plot, Axis *axis, int zoom)
 	if (changed) full_plot(plot);
 }
 
-void plot_vci_cb (GtkWidget *widget, Plot *plot, Axis *axis, int vci)
+gboolean plot_vci_cb (GtkWidget *widget, GdkEvent *event, Plot *plot, Axis *axis, int vci)
 {
 	f_start(F_CALLBACK);
 
-	set_axis_channel(axis, plot->svs->data[0], vci);
-	full_plot(plot);
+	if (vci != axis->vci)
+	{
+		axis->vci = vci;
+
+		set_axis_channel(axis, plot->svs->data[0]);
+		full_plot(plot);
+	}
+
+	gtk_widget_hide(gtk_widget_get_parent(gtk_widget_get_parent(widget)));
+	return 1;  // prevent event propagation, since the radios were toggled explicity by set_axis_channel(), and we just re-hid the menu
 }
 
-void plot_vci_mcf (int *vci, const char *signal_name, MValue value, Plot *plot, Axis *axis)
+void plot_vci_mcf (int *var, const char *signal_name, MValue value, Plot *plot, Axis *axis)
 {
 	f_start(F_MCF);
 
 	if (str_equal(signal_name, "setup"))
 	{
-		*vci = value.x_int;
+		axis->vci = value.x_int;
 		axis->keep_vci = 1;
 	}
 	else if (str_equal(signal_name, "panel"))
 	{
-		set_axis_channel(axis, plot->svs->data[0], window_int(value.x_int, -1, plot->svs->data[0]->N_col - 1));
-		full_plot(plot);
+		int vci = window_int(value.x_int, -1, plot->svs->data[0]->N_col - 1);
+		if (vci != axis->vci)
+		{
+			axis->vci = vci;
+
+			set_axis_channel(axis, plot->svs->data[0]);
+			full_plot(plot);
+		}
 	}
 }

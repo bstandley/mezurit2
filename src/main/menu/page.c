@@ -21,7 +21,6 @@
 #include <lib/gui.h>
 #include <lib/util/fs.h>
 #include <lib/util/str.h>
-#include <main/menu/terminal.h>
 
 #include "page_callback.c"
 
@@ -29,18 +28,18 @@ void page_init (Page *page, GtkWidget *menubar)
 {
 	f_start(F_INIT);
 
-	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(new_item(new_label("_Page", 0.0), NULL), menubar));
+	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Page"), menubar));
 
-	/**/                                         page->setup_item      = menu_append(new_item(new_label("Setup", 0.0),                        gtk_image_new()), menu);
-	for (int pid = 0; pid < M2_NUM_PANEL; pid++) page->panel_item[pid] = menu_append(new_item(new_label(atg(supercat("Panel %d", pid)), 0.0), gtk_image_new()), menu);
+	/**/                                         page->setup_item      = menu_append(new_radio_item("Setup"), menu);
+	for (int pid = 0; pid < M2_NUM_PANEL; pid++) page->panel_item[pid] = menu_append(new_radio_item(atg(supercat("Panel %d", pid))), menu);
 }
 
 void page_register (Page *page, ThreadVars *tv, Config *config, Terminal *terminal)
 {
 	f_start(F_INIT);
 
-	/**/                                         snazzy_connect(page->setup_item,      "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(set_page_cb), 0x31, page, config, tv, -1);
-	for (int pid = 0; pid < M2_NUM_PANEL; pid++) snazzy_connect(page->panel_item[pid], "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(set_page_cb), 0x31, page, config, tv, pid);
+	/**/                                         snazzy_connect(page->setup_item,      "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(set_page_cb), 0x31, page, config, tv, -1);
+	for (int pid = 0; pid < M2_NUM_PANEL; pid++) snazzy_connect(page->panel_item[pid], "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(set_page_cb), 0x31, page, config, tv, pid);
 
 	snazzy_connect(page->main_window, "delete-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(exit_cb), 0x30, page, tv, terminal);
 
@@ -66,11 +65,8 @@ void set_page (Page *page, Config *config, int pid)
 	                                    supercat("%s %s: Panel %d", quote(PROG2), quote(VERSION), pid);
 	gtk_window_set_title(GTK_WINDOW(page->main_window), title);
 
-	GdkPixbuf *active_pixbuf   = lookup_pixbuf(PIXBUF_ICON_PAGE);
-	GdkPixbuf *inactive_pixbuf = lookup_pixbuf(PIXBUF_ICON_BLANK);
-
-	/**/                                   gtk_image_set_from_pixbuf(GTK_IMAGE(gtk_image_menu_item_get_image(GTK_IMAGE_MENU_ITEM(page->setup_item))),    pid == -1 ? active_pixbuf : inactive_pixbuf);
-	for (int i = 0; i < M2_NUM_PANEL; i++) gtk_image_set_from_pixbuf(GTK_IMAGE(gtk_image_menu_item_get_image(GTK_IMAGE_MENU_ITEM(page->panel_item[i]))), pid == i  ? active_pixbuf : inactive_pixbuf);
+	/**/                                   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(page->setup_item),    pid == -1);
+	for (int i = 0; i < M2_NUM_PANEL; i++) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(page->panel_item[i]), pid == i);
 
 	if (page->terminal_vte) gtk_widget_grab_focus(page->terminal_vte);
 }

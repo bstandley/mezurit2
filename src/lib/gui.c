@@ -25,7 +25,7 @@
 #include <lib/util/str.h>
 #include <lib/hardware/timing.h>
 
-#define M2_NUM_PIXBUF 23
+#define M2_NUM_PIXBUF 20
 static GdkPixbuf *pixbuf_array[M2_NUM_PIXBUF];
 static char *last_dirname;
 static GtkCssProvider *css_provider;
@@ -221,13 +221,6 @@ GtkWidget * set_visibility (GtkWidget *widget, bool visible)
 	return widget;
 }
 
-GtkWidget * set_item_checked (GtkWidget *widget, bool checked)
-{
-	GdkPixbuf *pixbuf = lookup_pixbuf(checked ? PIXBUF_ICON_CHECK : PIXBUF_ICON_BLANK);
-	gtk_image_set_from_pixbuf(GTK_IMAGE(gtk_image_menu_item_get_image(GTK_IMAGE_MENU_ITEM(widget))), pixbuf);
-	return widget;
-}
-
 GtkWidget * get_child (GtkWidget *widget, int n)
 {
 	GList *list = gtk_container_get_children(GTK_CONTAINER(widget));
@@ -275,9 +268,6 @@ void gui_init (void)
 
 	// Pre-loaded images:
 
-	pixbuf_array[PIXBUF_ICON_CHECK]      = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_check.png")),      NULL);
-	pixbuf_array[PIXBUF_ICON_BLANK]      = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_blank.png")),      NULL);
-	pixbuf_array[PIXBUF_ICON_PAGE]       = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_page.png")),       NULL);
 	pixbuf_array[PIXBUF_ICON_ACTION]     = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_action.png")),     NULL);
 	pixbuf_array[PIXBUF_ICON_ROLLUP]     = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_rollup.png")),     NULL);
 	pixbuf_array[PIXBUF_ICON_ROLLDOWN]   = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_rolldown.png")),   NULL);

@@ -68,22 +68,13 @@ GtkWidget * new_button_with_icon (const char *label_str, const char *icon)
 	return widget;
 }
 
-GtkWidget * new_item (GtkWidget *child, GtkWidget *image)
+GtkWidget * new_radio_item (const char *label_str)
 {
-	GtkWidget *widget = (image != NULL) ? gtk_image_menu_item_new() : gtk_menu_item_new();
+	GtkWidget *widget = gtk_check_menu_item_new_with_label(label_str);
+	gtk_check_menu_item_set_draw_as_radio(GTK_CHECK_MENU_ITEM(widget), 1);
 
-	if (image != NULL)
-	{
-		gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(widget), image);
-		gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM(widget), 1);
-	}
-
-	if (child != NULL)
-	{
-		container_add(child, widget);
-		gtk_menu_item_set_use_underline(GTK_MENU_ITEM(widget), 1);
-	}
-
+	GtkWidget *child = gtk_bin_get_child(GTK_BIN(widget));
+	gtk_label_set_use_markup(GTK_LABEL(child), 1);
 	return widget;
 }
 

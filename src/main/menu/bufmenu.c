@@ -27,13 +27,13 @@ void bufmenu_init (Bufmenu *bufmenu, GtkWidget *menubar)
 {
 	f_start(F_INIT);
 
-	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(new_item(new_label("_Buffer", 0.0), NULL), menubar));
+	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Buffer"), menubar));
 
-	bufmenu->link_tzero_item  = menu_append(new_item(new_label("Set T=0 on clear", 0.0),               gtk_image_new()), menu);
-	/**/                        menu_append(gtk_separator_menu_item_new(),                                               menu);
-	bufmenu->save_header_item = menu_append(new_item(new_label("Save column headings",           0.0), gtk_image_new()), menu);
-	bufmenu->save_mcf_item    = menu_append(new_item(new_label("Save config alongside data",     0.0), gtk_image_new()), menu);
-	bufmenu->save_scr_item    = menu_append(new_item(new_label("Save screenshot alongside data", 0.0), gtk_image_new()), menu);
+	bufmenu->link_tzero_item  = menu_append(gtk_check_menu_item_new_with_label("Set T=0 on clear"),               menu);
+	/**/                        menu_append(gtk_separator_menu_item_new(),                                        menu);
+	bufmenu->save_header_item = menu_append(gtk_check_menu_item_new_with_label("Save column headings"),           menu);
+	bufmenu->save_mcf_item    = menu_append(gtk_check_menu_item_new_with_label("Save config alongside data"),     menu);
+	bufmenu->save_scr_item    = menu_append(gtk_check_menu_item_new_with_label("Save screenshot alongside data"), menu);
 
 	gtk_widget_set_sensitive(bufmenu->save_mcf_item, 0);
 	gtk_widget_set_sensitive(bufmenu->save_scr_item, 0);
@@ -53,8 +53,8 @@ void bufmenu_register (Bufmenu *bufmenu)
 	mcf_connect(save_mcf_var,    "setup, panel", BLOB_CALLBACK(check_item_mcf), 0x10, bufmenu->save_mcf_item);
 	mcf_connect(save_scr_var,    "setup, panel", BLOB_CALLBACK(check_item_mcf), 0x10, bufmenu->save_scr_item);
 
-	snazzy_connect(bufmenu->link_tzero_item,  "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->link_tzero);
-	snazzy_connect(bufmenu->save_header_item, "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->save_header);
-	snazzy_connect(bufmenu->save_mcf_item,    "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->save_mcf);
-	snazzy_connect(bufmenu->save_scr_item,    "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->save_scr);
+	snazzy_connect(bufmenu->link_tzero_item,  "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->link_tzero);
+	snazzy_connect(bufmenu->save_header_item, "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->save_header);
+	snazzy_connect(bufmenu->save_mcf_item,    "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->save_mcf);
+	snazzy_connect(bufmenu->save_scr_item,    "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(check_item_cb), 0x10, &bufmenu->save_scr);
 }

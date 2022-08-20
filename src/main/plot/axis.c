@@ -64,8 +64,8 @@ void axis_init (Axis *axis, int i, GtkWidget *parent)
 	axis->zoom_auto_item                 = menu_append(gtk_menu_item_new_with_label(atg(cat3("Zoom ", text, ": Auto"))),    axis->rc_menu);
 	axis->zoom_back_item                 = menu_append(gtk_menu_item_new_with_label(atg(cat3("Zoom ", text, ": Back"))),    axis->rc_menu);
 	axis->zoom_forward_item              = menu_append(gtk_menu_item_new_with_label(atg(cat3("Zoom ", text, ": Forward"))), axis->rc_menu);
-	if (i != 0) axis->lines.enable_item  = menu_append(new_item(new_label("Show lines",  0.0), gtk_image_new()),            axis->rc_menu);
-	if (i != 0) axis->points.enable_item = menu_append(new_item(new_label("Show points", 0.0), gtk_image_new()),            axis->rc_menu);
+	if (i != 0) axis->lines.enable_item  = menu_append(gtk_check_menu_item_new_with_label("Show lines"),                    axis->rc_menu);
+	if (i != 0) axis->points.enable_item = menu_append(gtk_check_menu_item_new_with_label("Show points"),                   axis->rc_menu);
 
 	axis->ch_menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Channel"), axis->rc_menu));
 	show_all(axis->rc_menu, NULL);
@@ -189,17 +189,17 @@ bool zoom_axis (Axis *axis, SVSP svs, int mode)
 	return changed;
 }
 
-void set_axis_channel (Axis *axis, VSP vs, int vci)
+void set_axis_channel (Axis *axis, VSP vs)
 {
 	f_start(F_VERBOSE);
 
-	GtkWidget *old = get_child(axis->ch_menu, 1 + axis->vci);
-	if (old != NULL) set_item_checked(old, 0);
+	for (int vci = -1; vci < vs->N_col; vci++)
+	{
+		GtkWidget *widget = get_child(axis->ch_menu, vci + 1);
+		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(widget), vci == axis->vci);
+	}
 
-	set_item_checked(get_child(axis->ch_menu, 1 + vci), 1);
-	axis->vci = vci;
-
-	replace(axis->name, cat1(vci == -1 ? "none" : get_colname(vs, vci)));
+	replace(axis->name, cat1(axis->vci == -1 ? "none" : get_colname(vs, axis->vci)));
 }
 
 void update_tick (Axis *axis, double span)
