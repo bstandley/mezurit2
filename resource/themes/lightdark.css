@@ -1,19 +1,19 @@
 #m2_worktop         { background-color: shade (@theme_bg_color, 0.4) }
 #m2_plotbuffer      { background-color: #000000 }
 #m2_section         { background-color: @theme_bg_color }
-#m2_icon_action     { background-image: -gtk-recolor(url('icon-action-symbolic.svg')); }
-#m2_icon_sweep      { background-image: -gtk-recolor(url('icon-sweep-symbolic.svg')); }
-#m2_icon_jump       { background-image: -gtk-recolor(url('icon-jump-symbolic.svg')); }
-#m2_icon_horizontal { background-image: -gtk-recolor(url('icon-horizontal-symbolic.svg')); }
-#m2_icon_vertical   { background-image: -gtk-recolor(url('icon-vertical-symbolic.svg')); }
-#m2_icon_rollup     { background-image: -gtk-recolor(url('icon-rollup-symbolic.svg')); }
-#m2_icon_rolldown   { background-image: -gtk-recolor(url('icon-rolldown-symbolic.svg')); }
-#m2_icon_wayleft    { background-image: -gtk-recolor(url('icon-wayleft-symbolic.svg')); }
-#m2_icon_left       { background-image: -gtk-recolor(url('icon-left-symbolic.svg')); }
-#m2_icon_top        { background-image: -gtk-recolor(url('icon-top-symbolic.svg')); }
-#m2_icon_bottom     { background-image: -gtk-recolor(url('icon-bottom-symbolic.svg')); }
-#m2_icon_right      { background-image: -gtk-recolor(url('icon-right-symbolic.svg')); }
-#m2_icon_wayright   { background-image: -gtk-recolor(url('icon-wayright-symbolic.svg')); }
+#m2_icon_action     { background-image: -gtk-recolor(url('icon-action.symbolic.png')) }
+#m2_icon_sweep      { background-image: -gtk-recolor(url('icon-sweep.symbolic.png')) }
+#m2_icon_jump       { background-image: -gtk-recolor(url('icon-jump.symbolic.png')) }
+#m2_icon_horizontal { background-image: -gtk-recolor(url('icon-horizontal.symbolic.png')) }
+#m2_icon_vertical   { background-image: -gtk-recolor(url('icon-vertical.symbolic.png')) }
+#m2_icon_rollup     { background-image: -gtk-recolor(url('icon-rollup.symbolic.png')) }
+#m2_icon_rolldown   { background-image: -gtk-recolor(url('icon-rolldown.symbolic.png')) }
+#m2_icon_wayleft    { background-image: -gtk-recolor(url('icon-wayleft.symbolic.png')) }
+#m2_icon_left       { background-image: -gtk-recolor(url('icon-left.symbolic.png')) }
+#m2_icon_top        { background-image: -gtk-recolor(url('icon-top.symbolic.png')) }
+#m2_icon_bottom     { background-image: -gtk-recolor(url('icon-bottom.symbolic.png')) }
+#m2_icon_right      { background-image: -gtk-recolor(url('icon-right.symbolic.png')) }
+#m2_icon_wayright   { background-image: -gtk-recolor(url('icon-wayright.symbolic.png')) }
 
 button image {
 	background-position: center;

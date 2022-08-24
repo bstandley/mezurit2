@@ -130,6 +130,7 @@ void popup_menu_cb (GtkWidget *widget, GtkWidget *menu)
 
 	f_print(F_BENCH, "Elapsed time: %f msec\n", timer_elapsed(bench_timer) * 1e3);
 	// Note: Menu is a bit slow to appear -- 18ms with all six location buttons.
+	// Note 2: Actually, menu appears much faster when icons are PNGs (ending in ".symbolic.png" to get recolored properly).
 }
 
 gboolean hide_menu_cb (GtkWidget *widget, GdkEventButton *event, GtkWidget *menu)
