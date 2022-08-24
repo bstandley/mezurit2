@@ -42,14 +42,12 @@ void sweep_array_init (Sweep *sweep_array, GtkWidget **apt)
 {
 	f_start(F_INIT);
 
-	char *sweep_icon_filename = atg(sharepath("pixmaps/tool_sweep.png"));
-
 	for (int id = 0; id < M2_MAX_CHAN; id++)
 	{
 		Sweep *sweep = &sweep_array[id];
 
 		// section:
-		section_init(&sweep->sect, sweep_icon_filename, atg(supercat("S%d", id)), apt);
+		section_init(&sweep->sect, atg(sharepath("pixmaps/tool_sweep.png")), atg(supercat("S%d", id)), apt);
 		add_loc_menu(&sweep->sect, SECTION_WAYLEFT, SECTION_LEFT, SECTION_TOP, SECTION_BOTTOM, SECTION_RIGHT, SECTION_WAYRIGHT, -1);
 
 		// channel, visibility modes:
@@ -61,8 +59,8 @@ void sweep_array_init (Sweep *sweep_array, GtkWidget **apt)
 		gtk_widget_set_can_focus(sweep->name_entry, 0);
 		gtk_editable_set_editable(GTK_EDITABLE(sweep->name_entry), 0);
 
-		container_add(gtk_image_new_from_pixbuf(lookup_pixbuf(PIXBUF_ICON_SWEEP)), sweep->vis_sweep_button);
-		container_add(gtk_image_new_from_pixbuf(lookup_pixbuf(PIXBUF_ICON_JUMP)),  sweep->vis_jump_button);
+		gtk_widget_set_name(container_add(gtk_image_new(), sweep->vis_sweep_button), "m2_icon_sweep");
+		gtk_widget_set_name(container_add(gtk_image_new(), sweep->vis_jump_button),  "m2_icon_jump");
 
 		gtk_widget_set_tooltip_markup(sweep->vis_sweep_button, "Sweep up/down controls");
 		gtk_widget_set_tooltip_markup(sweep->vis_jump_button,  "Jump-to-target control");

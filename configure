@@ -37,12 +37,13 @@ option_flags='-DSTATUS'  # use lib/status.h
 rules="copy:src/main/setup/${prog1}compute.py:src/main/setup/compute.py \
        copy:src/control/${prog1}control.py:src/control/client.py"
 
-shares="COPYING:COPYING                                  \
-        terminal_startup.py:resource/terminal_startup.py \
-        $(find resource -name '*.pdf' -printf '%P:%p ')  \
-        $(find resource -name '*.mcf' -printf '%P:%p ')  \
-        $(find resource -name '*.png' -printf '%P:%p ')  \
-        $(find resource -name '*.css' -printf '%P:%p ')"
+shares="COPYING:COPYING                                           \
+        terminal_startup.py:resource/terminal_startup.py          \
+        $(find resource -name '*.pdf'          -printf '%P:%p ')  \
+        $(find resource -name '*.mcf'          -printf '%P:%p ')  \
+        $(find resource -name '*.png'          -printf '%P:%p ')  \
+        $(find resource -name '*-symbolic.svg' -printf '%P:%p ')  \
+        $(find resource -name '*.css'          -printf '%P:%p ')"
 
 if ! $mingw ; then
 	rules="$rules app:src/main/$prog1:src/main/main.c \

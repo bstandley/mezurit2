@@ -43,7 +43,7 @@ void update_section_visibility (Sweep *sweep)
 	set_visibility(sweep->hsep,          sweep->vis_sweep && sweep->vis_jump);
 	set_visibility(sweep->jump_section,  sweep->vis_jump);
 
-	set_visibility(gtk_widget_get_parent(sweep->sect.box), sweep->channel != NULL && (sweep->vis_sweep || sweep->vis_jump));
+	set_visibility(sweep->sect.box, sweep->channel != NULL && (sweep->vis_sweep || sweep->vis_jump));  // TODO is checking the channel necessary?
 }
 
 gboolean vismode_cb (GtkWidget *widget, GdkEvent *event, Sweep *sweep, bool *vis)

@@ -24,7 +24,7 @@
 #include <lib/util/fs.h>
 #include <lib/util/num.h>
 
-static GdkPixbuf * lookup_icon (int loc);
+static char * lookup_icon (int loc);
 
 #include "section_callback.c"
 
@@ -87,7 +87,7 @@ void add_loc_menu (Section *sect, ...)
 	for (int loc = va_arg(vl, int); loc >= 0 && loc < M2_NUM_LOCATION; loc = va_arg(vl, int))
 	{
 		sect->loc_item[loc] = pack_start(flatten_button(gtk_button_new()), 0, sect->loc_menu);
-		container_add(gtk_image_new_from_pixbuf(lookup_icon(loc)), sect->loc_item[loc]);
+		gtk_widget_set_name(container_add(gtk_image_new(), sect->loc_item[loc]), atg(lookup_icon(loc)));
 	}
 	va_end(vl);
 }
@@ -114,16 +114,16 @@ void section_register (Section *sect, const char *prefix, int default_loc, GtkWi
 		if (sect->loc_item[i] != NULL) snazzy_connect(sect->loc_item[i], "clicked", SNAZZY_VOID_VOID, BLOB_CALLBACK(locate_section_cb), 0x21, sect, apt, i);
 }
 
-GdkPixbuf * lookup_icon (int loc)
+char * lookup_icon (int loc)
 {
 	switch (loc)
 	{
-		case SECTION_WAYLEFT  : return lookup_pixbuf(PIXBUF_ICON_WAYLEFT);
-		case SECTION_LEFT     : return lookup_pixbuf(PIXBUF_ICON_LEFT);
-		case SECTION_TOP      : return lookup_pixbuf(PIXBUF_ICON_TOP);
-		case SECTION_BOTTOM   : return lookup_pixbuf(PIXBUF_ICON_BOTTOM);
-		case SECTION_RIGHT    : return lookup_pixbuf(PIXBUF_ICON_RIGHT);
-		case SECTION_WAYRIGHT : return lookup_pixbuf(PIXBUF_ICON_WAYRIGHT);
+		case SECTION_WAYLEFT  : return cat1("m2_icon_wayleft");
+		case SECTION_LEFT     : return cat1("m2_icon_left");
+		case SECTION_TOP      : return cat1("m2_icon_top");
+		case SECTION_BOTTOM   : return cat1("m2_icon_bottom");
+		case SECTION_RIGHT    : return cat1("m2_icon_right");
+		case SECTION_WAYRIGHT : return cat1("m2_icon_wayright");
 		default               : f_print(F_ERROR, "Error: Location out of range.\n");
 		                        return NULL;
 	}

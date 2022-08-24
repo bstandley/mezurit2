@@ -23,7 +23,7 @@
 
 #include <lib/blob.h>
 
-// Persistent state for run_file_chooser(), lookup_pixbuf():
+// Persistent state for run_file_chooser(), CSS theme:
 
 void gui_init  (void);
 void gui_final (void);
@@ -93,33 +93,5 @@ GtkWidget * table_attach      (GtkWidget *widget, int left, int top,            
 GtkWidget * table_attach_full (GtkWidget *widget, int left, int top, int width, int height, GtkWidget *table);
 GtkWidget * menu_append       (GtkWidget *widget, GtkWidget *menu);
 GtkWidget * set_submenu       (GtkWidget *submenu, GtkWidget *item);
-
-// Pre-loaded images:
-
-enum
-{
-	PIXBUF_ICON_ACTION = 0,
-	PIXBUF_ICON_ROLLUP,
-	PIXBUF_ICON_ROLLDOWN,
-	PIXBUF_ICON_HORIZONTAL,
-	PIXBUF_ICON_VERTICAL,
-	PIXBUF_ICON_WAYLEFT,
-	PIXBUF_ICON_LEFT,
-	PIXBUF_ICON_TOP,
-	PIXBUF_ICON_BOTTOM,
-	PIXBUF_ICON_RIGHT,
-	PIXBUF_ICON_WAYRIGHT,
-	PIXBUF_ICON_SWEEP,
-	PIXBUF_ICON_JUMP,
-	PIXBUF_RL_STOP,
-	PIXBUF_RL_HOLD,
-	PIXBUF_RL_WAIT,
-	PIXBUF_RL_READY,
-	PIXBUF_RL_IDLE,
-	PIXBUF_RL_RECORD,
-	PIXBUF_RL_SCAN
-};
-
-GdkPixbuf * lookup_pixbuf (int id);
 
 #endif

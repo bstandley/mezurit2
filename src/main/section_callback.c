@@ -34,8 +34,10 @@ void rollup_section (Section *sect)
 	set_visibility(sect->box, sect->visible);
 
 	gtk_widget_set_tooltip_text(sect->rollup_button, sect->visible ? "Hide tool" : "Show tool");
-	gtk_image_set_from_pixbuf(GTK_IMAGE(get_child(sect->rollup_button, 0)), lookup_pixbuf(sect->visible ? PIXBUF_ICON_ROLLUP : PIXBUF_ICON_ROLLDOWN));
+	gtk_widget_set_name(get_child(sect->rollup_button, 0), sect->visible ? "m2_icon_rollup" : "m2_icon_rolldown");
+
 	// Note: Using pre-loaded pixbufs cuts rollup_section_cb()'s exec time from 0.3 msec to 0.1 msec.
+	// Note 2: Loading the icons via CSS (to take advantage of the -gtk-recolor feature) is not any slower than the pre-loaded pixbufs.
 }
 
 void orient_section (Section *sect)
@@ -43,13 +45,15 @@ void orient_section (Section *sect)
 	gtk_orientable_set_orientation(GTK_ORIENTABLE(sect->box), sect->horizontal ? GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL);
 
 	gtk_widget_set_tooltip_text(sect->orient_button, sect->horizontal ? "Stack vertically" : "Arrange horizontally");
-	gtk_image_set_from_pixbuf(GTK_IMAGE(get_child(sect->orient_button, 0)), lookup_pixbuf(sect->horizontal ? PIXBUF_ICON_VERTICAL : PIXBUF_ICON_HORIZONTAL));
+	gtk_widget_set_name(get_child(sect->orient_button, 0), sect->horizontal ? "m2_icon_vertical" : "m2_icon_horizontal");
 }
 
 void locate_section (Section *sect, GtkWidget **apt)  // manually set sect->location, then run this
 {
+	f_start(F_UPDATE);
+
 	if (sect->loc_menu != NULL) gtk_widget_hide(gtk_widget_get_parent(sect->loc_menu));
-	if (sect->loc_button != NULL) gtk_image_set_from_pixbuf(GTK_IMAGE(get_child(sect->loc_button, 0)), lookup_icon(sect->location));
+	if (sect->loc_button != NULL) gtk_widget_set_name(get_child(sect->loc_button, 0), atg(lookup_icon(sect->location)));
 
 	if (apt[sect->location] == NULL) sect->location = sect->old_location;  // handle invalid locations (for example, a corrupted MCF line)
 
@@ -120,8 +124,12 @@ void locate_section_mcf (int *location, const char *str, MValue value, Section *
 void popup_menu_cb (GtkWidget *widget, GtkWidget *menu)
 {
 	f_start(F_CALLBACK);
+	Timer *bench_timer _timerfree_ = timer_new();
 
 	show_all(gtk_widget_get_parent(menu), NULL);
+
+	f_print(F_BENCH, "Elapsed time: %f msec\n", timer_elapsed(bench_timer) * 1e3);
+	// Note: Menu is a bit slow to appear -- 18ms with all six location buttons.
 }
 
 gboolean hide_menu_cb (GtkWidget *widget, GdkEventButton *event, GtkWidget *menu)

@@ -34,7 +34,7 @@ PyMODINIT_FUNC init_mezurit2control (void);
 static PyMethodDef control_methods[] =
 {
 	{"send_recv_rcmd", send_recv_rcmd_cfunc, METH_VARARGS, "Sends command and waits for reply."},
-	{"xleep",          xleep_cfunc,          METH_VARARGS, "Sleeps for specified time in seconds (decimals allowed."},
+	{"xleep",          xleep_cfunc,          METH_VARARGS, "Sleeps for specified time in seconds (decimals allowed)."},
 	{NULL,             NULL,                 0,            NULL}
 };
 

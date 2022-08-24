@@ -25,8 +25,6 @@
 #include <lib/util/str.h>
 #include <lib/hardware/timing.h>
 
-#define M2_NUM_PIXBUF 20
-static GdkPixbuf *pixbuf_array[M2_NUM_PIXBUF];
 static char *last_dirname;
 static GtkCssProvider *css_provider;
 
@@ -250,7 +248,7 @@ void scroll_down (GtkWidget *widget)
 	gtk_adjustment_set_value(adjust, gtk_adjustment_get_upper(adjust));
 }
 
-// Persistent state for run_file_chooser(), lookup_pixbuf():
+// Persistent state for run_file_chooser(), CSS theme:
 
 void gui_init (void)
 {
@@ -259,35 +257,8 @@ void gui_init (void)
 	last_dirname = catg(g_get_current_dir());
 
 	css_provider = gtk_css_provider_new();
-#ifndef MINGW
-	gtk_css_provider_load_from_path(css_provider, atg(sharepath("themes/light.css")),     NULL);
-#else
-	gtk_css_provider_load_from_path(css_provider, atg(sharepath("themes/light-win.css")), NULL);
-#endif
+	gtk_css_provider_load_from_path(css_provider, atg(sharepath("themes/lightdark.css")), NULL);
 	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-	// Pre-loaded images:
-
-	pixbuf_array[PIXBUF_ICON_ACTION]     = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_action.png")),     NULL);
-	pixbuf_array[PIXBUF_ICON_ROLLUP]     = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_rollup.png")),     NULL);
-	pixbuf_array[PIXBUF_ICON_ROLLDOWN]   = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_rolldown.png")),   NULL);
-	pixbuf_array[PIXBUF_ICON_HORIZONTAL] = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_horizontal.png")), NULL);
-	pixbuf_array[PIXBUF_ICON_VERTICAL]   = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_vertical.png")),   NULL);
-	pixbuf_array[PIXBUF_ICON_WAYLEFT]    = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_wayleft.png")),    NULL);
-	pixbuf_array[PIXBUF_ICON_LEFT]       = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_left.png")),       NULL);
-	pixbuf_array[PIXBUF_ICON_TOP]        = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_top.png")),        NULL);
-	pixbuf_array[PIXBUF_ICON_BOTTOM]     = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_bottom.png")),     NULL);
-	pixbuf_array[PIXBUF_ICON_RIGHT]      = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_right.png")),      NULL);
-	pixbuf_array[PIXBUF_ICON_WAYRIGHT]   = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_wayright.png")),   NULL);
-	pixbuf_array[PIXBUF_ICON_SWEEP]      = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_sweep.png")),      NULL);
-	pixbuf_array[PIXBUF_ICON_JUMP]       = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/icon_jump.png")),       NULL);
-	pixbuf_array[PIXBUF_RL_STOP]         = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/rl_stop.png")),         NULL);
-	pixbuf_array[PIXBUF_RL_HOLD]         = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/rl_hold.png")),         NULL);
-	pixbuf_array[PIXBUF_RL_WAIT]         = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/rl_wait.png")),         NULL);
-	pixbuf_array[PIXBUF_RL_READY]        = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/rl_ready.png")),        NULL);
-	pixbuf_array[PIXBUF_RL_IDLE]         = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/rl_idle.png")),         NULL);
-	pixbuf_array[PIXBUF_RL_RECORD]       = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/rl_record.png")),       NULL);
-	pixbuf_array[PIXBUF_RL_SCAN]         = gdk_pixbuf_new_from_file(atg(sharepath("pixmaps/rl_scan.png")),         NULL);
 }
 	
 void gui_final (void)
@@ -298,16 +269,4 @@ void gui_final (void)
 
 	gtk_style_context_remove_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider));
 	g_object_unref(G_OBJECT(css_provider));
-
-	for (int id = 0; id < M2_NUM_PIXBUF; id++) g_object_unref(pixbuf_array[id]);
-}
-
-GdkPixbuf * lookup_pixbuf (int id)
-{
-	if (id >= 0 && id < M2_NUM_PIXBUF) return pixbuf_array[id];
-	else
-	{
-		f_print(F_ERROR, "Error: Pixbuf id out of range.\n");
-		return NULL;
-	}
 }

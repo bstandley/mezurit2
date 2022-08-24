@@ -83,10 +83,10 @@ void set_scope_runlevel (Scope *scope, int rl)
 	gtk_widget_set_sensitive(scope->time_entry->widget, rl != SCOPE_RL_SCAN);
 
 	gtk_button_set_label(GTK_BUTTON(scope->button), rl == SCOPE_RL_SCAN ? "CANCEL" : "SCAN");
-	gtk_image_set_from_pixbuf(GTK_IMAGE(scope->image), lookup_pixbuf(rl == SCOPE_RL_SCAN  ? PIXBUF_RL_SCAN  :
-	                                                                 rl == SCOPE_RL_READY ? PIXBUF_RL_READY :
-	                                                                 rl == SCOPE_RL_HOLD  ? PIXBUF_RL_HOLD  :
-	                                                                                        PIXBUF_RL_STOP));
+	gtk_image_set_from_file(GTK_IMAGE(scope->image), atg(sharepath(rl == SCOPE_RL_SCAN  ? "pixmaps/rl_scan.png"  :
+	                                                               rl == SCOPE_RL_READY ? "pixmaps/rl_ready.png" :
+	                                                               rl == SCOPE_RL_HOLD  ? "pixmaps/rl_hold.png"  :
+	                                                                                      "pixmaps/rl_stop.png")));
 }
 
 void scope_update (Scope *scope, ChanSet *chanset)

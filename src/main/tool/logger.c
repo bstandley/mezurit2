@@ -128,11 +128,13 @@ void set_logger_runlevel (Logger *logger, int rl)
 	gtk_widget_set_sensitive(logger->button, rl != LOGGER_RL_STOP && rl != LOGGER_RL_HOLD);
 
 	gtk_button_set_label(GTK_BUTTON(logger->button), rl == LOGGER_RL_RECORD || rl == LOGGER_RL_WAIT ? "STOP" : "START");
-	gtk_image_set_from_pixbuf(GTK_IMAGE(logger->image), lookup_pixbuf(rl == LOGGER_RL_WAIT   ? PIXBUF_RL_WAIT   :
-	                                                                  rl == LOGGER_RL_RECORD ? PIXBUF_RL_RECORD :
-	                                                                  rl == LOGGER_RL_IDLE   ? PIXBUF_RL_IDLE   :
-	                                                                  rl == LOGGER_RL_HOLD   ? PIXBUF_RL_HOLD   :
-	                                                                                           PIXBUF_RL_STOP));
+	gtk_image_set_from_file(GTK_IMAGE(logger->image), atg(sharepath(rl == LOGGER_RL_WAIT   ? "pixmaps/rl_wait.png"   :
+	                                                                rl == LOGGER_RL_RECORD ? "pixmaps/rl_record.png" :
+	                                                                rl == LOGGER_RL_IDLE   ? "pixmaps/rl_idle.png"   :
+	                                                                rl == LOGGER_RL_HOLD   ? "pixmaps/rl_hold.png"   :
+	                                                                                         "pixmaps/rl_stop.png")));
+
+	// Note: Loading an image from disk takes 0.75ms vs. 0.50ms for a pre-loaded pixbuf.
 }
 
 void set_logger_scanning (Logger *logger, bool scanning)

@@ -1,3 +1,0 @@
-#m2_worktop    { background-color: shade (@theme_bg_color, 0.4) }
-#m2_plotbuffer { background-color: #000000 }
-#m2_section    { background-color: @theme_bg_color }
