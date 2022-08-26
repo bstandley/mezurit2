@@ -17,6 +17,9 @@
 
 static void abort_control_cb (GtkWidget *widget, ThreadVars *tv);
 static void respawn_cb (GtkWidget *widget, Terminal *terminal);
+#ifndef MINGW
+static void respawn_after_exit_cb (GtkWidget *widget, int status, Terminal *terminal);
+#endif
 
 void abort_control_cb (GtkWidget *widget, ThreadVars *tv)
 {
@@ -35,11 +38,26 @@ void respawn_cb (GtkWidget *widget, Terminal *terminal)
 {
 	f_start(F_CALLBACK);
 
-#ifndef MINGW
-	char *msg _strfree_ = cat1("Restarting . . .   ");
-	vte_terminal_feed(VTE_TERMINAL(terminal->vte), msg, (glong) str_length(msg));
+	spawn_terminal(terminal);  // does *not* give python a chance to shutdown gracefully
+
+#ifdef MINGW
+	status_add(0, cat1("Launched new terminal window.\n"));
 #endif
+}
+
+#ifndef MINGW
+void respawn_after_exit_cb (GtkWidget *widget, int status, Terminal *terminal)
+{
+	if (terminal->no_auto_respawn)
+	{
+		f_print(F_CALLBACK, "Skipping unnecessary callback.\n");
+		return;
+	}
+
+	f_start(F_CALLBACK);
+
 	spawn_terminal(terminal);
 
-	status_add(0, cat1("Restarted command line process.\n"));
+	status_add(0, supercat("Command line process exited with status %d, restarted automatically.\n", status));
 }
+#endif

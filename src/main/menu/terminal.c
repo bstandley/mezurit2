@@ -41,8 +41,7 @@ void terminal_init (Terminal *terminal, GtkWidget *menubar, GtkWidget *scroll, i
 #ifndef MINGW
 	terminal->vte = container_add(vte_terminal_new(), scroll);
 	vte_terminal_set_size(VTE_TERMINAL(terminal->vte), 120, 500);
-#else
-	terminal->vte = NULL;
+	terminal->no_auto_respawn = 0;
 #endif
 
 	g_setenv("PYTHONSTARTUP",       atg(sharepath("terminal_startup.py")), 1);
@@ -62,10 +61,10 @@ void terminal_register (Terminal *terminal, ThreadVars *tv)
 	f_start(F_INIT);
 
 #ifndef MINGW
-	snazzy_connect(terminal->vte,          "child-exited", SNAZZY_VOID_VOID, BLOB_CALLBACK(respawn_cb),       0x10, terminal);
+	snazzy_connect(terminal->vte,          "child-exited", SNAZZY_VOID_INT,  BLOB_CALLBACK(respawn_after_exit_cb), 0x10, terminal);
 #endif
-	snazzy_connect(terminal->restart_item, "activate",     SNAZZY_VOID_VOID, BLOB_CALLBACK(respawn_cb),       0x10, terminal);
-	snazzy_connect(terminal->abort_item,   "activate",     SNAZZY_VOID_VOID, BLOB_CALLBACK(abort_control_cb), 0x10, tv);
+	snazzy_connect(terminal->restart_item, "activate",     SNAZZY_VOID_VOID, BLOB_CALLBACK(respawn_cb),            0x10, terminal);
+	snazzy_connect(terminal->abort_item,   "activate",     SNAZZY_VOID_VOID, BLOB_CALLBACK(abort_control_cb),      0x10, tv);
 }
 
 void spawn_terminal (Terminal *terminal)
@@ -73,9 +72,9 @@ void spawn_terminal (Terminal *terminal)
 	f_start(F_RUN);
 
 #ifdef MINGW
-	system(atg(supercat("start \"%s %s: Terminal\" \"%s\" -O -B", quote(PROG2), quote(VERSION), atg(libpath("python.exe")))));
+	char *exe = atg(supercat("python%d.%d.exe", PY_MAJOR_VERSION, PY_MINOR_VERSION));
+	system(atg(supercat("start \"%s %s: Terminal\" \"%s\" -O -B", quote(PROG2), quote(VERSION), atg(libpath(exe)))));
 #else
-
 	char *argv[2];
 	argv[0] = atg(supercat("python%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION));
 	argv[1] = NULL;
@@ -90,5 +89,6 @@ void quit_terminal (Terminal *terminal)
 #ifndef MINGW
 	char *msg _strfree_ = cat1("quit()\n");
 	vte_terminal_feed_child(VTE_TERMINAL(terminal->vte), msg, (glong) str_length(msg));
+	terminal->no_auto_respawn = 1;
 #endif
 }

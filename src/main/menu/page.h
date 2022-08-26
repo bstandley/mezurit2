@@ -27,9 +27,9 @@ typedef struct
 
 		GtkWidget *setup_item, *panel_item[M2_NUM_PANEL];
 
-		Setup *setup;             // inherited from Mezurit2
-		Panel *panel_array;       // inherited from Mezurit2
-		GtkWidget *terminal_vte;  // inherited from Mezurit2
+		Setup *setup;        // inherited from Mezurit2
+		Panel *panel_array;  // inherited from Mezurit2
+		Terminal *terminal;  // inherited from Mezurit2
 
 	// public:
 
@@ -38,7 +38,7 @@ typedef struct
 } Page;
 
 void page_init     (Page *page, GtkWidget *menubar);
-void page_register (Page *page, ThreadVars *tv, Config *config, Terminal *terminal);
+void page_register (Page *page, ThreadVars *tv, Config *config);
 
 void set_page (Page *page, Config *config, int pid);
 

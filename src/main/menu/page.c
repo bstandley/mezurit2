@@ -34,14 +34,14 @@ void page_init (Page *page, GtkWidget *menubar)
 	for (int pid = 0; pid < M2_NUM_PANEL; pid++) page->panel_item[pid] = menu_append(new_radio_item(atg(supercat("Panel %d", pid))), menu);
 }
 
-void page_register (Page *page, ThreadVars *tv, Config *config, Terminal *terminal)
+void page_register (Page *page, ThreadVars *tv, Config *config)
 {
 	f_start(F_INIT);
 
 	/**/                                         snazzy_connect(page->setup_item,      "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(set_page_cb), 0x31, page, config, tv, -1);
 	for (int pid = 0; pid < M2_NUM_PANEL; pid++) snazzy_connect(page->panel_item[pid], "button-release-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(set_page_cb), 0x31, page, config, tv, pid);
 
-	snazzy_connect(page->main_window, "delete-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(exit_cb), 0x30, page, tv, terminal);
+	snazzy_connect(page->main_window, "delete-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(exit_cb), 0x20, page, tv);
 
 	control_server_connect(M2_TS_ID, "hello",     M2_CODE_SETUP | all_pid(M2_CODE_GUI), BLOB_CALLBACK(hello_csf),     0x00);
 	control_server_connect(M2_TS_ID, "set_panel", M2_CODE_SETUP | all_pid(M2_CODE_GUI), BLOB_CALLBACK(set_panel_csf), 0x30, page, config, tv);
@@ -55,7 +55,9 @@ void set_page (Page *page, Config *config, int pid)
 	for (int i = 0; i < 6; i++) gtk_widget_set_sensitive(config->load_item[i],     pid == -1);
 	/**/                        gtk_widget_set_sensitive(config->load_preset_item, pid == -1);
 
-	if (page->terminal_vte != NULL) container_add(page->terminal_vte, pid == -1 ? page->setup->terminal_scroll : page->panel_array[pid].terminal_scroll);  // TODO use ifdef MINGW here?
+#ifndef MINGW
+	container_add(page->terminal->vte, pid == -1 ? page->setup->terminal_scroll : page->panel_array[pid].terminal_scroll);
+#endif
 	message_update(pid == -1 ? &page->setup->message : &page->panel_array[pid].message);
 
 	gtk_stack_set_visible_child(GTK_STACK(page->worktop), get_child(page->worktop, pid + 1));  // depends on setup_init() and panel_init() having been called in the expected order
@@ -67,5 +69,7 @@ void set_page (Page *page, Config *config, int pid)
 	/**/                                   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(page->setup_item),    pid == -1);
 	for (int i = 0; i < M2_NUM_PANEL; i++) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(page->panel_item[i]), pid == i);
 
-	if (page->terminal_vte) gtk_widget_grab_focus(page->terminal_vte);  // TODO use ifdef MINGW here?
+#ifndef MINGW
+	gtk_widget_grab_focus(page->terminal->vte);
+#endif
 }

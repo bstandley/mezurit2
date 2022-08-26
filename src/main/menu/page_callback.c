@@ -16,7 +16,7 @@
 */
 
 static gboolean set_page_cb (GtkWidget *widget, GdkEvent *event, Page *page, Config *config, ThreadVars *tv, int pid);
-static gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv, Terminal *terminal);
+static gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv);
 static char * set_panel_csf (gchar **argv, Page *page, Config *config, ThreadVars *tv);
 static char * get_panel_csf (gchar **argv, ThreadVars *tv);
 static char * hello_csf (gchar **argv);
@@ -41,7 +41,7 @@ gboolean set_page_cb (GtkWidget *widget, GdkEvent *event, Page *page, Config *co
 	return 1;  // prevent event propagation, since the radios were toggled explicity by set_page(), and we just re-hid the menu
 }
 
-gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv, Terminal *terminal)
+gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv)
 {
 	f_start(F_CALLBACK);
 
@@ -51,7 +51,7 @@ gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv
 		else return 1;
 	}
 
-	quit_terminal(terminal);
+	quit_terminal(page->terminal);
 	tv->pid = -2;
 
 	return 1;

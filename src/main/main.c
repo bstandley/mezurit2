@@ -134,7 +134,9 @@ int main (int argc, char *argv[])
 	spawn_terminal(&m2.terminal);
 	gtk_widget_destroy(splash_window);
 	show_all(m2.page.main_window, NULL);
-	if (m2.terminal.vte != NULL) gtk_widget_grab_focus(m2.terminal.vte);
+#ifndef MINGW
+	gtk_widget_grab_focus(m2.terminal.vte);
+#endif
 
 	status_add(1, supercat("Welcome to %s %s!\n", quote(PROG2), quote(VERSION)));
 	f_print(F_BENCH, "startup: %f sec\n", timer_elapsed(bench_timer));
@@ -242,7 +244,7 @@ void mezurit2_init (struct Mezurit2 *m2)
 
 	m2->page.setup = &m2->setup;
 	m2->page.panel_array = m2->panel;
-	m2->page.terminal_vte = m2->terminal.vte;
+	m2->page.terminal = &m2->terminal;
 	m2->tv.chanset = &m2->chanset;
 
 	set_page(&m2->page, &m2->config, -1);
@@ -284,7 +286,7 @@ void mezurit2_register (struct Mezurit2 *m2)
 
 	oldvars_register(&m2->oldvars);
 	
-	page_register     (&m2->page, &m2->tv, &m2->config, &m2->terminal);
+	page_register     (&m2->page, &m2->tv, &m2->config);
 	config_register   (&m2->config, m2->setup.hw, &m2->tv.panel, &m2->oldvars);
 	bufmenu_register  (&m2->bufmenu);
 	terminal_register (&m2->terminal, &m2->tv);

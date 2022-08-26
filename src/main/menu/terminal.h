@@ -24,7 +24,11 @@ typedef struct
 {
 	// private:
 
-		GtkWidget *vte, *abort_item, *restart_item;
+		GtkWidget *abort_item, *restart_item;
+#ifndef MINGW
+		GtkWidget *vte;
+		bool no_auto_respawn;
+#endif
 
 } Terminal;
 
