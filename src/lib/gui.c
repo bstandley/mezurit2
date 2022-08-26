@@ -228,20 +228,6 @@ GtkWidget * get_child (GtkWidget *widget, int n)
 	return child;
 }
 
-int get_N_children (GtkWidget *widget)
-{
-	GList *list = gtk_container_get_children(GTK_CONTAINER(widget));
-	int N = (int) g_list_length(list);
-	g_list_free(list);
-	return N;
-}
-
-void set_flipbook_page (GtkWidget *widget, int page)
-{
-	int N = get_N_children(widget);
-	for (int n = 0; n < N; n++) set_visibility(get_child(widget, n), n == page);
-}
-
 void scroll_down (GtkWidget *widget)
 {
 	GtkAdjustment *adjust = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(widget));

@@ -55,11 +55,10 @@ void set_page (Page *page, Config *config, int pid)
 	for (int i = 0; i < 6; i++) gtk_widget_set_sensitive(config->load_item[i],     pid == -1);
 	/**/                        gtk_widget_set_sensitive(config->load_preset_item, pid == -1);
 
-	if (page->terminal_vte != NULL) container_add(page->terminal_vte, pid == -1 ? page->setup->terminal_scroll : page->panel_array[pid].terminal_scroll);
+	if (page->terminal_vte != NULL) container_add(page->terminal_vte, pid == -1 ? page->setup->terminal_scroll : page->panel_array[pid].terminal_scroll);  // TODO use ifdef MINGW here?
 	message_update(pid == -1 ? &page->setup->message : &page->panel_array[pid].message);
 
-	if (pid >= 0) gtk_widget_hide(page->flipbook);
-	set_flipbook_page(page->flipbook, pid + 1);
+	gtk_stack_set_visible_child(GTK_STACK(page->worktop), get_child(page->worktop, pid + 1));  // depends on setup_init() and panel_init() having been called in the expected order
 
 	char *title _strfree_ = pid == -1 ? supercat("%s %s: Setup",    quote(PROG2), quote(VERSION)) :
 	                                    supercat("%s %s: Panel %d", quote(PROG2), quote(VERSION), pid);
@@ -68,5 +67,5 @@ void set_page (Page *page, Config *config, int pid)
 	/**/                                   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(page->setup_item),    pid == -1);
 	for (int i = 0; i < M2_NUM_PANEL; i++) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(page->panel_item[i]), pid == i);
 
-	if (page->terminal_vte) gtk_widget_grab_focus(page->terminal_vte);
+	if (page->terminal_vte) gtk_widget_grab_focus(page->terminal_vte);  // TODO use ifdef MINGW here?
 }

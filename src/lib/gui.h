@@ -42,12 +42,8 @@ void snazzy_connect (GtkWidget *widget, const char *signal_list, int type, BlobC
 
 // Utilities:
 
-void show_all           (GtkWidget *widget, void *ptr);
-void set_flipbook_page  (GtkWidget *widget, int page);
-void scroll_down        (GtkWidget *widget);
-
-int get_N_children     (GtkWidget *widget);
-int get_N_vis_children (GtkWidget *widget);
+void show_all    (GtkWidget *widget, void *ptr);
+void scroll_down (GtkWidget *widget);
 
 GtkWidget * set_no_show_all    (GtkWidget *widget);
 GtkWidget * set_visibility     (GtkWidget *widget, bool visible);

@@ -33,7 +33,7 @@ typedef struct
 
 	// public:
 
-		GtkWidget *main_window, *flipbook;  // externally initialized before calling page_init()
+		GtkWidget *main_window, *worktop;  // externally initialized before calling page_init()
 
 } Page;
 

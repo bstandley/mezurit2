@@ -23,6 +23,6 @@
 void thread_register_gui   (ThreadVars *tv);
 void thread_register_panel (ThreadVars *tv, Panel *panel);
 
-void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array, GtkWidget *flipbook);
+void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array);
 
 #endif

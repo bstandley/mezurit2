@@ -61,7 +61,7 @@ void thread_register_panel (ThreadVars *tv, Panel *panel)
 	snazzy_connect(panel->logger.gpib_button,  "button-release-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(gpib_pause_cb), 0x10, tv);
 }
 
-void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array, GtkWidget *flipbook)
+void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 {
 	f_start(F_UPDATE);
 
@@ -92,7 +92,6 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array,
 	trigger_array_update (panel->trigger);
 
 	clear_gtk_events(0);
-	gtk_widget_show(flipbook);
 
 	if (!plot->exposure_complete)
 	{

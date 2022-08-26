@@ -81,10 +81,10 @@ typedef struct
 
 } OldVars;
 
-void setup_init     (Setup *setup, GtkWidget *flipbook);
+void setup_init     (Setup *setup, GtkWidget *worktop);
 void setup_register (Setup *setup);
 
-void panel_init     (Panel *panel, int pid, GtkWidget *flipbook);
+void panel_init     (Panel *panel, int pid, GtkWidget *worktop);
 void panel_register (Panel *panel, ChanSet *chanset);
 void panel_final    (Panel *panel);
 

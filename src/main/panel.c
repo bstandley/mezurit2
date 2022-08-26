@@ -26,7 +26,7 @@
 #include <lib/util/num.h>
 #include <main/thread/gui.h>
 
-static void make_page (GtkWidget *flipbook, GtkWidget **hbox_main, GtkWidget **vbox_main, GtkWidget **terminal_scroll);
+static void make_page (GtkWidget *worktop, GtkWidget **hbox_main, GtkWidget **vbox_main, GtkWidget **terminal_scroll);
 static void scrollfix_connect (GtkWidget *widget);
 static void scrollfix_cb (GtkWidget *widget, GdkRectangle *rect, GtkWidget *scroll, GtkAdjustment *adj);
 
@@ -57,12 +57,12 @@ static void scrollfix_cb (GtkWidget *widget, GdkRectangle *rect, GtkWidget *scro
  *  └----------------------------------------------------------------------------------┘
 */
 
-void setup_init (Setup *setup, GtkWidget *flipbook)
+void setup_init (Setup *setup, GtkWidget *worktop)
 {
 	f_start(F_INIT);
 
 	GtkWidget *hbox_main, *vbox_main;
-	make_page(flipbook, &hbox_main, &vbox_main, &setup->terminal_scroll);
+	make_page(worktop, &hbox_main, &vbox_main, &setup->terminal_scroll);
 
 	setup->apt[SECTION_RIGHT] = add_with_viewport(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0),
 	                            pack_start(set_margins(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main));
@@ -137,7 +137,7 @@ void setup_register (Setup *setup)
  *  └----------------------------------------------------------------------------------------------------┘
 */
 
-void panel_init (Panel *panel, int pid, GtkWidget *flipbook)
+void panel_init (Panel *panel, int pid, GtkWidget *worktop)
 {
 	f_start(F_INIT);
 
@@ -146,7 +146,7 @@ void panel_init (Panel *panel, int pid, GtkWidget *flipbook)
 	mt_mutex_init(&panel->trigger_mutex);
 
 	GtkWidget *hbox_main, *vbox_main;
-	make_page(flipbook, &hbox_main, &vbox_main, &panel->terminal_scroll);
+	make_page(worktop, &hbox_main, &vbox_main, &panel->terminal_scroll);
 
 	GtkWidget *hbox_right = add_with_viewport(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
 	                        pack_start(set_margins(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main));
@@ -244,9 +244,9 @@ void scrollfix_cb (GtkWidget *widget, GdkRectangle *rect, GtkWidget *scroll, Gtk
 	gtk_widget_queue_resize(scroll);
 }
 
-void make_page (GtkWidget *flipbook, GtkWidget **hbox_main, GtkWidget **vbox_main, GtkWidget **terminal_scroll)
+void make_page (GtkWidget *worktop, GtkWidget **hbox_main, GtkWidget **vbox_main, GtkWidget **terminal_scroll)
 {
-	*hbox_main = pack_start(set_no_show_all(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)), 1, flipbook);
+	*hbox_main = container_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), worktop);
 #ifndef MINGW
 	GtkWidget *panes = pack_start(gtk_paned_new(GTK_ORIENTATION_VERTICAL), 1, *hbox_main);
 

@@ -153,7 +153,7 @@ int main (int argc, char *argv[])
 			if (!matched) control_server_reply(M2_TS_ID, "command_error");
 		}
 
-		if (m2.tv.pid >= 0) run_gui_thread(&m2.tv, m2.setup.channel, m2.panel, m2.page.flipbook);
+		if (m2.tv.pid >= 0) run_gui_thread(&m2.tv, m2.setup.channel, m2.panel);
 
 		xleep(1.0 / M2_DEFAULT_GUI_RATE);
 
@@ -205,14 +205,15 @@ void mezurit2_init (struct Mezurit2 *m2)
 
 	GtkWidget *vbox = container_add(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), m2->page.main_window);
 
-	GtkWidget *menubar = pack_start(gtk_menu_bar_new(),                         0, vbox);
-	m2->page.flipbook  = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, vbox);
-	gtk_widget_set_name(m2->page.flipbook, "m2_worktop");
+	GtkWidget *menubar = pack_start(gtk_menu_bar_new(), 0, vbox);
+	m2->page.worktop   = pack_start(gtk_stack_new(),    1, vbox);
+	gtk_stack_set_homogeneous(GTK_STACK(m2->page.worktop), 0);
+	gtk_widget_set_name(m2->page.worktop, "m2_worktop");
 
 	int port = control_server_listen(M2_TS_ID);
 
 	// setup:
-	setup_init(&m2->setup, m2->page.flipbook);
+	setup_init(&m2->setup, m2->page.worktop);
 
 	// menus:
 	page_init     (&m2->page,     menubar);
@@ -222,7 +223,7 @@ void mezurit2_init (struct Mezurit2 *m2)
 	help_init     (&m2->help,     menubar);
 
 	// panels:
-	for (int pid = 0; pid < M2_NUM_PANEL; pid++) panel_init(&m2->panel[pid], pid, m2->page.flipbook);
+	for (int pid = 0; pid < M2_NUM_PANEL; pid++) panel_init(&m2->panel[pid], pid, m2->page.worktop);
 
 	// threads:
 	thread_init_all(&m2->tv);
