@@ -62,10 +62,3 @@ GtkWidget * menu_append (GtkWidget *widget, GtkWidget *menu)
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), widget);
 	return widget;
 }
-
-GtkWidget * add_with_viewport (GtkWidget *widget, GtkWidget *parent)
-{
-	gtk_container_add(GTK_CONTAINER(parent), widget);
-	gtk_viewport_set_shadow_type(GTK_VIEWPORT(gtk_widget_get_parent(widget)), GTK_SHADOW_NONE);
-	return widget;
-}

@@ -88,12 +88,8 @@ GtkWidget * set_text_view_text (GtkWidget *widget, const char *str)
 
 char * run_file_chooser (const char *title, int action, const char *preset)
 {
-	GtkWidget *chooser = gtk_file_chooser_dialog_new(title, NULL, action == FILE_CHOOSER_OPEN ? GTK_FILE_CHOOSER_ACTION_OPEN : GTK_FILE_CHOOSER_ACTION_SAVE,
-	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
-	                                                 "_OK",     GTK_RESPONSE_ACCEPT, NULL);
-
+	GtkFileChooserNative *chooser = gtk_file_chooser_native_new(title, NULL, action == FILE_CHOOSER_OPEN ? GTK_FILE_CHOOSER_ACTION_OPEN : GTK_FILE_CHOOSER_ACTION_SAVE, NULL, NULL);
 	if (action == FILE_CHOOSER_SAVE) gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER(chooser), 1);
-
 	if (preset != NULL)
 	{
 		char *dirname _strfree_ = extract_dir(preset);
@@ -104,9 +100,9 @@ char * run_file_chooser (const char *title, int action, const char *preset)
 	}
 	else gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(chooser), last_dirname);
 
-	bool ok = (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT);
+	bool ok = (gtk_native_dialog_run(GTK_NATIVE_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT);
 	char *filename = ok ? catg(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(chooser))) : NULL;
-	gtk_widget_destroy(chooser);
+	g_object_unref(chooser);
 
 	if (preset == NULL && filename != NULL) replace(last_dirname, extract_dir(filename));
 
@@ -133,16 +129,6 @@ GtkWidget * set_expand_fill (GtkWidget *widget, bool expand_fill)
 	gtk_box_query_child_packing(box, widget, NULL,        NULL,        &padding, &packtype);
 	gtk_box_set_child_packing  (box, widget, expand_fill, expand_fill, padding,  packtype);
 
-	return widget;
-}
-
-GtkWidget * fix_shadow (GtkWidget *widget)
-{
-#ifdef MINGW
-	g_object_set(G_OBJECT(widget), "shadow-type", GTK_SHADOW_IN, NULL);
-#else
-	g_object_set(G_OBJECT(widget), "shadow-type", GTK_SHADOW_ETCHED_IN, NULL);
-#endif
 	return widget;
 }
 

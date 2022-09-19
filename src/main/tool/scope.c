@@ -64,7 +64,7 @@ void scope_init (Scope *scope, GtkWidget **apt)
 
 	// status:
 	GtkWidget *status_hbox = container_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
-	                         pack_start(fix_shadow(gtk_frame_new(NULL)), 0, scope->sect.box));
+	                         pack_start(gtk_frame_new(NULL), 0, scope->sect.box));
 
 	scope->status_left  = pack_start(new_text_view(1, 4), 0, status_hbox);
 	scope->status_right = pack_start(new_text_view(0, 0), 1, status_hbox);

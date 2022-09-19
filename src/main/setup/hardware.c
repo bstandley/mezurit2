@@ -98,7 +98,7 @@ void hardware_array_init (Hardware *hw_array, GtkWidget **apt)
 		hw->settle = 0;
 
 		GtkWidget *textview = container_add(new_text_view(4, 4),
-		                      pack_start(fix_shadow(gtk_frame_new(NULL)),            1, hw->sect.box));
+		                      pack_start(gtk_frame_new(NULL),                        1, hw->sect.box));
 		GtkWidget *hbox     = pack_end  (gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4), 0, hw->sect.box);
 
 		g_object_set(G_OBJECT(textview), "border-width", 1, NULL);

@@ -404,9 +404,9 @@ GtkWidget * make_sweep_section (Sweep *sweep)
 	GtkWidget *table = set_margins(new_table(0, 0), 2, 2, 8, 4);
 
 	// buttons:
-	sweep->stop_button = table_attach(gtk_toggle_button_new_with_label("STOP"),                    0, 0, table);
-	sweep->down_button = table_attach(new_toggle_button_with_icon("DN", "go-down", GTK_POS_LEFT),  1, 0, table);
-	sweep->up_button   = table_attach(new_toggle_button_with_icon("UP", "go-up",   GTK_POS_RIGHT), 2, 0, table);
+	sweep->stop_button = table_attach(gtk_toggle_button_new_with_label("STOP"), 0, 0, table);
+	sweep->down_button = table_attach(gtk_toggle_button_new_with_label("DOWN"), 1, 0, table);
+	sweep->up_button   = table_attach(gtk_toggle_button_new_with_label("UP"),   2, 0, table);
 
 	// ranges:
 	attach_range(&sweep->voltage,  1, "V<sub>DAC</sub>",   "V",   table);
@@ -471,7 +471,7 @@ GtkWidget * make_jump_section (Sweep *sweep)
 	/**/                       table_attach(sweep->jump_voltage_entry->widget,  1, 0, table);
 	/**/                       table_attach(sweep->jump_scaled_entry->widget,   1, 1, table);
 
-	sweep->jump_button = table_attach_full(new_button_with_icon("SET", "go-last"), 2, 0, 1, 2, table);
+	sweep->jump_button = table_attach_full(gtk_button_new_with_label("SET"), 2, 0, 1, 2, table);
 	set_margins(sweep->jump_button, 2, 2, 8, 8);
 	gtk_button_set_image_position(GTK_BUTTON(sweep->jump_button), GTK_POS_RIGHT);
 

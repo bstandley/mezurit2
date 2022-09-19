@@ -41,7 +41,7 @@ void message_init (Message *message, GtkWidget **apt)
 	set_padding(message->mini_spacer, 2);
 
 	message->scroll = container_add(size_widget(new_scrolled_window(GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS), -1, M2_MESSAGE_HEIGHT),
-	                  pack_start(fix_shadow(gtk_frame_new(NULL)), 1, message->sect.box));
+	                  pack_start(gtk_frame_new(NULL), 1, message->sect.box));
 	GtkWidget *textview = container_add(new_text_view(0, 0), message->scroll);
 
 	g_object_set(G_OBJECT(textview), "border-width", 1, NULL);

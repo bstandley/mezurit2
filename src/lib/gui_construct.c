@@ -29,7 +29,7 @@ GtkWidget * new_entry (int max, int width)
 	GtkWidget *widget = gtk_entry_new();
 	gtk_entry_set_max_length  (GTK_ENTRY(widget), max);
 	gtk_entry_set_width_chars (GTK_ENTRY(widget), width);
-	return fix_shadow(widget);
+	return widget;
 }
 
 GtkWidget * new_text_view (gint left_margin, gint right_margin)
@@ -47,24 +47,6 @@ GtkWidget * new_table (guint row_spacing, guint col_spacing)
 	GtkWidget *widget = gtk_grid_new();
 	gtk_grid_set_row_spacing   (GTK_GRID(widget), row_spacing);
 	gtk_grid_set_column_spacing(GTK_GRID(widget), col_spacing);
-	return widget;
-}
-
-GtkWidget * new_toggle_button_with_icon (const char *label_str, const char *icon, GtkPositionType pos)
-{
-	GtkWidget *widget = gtk_toggle_button_new_with_label(label_str);
-	if (icon != NULL)
-	{
-		gtk_button_set_image(GTK_BUTTON(widget), gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_MENU));
-		gtk_button_set_image_position(GTK_BUTTON(widget), pos);
-	}
-	return widget;
-}
-
-GtkWidget * new_button_with_icon (const char *label_str, const char *icon)
-{
-	GtkWidget *widget = (label_str != NULL) ? gtk_button_new_with_label(label_str) : gtk_button_new();
-	gtk_button_set_image(GTK_BUTTON(widget), gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_MENU));
 	return widget;
 }
 

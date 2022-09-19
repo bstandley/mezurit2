@@ -64,7 +64,7 @@ void setup_init (Setup *setup, GtkWidget *worktop)
 	GtkWidget *hbox_main, *vbox_main;
 	make_page(worktop, &hbox_main, &vbox_main, &setup->terminal_scroll);
 
-	setup->apt[SECTION_RIGHT] = add_with_viewport(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0),
+	setup->apt[SECTION_RIGHT] = container_add(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0),
 	                            pack_start(set_margins(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main));
 
 	setup->apt[SECTION_TOP]    = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
@@ -148,14 +148,14 @@ void panel_init (Panel *panel, int pid, GtkWidget *worktop)
 	GtkWidget *hbox_main, *vbox_main;
 	make_page(worktop, &hbox_main, &vbox_main, &panel->terminal_scroll);
 
-	GtkWidget *hbox_right = add_with_viewport(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
+	GtkWidget *hbox_right = container_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
 	                        pack_start(set_margins(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS), M2_HALFSPACE, M2_HALFSPACE, 0, M2_HALFSPACE), 0, hbox_main));
 
 	panel->apt[SECTION_TOP]    = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
 	GtkWidget *hbox_middle     = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, vbox_main);
 	panel->apt[SECTION_BOTTOM] = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 0, vbox_main);
 
-	GtkWidget *hbox_left   = add_with_viewport(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
+	GtkWidget *hbox_left   = container_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
 	                         pack_start(new_scrolled_window(GTK_POLICY_NEVER, GTK_POLICY_ALWAYS),                                                      0, hbox_middle));
 	GtkWidget *vbox_middle = pack_start(set_margins(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE, M2_HALFSPACE), 1, hbox_middle);
 	gtk_widget_set_name(vbox_middle, "m2_plotbuffer");
