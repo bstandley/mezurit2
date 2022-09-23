@@ -49,7 +49,7 @@
 #define M2_HALFSPACE 2
 #define M2_CHANNEL_FORMAT "<span font_stretch=\"semicondensed\">%s</span>"
 #define M2_HEADING_FORMAT "<span font_weight=\"bold\" font_stretch=\"semicondensed\">%s</span>"
-#define M2_URL "www.ugcs.caltech.edu/~mezurit2"
+#define M2_URL "brianstandley.com/mezurit2"
 
 // threads:
 #define M2_SLEEP_MULT 15
@@ -76,7 +76,7 @@
 #define M2_TICK_LABEL_SIZE 14
 #define M2_FONT_SIZE 14
 #define M2_BUFFER_SYMBOL_WIDTH 18
-#define M2_SCOPE_PROGRESS_WIDTH 100.0
+#define M2_SCOPE_PROGRESS_WIDTH 100
 #define M2_MINMAX_LABEL_BORDER 1.5
 #define M2_MAX_CAIRO_PTS 4000  // should be under 10000 to avoid Cairo crashes
 #define M2_PLOT_POINT_WIDTH 2

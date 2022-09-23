@@ -37,15 +37,15 @@ void buffer_init (Buffer *buffer, GtkWidget *parent)
 
 	GtkWidget *hbox = pack_start(set_margins(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4), 2, 4, 10, 10), 0, parent);
 
-	buffer->tzero_button = pack_start(gtk_button_new_with_label("T=0"),           0, hbox);
-	buffer->clear_button = pack_start(gtk_button_new_with_label("CLEAR"),         0, hbox);
-	buffer->add_button   = pack_start(new_button_with_icon(NULL, "list-add"),     0, hbox);
-	GtkWidget *file_hbox = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, hbox);
-	buffer->save_button  = pack_start(gtk_button_new_with_label("SAVE"),          0, hbox);
+	buffer->tzero_button = pack_start(gtk_button_new_with_label("T=0"),                                0, hbox);
+	buffer->clear_button = pack_start(gtk_button_new_with_label("CLEAR"),                              0, hbox);
+	buffer->add_button   = pack_start(gtk_button_new_from_icon_name("list-add", GTK_ICON_SIZE_BUTTON), 0, hbox);
+	GtkWidget *file_hbox = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),                      1, hbox);
+	buffer->save_button  = pack_start(gtk_button_new_with_label("SAVE"),                               0, hbox);
 
 	set_padding(file_hbox, 8);
-	buffer->file_entry  = pack_start(new_entry(0, -1),                             1, file_hbox);
-	buffer->file_button = pack_start(new_button_with_icon(NULL, "text-x-generic"), 0, file_hbox);
+	buffer->file_entry  = pack_start(new_entry(0, -1),                                                      1, file_hbox);
+	buffer->file_button = pack_start(gtk_button_new_from_icon_name("text-x-generic", GTK_ICON_SIZE_BUTTON), 0, file_hbox);
 
 	gtk_widget_set_tooltip_text(buffer->add_button,  "Start new dataset");
 	gtk_widget_set_tooltip_text(buffer->file_button, "Select filename");

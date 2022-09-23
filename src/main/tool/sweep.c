@@ -194,11 +194,11 @@ void sweep_register_legacy (Sweep *sweep, const char *prefix)
 		int endstop_var  = mcf_register(&sweep->endstop[s],      atg(cat3(prefix, "endstop_",  s == LOWER ? "down" : "up")), MCF_BOOL);
 		int zerostop_var = mcf_register(&sweep->zerostop[s],     atg(cat3(prefix, "zerostop_", s == LOWER ? "down" : "up")), MCF_BOOL);
 
-		mcf_connect_with_note(scaled_var,   "setup", "Mapped obsolete var onto 'Panel 0'.\n", BLOB_CALLBACK(endpoint_mcf),      0x32, NULL,  NULL,         NULL, 0, 0);
-		mcf_connect_with_note(rate_var,     "setup", "Mapped obsolete var onto 'Panel 0'.\n", BLOB_CALLBACK(endpoint_mcf),      0x32, NULL,  NULL,         NULL, 0, 0);
-		mcf_connect_with_note(hold_var,     "setup", "Mapped obsolete var onto 'Panel 0'.\n", BLOB_CALLBACK(endpoint_mcf),      0x32, sweep, &sweep->hold, NULL, s, 0);
-		mcf_connect_with_note(endstop_var,  "setup", "Mapped obsolete var onto 'Panel 0'.\n", BLOB_CALLBACK(stopcondition_mcf), 0x20, sweep, sweep->endstop_button[s]);
-		mcf_connect_with_note(zerostop_var, "setup", "Mapped obsolete var onto 'Panel 0'.\n", BLOB_CALLBACK(stopcondition_mcf), 0x20, sweep, sweep->zerostop_button[s]);
+		mcf_connect_with_note(scaled_var,   "setup", "Mapped obsolete var onto 'Panel A'.\n", BLOB_CALLBACK(endpoint_mcf),      0x32, NULL,  NULL,         NULL, 0, 0);
+		mcf_connect_with_note(rate_var,     "setup", "Mapped obsolete var onto 'Panel A'.\n", BLOB_CALLBACK(endpoint_mcf),      0x32, NULL,  NULL,         NULL, 0, 0);
+		mcf_connect_with_note(hold_var,     "setup", "Mapped obsolete var onto 'Panel A'.\n", BLOB_CALLBACK(endpoint_mcf),      0x32, sweep, &sweep->hold, NULL, s, 0);
+		mcf_connect_with_note(endstop_var,  "setup", "Mapped obsolete var onto 'Panel A'.\n", BLOB_CALLBACK(stopcondition_mcf), 0x20, sweep, sweep->endstop_button[s]);
+		mcf_connect_with_note(zerostop_var, "setup", "Mapped obsolete var onto 'Panel A'.\n", BLOB_CALLBACK(stopcondition_mcf), 0x20, sweep, sweep->zerostop_button[s]);
 	}
 }
 

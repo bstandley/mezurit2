@@ -31,7 +31,7 @@ void page_init (Page *page, GtkWidget *menubar)
 	GtkWidget *menu = set_submenu(gtk_menu_new(), menu_append(gtk_menu_item_new_with_label("Page"), menubar));
 
 	/**/                                         page->setup_item      = menu_append(new_radio_item("Setup"), menu);
-	for (int pid = 0; pid < M2_NUM_PANEL; pid++) page->panel_item[pid] = menu_append(new_radio_item(atg(supercat("Panel %d", pid))), menu);
+	for (int pid = 0; pid < M2_NUM_PANEL; pid++) page->panel_item[pid] = menu_append(new_radio_item(atg(supercat("Panel %c", 'A' + pid))), menu);
 }
 
 void page_register (Page *page, ThreadVars *tv, Config *config)
@@ -63,7 +63,7 @@ void set_page (Page *page, Config *config, int pid)
 	gtk_stack_set_visible_child(GTK_STACK(page->worktop), get_child(page->worktop, pid + 1));  // depends on setup_init() and panel_init() having been called in the expected order
 
 	char *title _strfree_ = pid == -1 ? supercat("%s %s: Setup",    quote(PROG2), quote(VERSION)) :
-	                                    supercat("%s %s: Panel %d", quote(PROG2), quote(VERSION), pid);
+	                                    supercat("%s %s: Panel %c", quote(PROG2), quote(VERSION), 'A' + pid);
 	gtk_window_set_title(GTK_WINDOW(page->main_window), title);
 
 	/**/                                   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(page->setup_item),    pid == -1);
