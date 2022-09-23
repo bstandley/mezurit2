@@ -28,21 +28,6 @@ typedef struct
 {
 	// private:
 
-		cairo_t *cr, *crd;
-		cairo_text_extents_t ext;
-
-	// public:
-
-		char *str;
-		bool str_dirty;
-		int percent, old_percent;
-
-} Display;
-
-typedef struct
-{
-	// private:
-
 		Axis axis[3];
 		ColorScheme *colorscheme;  // inherited from Panel
 
@@ -55,9 +40,12 @@ typedef struct
 		Region region;             // dimensions of surface and margins of plottable space
 		double XM, YM;             // location of clicked point (XM = -1 for none)
 
+		long displayed_total;
+		int displayed_sets;
+		int displayed_percent;
+
 		int active_set;  // index of currently-plotting varset
 		long draw_set;   // points already drawn from currently-plotting varset
-		bool needs_context_regen;
 		bool mcf_activity;
 
 		SVSP svs, blank_svs;
@@ -65,12 +53,9 @@ typedef struct
 	// public:
 
 		bool enabled;
-		bool exposure_blocked, exposure_complete;
 
 		long draw_total;    // total points already drawn
 		long draw_request;  // total points to plot next tick
-
-		Display display;
 
 } Plot;
 
@@ -85,10 +70,10 @@ void plot_register_legacy (Plot *plot);
 
 void plot_update_channels (Plot *plot, int *vc_by_vci, SVSP svs);  // call when vset columns change
 
-void full_plot  (Plot *plot);
-void plot_open  (Plot *plot);
-void plot_close (Plot *plot);
-void plot_reset (Plot *plot);
-void plot_tick  (Plot *plot);  // place plot_open(), plot_close() around call
+void full_plot   (Plot *plot);
+void plot_reset  (Plot *plot);
+void plot_tick   (Plot *plot);
+void plot_buffer (Plot *plot, long total, int sets);
+void plot_scope  (Plot *plot, int percent);
 
 #endif

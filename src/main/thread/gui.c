@@ -83,8 +83,6 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 	buffer_update(buffer, chanset);
 
 	plot_update_channels(plot, chanset->vc_by_vci, buffer->svs);
-	plot->exposure_blocked = 0;
-	plot->exposure_complete = 0;
 
 	logger_update        (&panel->logger, chanset);
 	scope_update         (&panel->scope,  chanset);
@@ -92,12 +90,6 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 	trigger_array_update (panel->trigger);
 
 	clear_gtk_events(0);
-
-	if (!plot->exposure_complete)
-	{
-		full_plot(plot);  // redraw plot in case nothing caused an "expose" event
-		plot->needs_context_regen = 1;
-	}
 
 	// shared variables
 
@@ -120,10 +112,6 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 	double reader_target = 1.0 / M2_MAX_READER_RATE;
 	double buffer_target = 1.0 / M2_MAX_BUFFER_STATUS_RATE;
 	
-	// in-flight plotting:
-	plot_reset(plot);
-	plot_open(plot);
-
 	// show as ready to go (or not)
 
 	int logger_rld = tv->logger_rl = buffer->locked ? LOGGER_RL_HOLD : LOGGER_RL_IDLE;
@@ -178,9 +166,7 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 			clear_gtk_events(5e-5);
 		}
 
-		if (overtime_then_reset(buffer_timer, buffer_target))
-			if (run_buffer_status(buffer, &plot->display))
-				clear_gtk_events(5e-5);
+		if (overtime_then_reset(buffer_timer, buffer_target)) run_buffer_status(buffer, plot);
 
 		if (plot->enabled)  // check how many points need to be plotted
 		{
@@ -192,10 +178,8 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 
 		xleep(plot->draw_request < M2_BOOST_THRESHOLD_PTS ? secondary_interval : secondary_boost_interval);  // secondary sleeper
 
-		if (plot->draw_request > 0 || plot->display.str_dirty || plot->display.percent != plot->display.old_percent) plot_tick(plot);  // in-flight plotting
+		if (plot->draw_request > 0) plot_tick(plot);  // in-flight plotting
 	}
-
-	plot_close(plot);
 
 	mt_thread_join(daq_thread);
 	f_print(F_UPDATE, "Joined DAQ thread.\n");

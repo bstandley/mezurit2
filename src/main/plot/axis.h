@@ -47,11 +47,8 @@ typedef struct
 {
 	// public:
 
-		bool enabled, started;
-		long unstroked;
-		double x0, y0;
+		bool enabled;
 		Color color;
-		cairo_t *cr, *crd;
 		GtkWidget *enable_item;
 
 } Brush;
@@ -85,9 +82,5 @@ void set_axis_color   (Axis *axis, ColorScheme *colorscheme, int offset);
 
 double scale_point   (double point, Axis *axis, double min_px, double max_px);
 double descale_point (double pixel, Axis *axis, double min_px, double max_px);
-
-void brush_init  (Brush *brush, cairo_t *cr, cairo_t *crd);
-void brush_reset (Brush *brush);
-void brush_close (Brush *brush);
 
 #endif

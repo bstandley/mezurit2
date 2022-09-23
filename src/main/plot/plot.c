@@ -38,7 +38,8 @@ enum
 	REGION_CORNER
 };
 
-static long plot_points (Plot *plot, long request);
+static long plot_points (cairo_t *cr, Plot *plot, long request);
+static void plot_build_noqueue (Plot *plot);
 static void place_marker (Plot *plot, double XM, double YM);
 static void update_axis_channels (Plot* plot, Axis *axis, int *vc_by_vci);
 
@@ -69,20 +70,16 @@ void plot_init (Plot *plot, GtkWidget *parent)
 	plot->region.X = plot->region.Y = -1;
 	plot->XM       = plot->YM       = -1;
 
-	plot->display.str = NULL;
-	plot->display.percent = plot->display.old_percent = -1;  // -1 means don't draw any part of the indicator
-	plot->display.str_dirty = 0;
-	plot->display.ext.width = plot->display.ext.height = -1;
+	plot->displayed_total = 0;
+	plot->displayed_sets = 0;
+	plot->displayed_percent = 0;
 
-	plot->needs_context_regen = 0;
 	plot->active_set = 0;
 	plot->draw_set = 0;
 
 	plot->blank_svs = append_vset(new_svset(), new_vset(0));
 	plot->svs = plot->blank_svs;
 
-	plot->exposure_blocked = 1;
-	plot->exposure_complete = 0;
 	plot->mcf_activity = 0;
 
 #ifdef MINGW
@@ -106,6 +103,7 @@ void plot_register (Plot *plot, int pid)
 	snazzy_connect(plot->zoom_forward_item, "activate",             SNAZZY_VOID_VOID, BLOB_CALLBACK(plot_zoom_cb),   0x21, plot, NULL, ZOOM_FORWARD);
 	snazzy_connect(plot->enable_item,       "button-release-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(plot_enable_cb), 0x20, &plot->enabled, plot);
 
+	snazzy_connect(plot->area_widget, "size-allocate",      SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_size_cb),  0x10, plot);
 	snazzy_connect(plot->area_widget, "draw",               SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_draw_cb),  0x10, plot);
 	snazzy_connect(plot->area_widget, "button-press-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(plot_click_cb), 0x10, plot);
 
@@ -180,7 +178,6 @@ void plot_final (Plot *plot)
 	if (plot->surface != NULL) cairo_surface_destroy(plot->surface);
 	for (int a = 0; a < 3; a++)	axis_final(&plot->axis[a]);
 
-	replace(plot->display.str, NULL);
 	free_svset(plot->blank_svs);
 }
 
@@ -239,22 +236,15 @@ void place_marker (Plot *plot, double XM, double YM)
 {
 	f_start(F_RUN);
 
-	if (XM > -0.5)  // avoid unnecessary work if marker is obviously off the window
+	if (detect_region(XM, YM, plot->region) == REGION_INSIDE)
 	{
-		if (detect_region(XM, YM, plot->region) == REGION_INSIDE)
-		{
-			cairo_t *crd = gdk_cairo_create(gtk_widget_get_window(plot->area_widget));  // don't save to plot->surface
-			draw_marker(crd, plot->axis, plot->region, plot->colorscheme, XM, YM);
-			cairo_destroy(crd);
-
-			plot->XM = XM;
-			plot->YM = YM;
-		}
-		else
-		{
-			plot->XM = -1;
-			plot->YM = -1;
-		}
+		plot->XM = XM;
+		plot->YM = YM;
+	}
+	else
+	{
+		plot->XM = -1;
+		plot->YM = -1;
 	}
 }
 
@@ -262,27 +252,21 @@ void full_plot (Plot *plot)
 {
 	f_start(F_RUN);
 
-	if (plot->mcf_activity)
+	plot_build_noqueue(plot);
+	gtk_widget_queue_draw(plot->area_widget);
+}
+
+void plot_build_noqueue (Plot *plot)
+{
+	if (plot->mcf_activity)  // TODO move elsewhere?
 	{
 		plot->mcf_activity = 0;
 		for (int a = 0; a < 3; a++)
 			history_range_append(&plot->axis[a].limit_history, &plot->axis[a].limit);
 	}
 
-	GtkAllocation alloc;
-	gtk_widget_get_allocation(plot->area_widget, &alloc);
-
 	VSP vs = plot->svs->data[0];  // plot->svs must have at least one set
 	Region *r = &plot->region;  // use reference to allow modifications
-
-	if (alloc.width != r->X || alloc.height != r->Y)  // regenerate plot->surface if size of viewport changed
-	{
-		if (plot->surface != NULL) cairo_surface_destroy(plot->surface);
-		plot->surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, alloc.width, alloc.height);
-		r->X = alloc.width;
-		r->Y = alloc.height;
-	}
-
 	cairo_t *cr = cairo_create(plot->surface);
 
 	// background
@@ -293,8 +277,9 @@ void full_plot (Plot *plot)
 
 	// buffer display
 	draw_buffer_symbol(cr, plot->region, plot->colorscheme);
-	plot->display.str_dirty = 1;
-	plot->display.old_percent = -1;
+	draw_buffer_readout(cr, plot->region, plot->colorscheme, plot->displayed_total, plot->displayed_sets);
+	draw_scope_symbol(cr, plot->region, plot->colorscheme);
+	draw_scope_progress(cr, plot->region, plot->colorscheme, plot->displayed_percent);
 
 	// handle x ticks
 	cairo_new_path(cr);
@@ -328,30 +313,18 @@ void full_plot (Plot *plot)
 
 	cairo_destroy(cr);
 
-	flip_surface(plot->area_widget, plot->surface);
-
 	if (plot->enabled) plot_reset(plot);
 	// plot now knows where to begin further plotting i.e. at the very beginning
-
-	place_marker(plot, plot->XM, plot->YM);  // surface is already clean
 }
 
 void plot_tick (Plot *plot)  // bite-size plotting session for smooth operation
 {
-	if (plot->needs_context_regen)
-	{
-		plot->needs_context_regen = 0;
-		plot_close(plot);
-		plot_open(plot);
-	}
-
-	draw_buffer_display(&plot->display, plot->region, plot->colorscheme);
-
 	if (plot->axis[X_AXIS].vci == -1) return;  // don't do any actual plotting if we don't have an x-axis
 
-	plot->draw_total += plot->draw_request;  // assume request will be fulfilled
+	cairo_t *cr = cairo_create(plot->surface);
 
-	plot->draw_request -= plot_points(plot, plot->draw_request);
+	plot->draw_total += plot->draw_request;  // assume request will be fulfilled
+	plot->draw_request -= plot_points(cr, plot, plot->draw_request);
 	while (plot->draw_request > 0 && plot->active_set + 1 < plot->svs->N_set)  // move to next set until request is satisfied or we run out of sets
 	{
 		plot->active_set++;
@@ -359,10 +332,12 @@ void plot_tick (Plot *plot)  // bite-size plotting session for smooth operation
 
 		for (int a = 1; a < 3; a++) set_axis_color(&plot->axis[a], plot->colorscheme, plot->active_set);
 
-		plot->draw_request -= plot_points(plot, plot->draw_request);
+		plot->draw_request -= plot_points(cr, plot, plot->draw_request);
 	}
-
 	plot->draw_total -= plot->draw_request;  // subtract remainder of request
+
+	cairo_destroy(cr);
+	gtk_widget_queue_draw_area(plot->area_widget, (gint) plot->region.X0, (gint) plot->region.Y0, (gint) (plot->region.X1 - plot->region.X0), (gint) (plot->region.Y1 - plot->region.Y0));  // TODO properly calculate, use cairo regions
 }
 
 void plot_reset (Plot *plot)
@@ -375,45 +350,10 @@ void plot_reset (Plot *plot)
 	plot->draw_total = 0;
 	plot->draw_request = 0;
 
-	for (int a = 1; a < 3; a++)
-	{
-		set_axis_color(&plot->axis[a], plot->colorscheme, plot->active_set);
-		brush_reset(&plot->axis[a].lines);
-	}
+	for (int a = 1; a < 3; a++) set_axis_color(&plot->axis[a], plot->colorscheme, plot->active_set);
 }
 
-void plot_open (Plot *plot)
-{
-	f_start(F_UPDATE);
-
-	plot->display.cr = cairo_create(plot->surface);
-	plot->display.crd = gdk_cairo_create(gtk_widget_get_window(plot->area_widget));
-
-	cairo_set_font_size(plot->display.cr,  M2_FONT_SIZE);
-	cairo_set_font_size(plot->display.crd, M2_FONT_SIZE);
-
-	for (int a = 1; a < 3; a++)
-	{
-		brush_init(&plot->axis[a].lines,  cairo_create(plot->surface), gdk_cairo_create(gtk_widget_get_window(plot->area_widget)));
-		brush_init(&plot->axis[a].points, cairo_create(plot->surface), gdk_cairo_create(gtk_widget_get_window(plot->area_widget)));
-	}
-}
-
-void plot_close (Plot *plot)
-{
-	f_start(F_UPDATE);
-
-	cairo_destroy(plot->display.cr);
-	cairo_destroy(plot->display.crd);
-
-	for (int a = 1; a < 3; a++)
-	{
-		brush_close(&plot->axis[a].lines);
-		brush_close(&plot->axis[a].points);
-	}
-}
-
-long plot_points (Plot *plot, long request)
+long plot_points (cairo_t *cr, Plot *plot, long request)
 {
 	if (plot->axis[X_AXIS].vci == -1) return 0;  // don't to anything if we don't have an x-axis
 
@@ -427,9 +367,51 @@ long plot_points (Plot *plot, long request)
 	// this way we have a complete plot->surface to erase dirty elements but don't have to do a slow flip_surface() at the end
 	// benchmark: adding duplicate cairo calls increases logger plot updates from 50 to 70 microseconds, flip_surface() takes ~2 milliseconds'
 
-	plot_axis_points(plot->axis, vs, plot->region, begin, plot->draw_set);
+	for (int a = 1; a < 3; a++)
+	{
+		if (plot->axis[a].vci != -1)
+		{
+			draw_axis_lines (cr, &plot->axis[X_AXIS], &plot->axis[a], vs, plot->region, begin, plot->draw_set);
+			draw_axis_points(cr, &plot->axis[X_AXIS], &plot->axis[a], vs, plot->region, begin, plot->draw_set);
+		}
+	}
 
 	if (plot->draw_set - begin > 0) f_print(F_VERBOSE, "Info: Plotted %ld points.\n", plot->draw_set - begin);
 
 	return plot->draw_set - begin;
+}
+
+void plot_buffer (Plot *plot, long total, int sets)
+{
+	if (plot->displayed_total != total || plot->displayed_sets != sets)
+	{
+		cairo_t *cr = cairo_create(plot->surface);
+		cairo_rectangle_int_t rect[2];
+		rect[0] = erase_buffer_readout(cr, plot->region, plot->colorscheme, plot->displayed_total, plot->displayed_sets);
+		rect[1] = draw_buffer_readout(cr, plot->region, plot->colorscheme, total, sets);
+		cairo_destroy(cr);
+
+		cairo_region_t *dr = cairo_region_create_rectangles(rect, 2);
+		gtk_widget_queue_draw_region(plot->area_widget, dr);
+		cairo_region_destroy(dr);
+
+		plot->displayed_total = total;
+		plot->displayed_sets = sets;
+	}
+}
+
+void plot_scope (Plot *plot, int percent)
+{
+	if (plot->displayed_percent != percent)
+	{
+		cairo_t *cr = cairo_create(plot->surface);
+		cairo_rectangle_int_t rect = draw_scope_progress(cr, plot->region, plot->colorscheme, percent);
+		cairo_destroy(cr);
+
+		cairo_region_t *dr = cairo_region_create_rectangle(&rect);
+		gtk_widget_queue_draw_region(plot->area_widget, dr);
+		cairo_region_destroy(dr);
+
+		plot->displayed_percent = percent;
+	}
 }

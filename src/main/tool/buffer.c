@@ -57,13 +57,11 @@ void buffer_init (Buffer *buffer, GtkWidget *parent)
 	buffer->svs = NULL;
 	buffer->timer = timer_new();
 	buffer->do_time_reset = 1;
-	buffer->percent = -1;
+	buffer->percent = 0;
 
 	buffer->filename = NULL;
 	buffer->locked = 0;
 
-	buffer->displayed_total = -1;
-	buffer->displayed_sets = -1;
 	buffer->displayed_empty = 0;
 	buffer->displayed_filling = 1;
 }
@@ -187,7 +185,7 @@ bool clear_buffer (Buffer *buffer, ChanSet *chanset, bool confirm, bool tzero)
 			buffer->svs = svs;
 			buffer->locked = 0;
 			if (tzero) buffer->do_time_reset = 1;
-			buffer->percent = -1;
+			buffer->percent = 0;
 			mt_mutex_unlock(&buffer->mutex);
 
 			status_add(1, supercat("Cleared buffer (Time reset: %s)\n", tzero ? "Y" : "N"));
@@ -238,45 +236,35 @@ void set_scan_progress (Buffer *buffer, double frac)
 	mt_mutex_unlock(&buffer->mutex);
 }
 
-bool run_buffer_status (Buffer *buffer, Display *display)
+void run_buffer_status (Buffer *buffer, Plot *plot)
 {
 	mt_mutex_lock(&buffer->mutex);
 
 	long total  = total_pts(buffer->svs);
 	bool primed = (buffer->svs->last_vs->N_pt == 0);
 	int sets    = buffer->svs->N_set - (primed ? 1 : 0);
-	display->percent = buffer->percent;  // display will decide whether it should redraw the percent indicator
+	int percent = buffer->percent;
 
 	mt_mutex_unlock(&buffer->mutex);
 
-	if (buffer->displayed_total != total || buffer->displayed_sets != sets)
-	{
-		replace(display->str, supercat("%ld pt%s in %d set%s", total, total == 1 ? "" : "s", sets, sets == 1 ? "" : "s"));
-		display->str_dirty = 1;
+	plot_buffer(plot, total, sets);
+	plot_scope(plot, percent);
 
-		buffer->displayed_total = total;
-		buffer->displayed_sets  = sets;
-	}
-
-	return set_buffer_buttons(buffer, total == 0, !primed);
+	set_buffer_buttons(buffer, total == 0, !primed);
 }
 
-bool set_buffer_buttons (Buffer *buffer, bool empty, bool filling)
+void set_buffer_buttons (Buffer *buffer, bool empty, bool filling)
 {
-	bool rv = 0;
 	if (buffer->displayed_empty != empty)
 	{
 		gtk_widget_set_sensitive(buffer->clear_button, !empty);
 		gtk_widget_set_sensitive(buffer->save_button,  !empty);
 		buffer->displayed_empty = empty;
-		rv = 1;
 	}
 
 	if (buffer->displayed_filling != filling)
 	{
 		gtk_widget_set_sensitive(buffer->add_button, filling);
 		buffer->displayed_filling = filling;
-		rv = 1;
 	}
-	return rv;
 }

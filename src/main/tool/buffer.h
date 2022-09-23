@@ -37,7 +37,6 @@ typedef struct
 		GtkWidget *file_entry, *file_button;
 		bool adjusted;
 
-		long displayed_total, displayed_sets;     // threads: GUI only
 		bool displayed_empty, displayed_filling;  // threads: GUI only
 
 		int percent;                              // threads: shared (used for scan progress)
@@ -68,8 +67,8 @@ bool clear_buffer (Buffer *buffer, ChanSet *chanset, bool confirm, bool tzero);
 bool add_set      (Buffer *buffer, ChanSet *chanset);  // needs outer locks
 VSP  active_vsp   (Buffer *buffer);
 
-bool run_buffer_status (Buffer *buffer, Display *display);
-bool set_buffer_buttons (Buffer *buffer, bool empty, bool filling);
+void run_buffer_status (Buffer *buffer, Plot *plot);
+void set_buffer_buttons (Buffer *buffer, bool empty, bool filling);
 void set_scan_progress (Buffer *buffer, double frac);  // call from DAQ thread
 
 // empty:   buffer is completely empty, including last_vs (the only set)

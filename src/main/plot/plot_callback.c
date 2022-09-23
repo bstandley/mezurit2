@@ -15,7 +15,8 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-static gboolean plot_draw_cb (GtkWidget *widget, void *ptr, Plot *plot);
+static gboolean plot_draw_cb (GtkWidget *widget, cairo_t *crd, Plot *plot);
+static gboolean plot_size_cb (GtkWidget *widget, cairo_t *crd, Plot *plot);
 static gboolean plot_click_cb (GtkWidget *widget, GdkEventButton *event, Plot *plot);
 static gboolean plot_minmax_cb (GtkWidget *widget, GdkEvent *event, Plot *plot, Axis *axis, int side);
 static void plot_zoom_cb (GtkWidget *widget, Plot *plot, Axis *axis, int zoom);
@@ -26,20 +27,31 @@ static void plot_enable_mcf (bool *enabled, const char *signal_name, MValue valu
 static void plot_vci_mcf (int *var, const char *signal_name, MValue value, Plot *plot, Axis *axis);
 static void plot_minmax_mcf (double *var, const char *signal_name, MValue value, Plot *plot, Axis *axis, int side);
 
-gboolean plot_draw_cb (GtkWidget *widget, void *ptr, Plot *plot)  // ptr may be a CairoContext* or a GdkEvent*, but we don't care
+gboolean plot_draw_cb (GtkWidget *widget, cairo_t *cr, Plot *plot)
 {
-	if (plot->exposure_blocked > 0)
-	{
-		plot->exposure_blocked--;
-		f_print(F_CALLBACK, "Skipping unnecessary exposure event.\n");
-		return 0;
-	}
-
 	f_start(F_CALLBACK);
 
-	full_plot(plot);
-	plot->exposure_complete = 1;
-	plot->needs_context_regen = 1;
+	cairo_set_source_surface(cr, plot->surface, 0, 0);
+	cairo_paint(cr);
+
+	if (plot->XM > -0.5) draw_marker(cr, plot->axis, plot->region, plot->colorscheme, plot->XM, plot->YM);  // TODO check clip region, draw only necessary parts?
+
+	return 0;
+}
+
+gboolean plot_size_cb (GtkWidget *widget, cairo_t *cr, Plot *plot)
+{
+	f_start(F_CALLBACK);
+
+	GtkAllocation alloc;
+	gtk_widget_get_allocation(widget, &alloc);
+
+	if (plot->surface != NULL) cairo_surface_destroy(plot->surface);
+	plot->surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, alloc.width, alloc.height);
+	plot->region.X = alloc.width;
+	plot->region.Y = alloc.height;
+
+	plot_build_noqueue(plot);  // draw signal is automatically emitted along with size-allocate
 
 	return 0;
 }
@@ -68,8 +80,8 @@ gboolean plot_click_cb (GtkWidget *widget, GdkEventButton *event, Plot *plot)
 		if (minmax_widget != NULL) show_all(gtk_widget_get_parent(minmax_widget), NULL);
 		else
 		{
-			flip_surface(plot->area_widget, plot->surface);  // erase dirty elements
 			place_marker(plot, event->x, event->y);
+			gtk_widget_queue_draw(plot->area_widget);
 		}
 #ifdef MINGW
 		timer_reset(plot->doubleclick_timer);

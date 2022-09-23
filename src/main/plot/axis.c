@@ -48,9 +48,6 @@ void axis_init (Axis *axis, int i, GtkWidget *parent)
 	axis->limit_history.occupied = 0;
 	axis->limit_history.current = -1;
 
-	brush_init(&axis->lines,  NULL, NULL);
-	brush_init(&axis->points, NULL, NULL);
-
 	axis->points.color.r = 1.0;
 	axis->points.color.g = 1.0;
 	axis->points.color.b = 1.0;
@@ -75,9 +72,6 @@ void set_axis_color (Axis *axis, ColorScheme *colorscheme, int offset)
 {
 	f_start(F_RUN);
 
-	brush_reset(&axis->lines);
-	brush_reset(&axis->points);
-
 	if (axis->vci != -1)
 	{
 		axis->lines.color = colorscheme->data[(offset + axis->vci) % M2_NUM_COLOR];
@@ -94,50 +88,6 @@ void axis_final (Axis *axis)
 	replace(axis->marker_format, NULL);
 
 	for sides destroy_entry(axis->limit.entry[s]);
-}
-
-void brush_init (Brush *brush, cairo_t *cr, cairo_t *crd)
-{
-	f_start(F_UPDATE);
-
-	brush->cr  = cr;
-	brush->crd = crd;
-
-	if(cr != NULL)
-	{
-		cairo_set_line_cap(cr,  CAIRO_LINE_CAP_ROUND);
-		cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
-	}
-
-	if(crd != NULL)
-	{
-		cairo_set_line_cap(crd,  CAIRO_LINE_CAP_ROUND);
-		cairo_set_line_join(crd, CAIRO_LINE_JOIN_ROUND);
-	}
-
-	brush_reset(brush);
-}
-
-void brush_reset (Brush *brush)
-{
-	f_start(F_VERBOSE);
-
-	brush->started = 0;
-	brush->unstroked = 0;
-
-	brush->x0 = -100;
-	brush->y0 = -100;
-}
-
-void brush_close (Brush *brush)
-{
-	f_start(F_UPDATE);
-
-	cairo_destroy(brush->cr);
-	cairo_destroy(brush->crd);
-
-	brush->cr  = NULL;
-	brush->crd = NULL;
 }
 
 bool zoom_axis (Axis *axis, SVSP svs, int mode)

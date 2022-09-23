@@ -33,8 +33,6 @@ gboolean set_page_cb (GtkWidget *widget, GdkEvent *event, Page *page, Config *co
 		tv->pid = pid;
 
 		set_page(page, config, pid);
-
-		if (pid >= 0) page->panel_array[pid].plot.exposure_blocked = 1;
 	}
 
 	gtk_widget_hide(gtk_widget_get_parent(gtk_widget_get_parent(widget)));
@@ -72,8 +70,6 @@ char * set_panel_csf (gchar **argv, Page *page, Config *config, ThreadVars *tv)
 			tv->pid = pid;
 
 			set_page(page, config, pid);
-
-			if (pid >= 0) page->panel_array[pid].plot.exposure_blocked = 1;
 		}
 
 		return cat1(argv[0]);
