@@ -101,14 +101,12 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 
 	// timing
 
-	double primary_interval         = 0.8 / M2_DEFAULT_GUI_RATE;
-	double secondary_interval       = 0.2 / M2_DEFAULT_GUI_RATE;
-	double primary_boost_interval   = 0.8 / M2_BOOST_GUI_RATE;
-	double secondary_boost_interval = 0.2 / M2_BOOST_GUI_RATE;
+	Timer *limit_timer  _timerfree_ = timer_new();
+	Timer *reader_timer _timerfree_ = timer_new();
+	Timer *buffer_timer _timerfree_ = timer_new();
 
-	Timer *reader_timer = timer_new();
-	Timer *buffer_timer = timer_new();
-
+	double limit_target  = 1.0 / M2_DEFAULT_GUI_RATE;
+	double boost_target  = 1.0 / M2_BOOST_GUI_RATE;
 	double reader_target = 1.0 / M2_MAX_READER_RATE;
 	double buffer_target = 1.0 / M2_MAX_BUFFER_STATUS_RATE;
 	
@@ -131,7 +129,7 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 	long draw_request = 0;
 	while (get_logger_rl(tv) != LOGGER_RL_STOP)
 	{
-		clear_gtk_events(5e-5);
+		wait_and_reset(limit_timer, draw_request > M2_BOOST_THRESHOLD_PTS ? boost_target : limit_target);  // control rate (primary sleeper)
 
 		mt_mutex_lock(&tv->ts_mutex);
 		if (tv->terminal_dirty)
@@ -142,16 +140,9 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 		}
 		mt_mutex_unlock(&tv->ts_mutex);
 
-		xleep(draw_request < M2_BOOST_THRESHOLD_PTS ? primary_interval : primary_boost_interval);  // primary sleeper
-
-		if (status_regenerate())
-		{
-			message_update(&panel->message);
-			clear_gtk_events(0);
-		}
+		if (status_regenerate()) message_update(&panel->message);
 
 		bool scanning = run_runlevel_updates(tv, panel, &logger_rld, &scope_rld);
-
 		if (!scanning && overtime_then_reset(reader_timer, reader_target))
 		{
 			// copy data from DAQ thread:
@@ -164,7 +155,6 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 			mt_mutex_unlock(&tv->data_mutex);
 
 			reader_update(&panel->logger, chanset, tv->known_gui, tv->data_gui);
-			clear_gtk_events(5e-5);
 		}
 
 		if (overtime_then_reset(buffer_timer, buffer_target))
@@ -187,12 +177,12 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 			mt_mutex_lock(&buffer->mutex);
 			draw_request = min_long(total_pts(buffer->svs) - plot->draw_total, M2_MAX_GRADUAL_PTS);
 			mt_mutex_unlock(&buffer->mutex);
+
+			if (draw_request > 0) plot_tick(plot, draw_request);
 		}
 		else draw_request = 0;
 
-		xleep(draw_request < M2_BOOST_THRESHOLD_PTS ? secondary_interval : secondary_boost_interval);  // secondary sleeper
-
-		if (draw_request > 0) plot_tick(plot, draw_request);
+		clear_gtk_events(5e-5);  // primary event iteration (secondary sleeper)
 	}
 
 	mt_thread_join(daq_thread);
