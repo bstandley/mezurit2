@@ -38,7 +38,7 @@ enum
 	REGION_CORNER
 };
 
-static long plot_points (cairo_t *cr, Plot *plot, long request);
+static long plot_data (cairo_t *cr, Plot *plot, long request);
 static void plot_build_noqueue (Plot *plot);
 static void place_marker (Plot *plot, double XM, double YM);
 static void update_axis_channels (Plot* plot, Axis *axis, int *vc_by_vci);
@@ -248,7 +248,7 @@ void place_marker (Plot *plot, double XM, double YM)
 	}
 }
 
-void full_plot (Plot *plot)
+void plot_build (Plot *plot)
 {
 	f_start(F_RUN);
 
@@ -313,70 +313,54 @@ void plot_build_noqueue (Plot *plot)
 
 	cairo_destroy(cr);
 
-	if (plot->enabled) plot_reset(plot);
-	// plot now knows where to begin further plotting i.e. at the very beginning
+	// reset in-flight plotting
+	plot->active_set = 0;
+	plot->draw_set = 0;
+	plot->draw_total = 0;
 }
 
-void plot_tick (Plot *plot)  // bite-size plotting session for smooth operation
+bool plot_active (Plot *plot)
 {
-	if (plot->axis[X_AXIS].vci == -1) return;  // don't do any actual plotting if we don't have an x-axis
+	return (plot->enabled && plot->axis[X_AXIS].vci != -1);
+}
 
+void plot_tick (Plot *plot, long draw_request)  // bite-size plotting session for smooth operation
+{
 	cairo_t *cr = cairo_create(plot->surface);
 
-	plot->draw_total += plot->draw_request;  // assume request will be fulfilled
-	plot->draw_request -= plot_points(cr, plot, plot->draw_request);
-	while (plot->draw_request > 0 && plot->active_set + 1 < plot->svs->N_set)  // move to next set until request is satisfied or we run out of sets
+	draw_request -= plot_data(cr, plot, draw_request);
+	while (draw_request > 0 && plot->active_set + 1 < plot->svs->N_set)  // move to next set until request is satisfied or we run out of sets
 	{
 		plot->active_set++;
 		plot->draw_set = 0;
 
-		for (int a = 1; a < 3; a++) set_axis_color(&plot->axis[a], plot->colorscheme, plot->active_set);
-
-		plot->draw_request -= plot_points(cr, plot, plot->draw_request);
+		draw_request -= plot_data(cr, plot, draw_request);
 	}
-	plot->draw_total -= plot->draw_request;  // subtract remainder of request
 
 	cairo_destroy(cr);
 	gtk_widget_queue_draw_area(plot->area_widget, (gint) plot->region.X0, (gint) plot->region.Y0, (gint) (plot->region.X1 - plot->region.X0), (gint) (plot->region.Y1 - plot->region.Y0));  // TODO properly calculate, use cairo regions
 }
 
-void plot_reset (Plot *plot)
+long plot_data (cairo_t *cr, Plot *plot, long draw_request)
 {
-	f_start(F_UPDATE);
-
-	plot->active_set = 0;
-	plot->draw_set = 0;
-
-	plot->draw_total = 0;
-	plot->draw_request = 0;
-
-	for (int a = 1; a < 3; a++) set_axis_color(&plot->axis[a], plot->colorscheme, plot->active_set);
-}
-
-long plot_points (cairo_t *cr, Plot *plot, long request)
-{
-	if (plot->axis[X_AXIS].vci == -1) return 0;  // don't to anything if we don't have an x-axis
-
 	VSP vs = plot->svs->data[plot->active_set];
-	if(request == -1) request = vs->N_pt;
 
 	long begin = plot->draw_set;
-	plot->draw_set = min_long(begin + request, vs->N_pt);  // update plot.draw_set to reflect last plotted point
-
-	// make all updates to both the pristine plot->surface and the dirty (click points and zoom boxes) plot->area_widget->window
-	// this way we have a complete plot->surface to erase dirty elements but don't have to do a slow flip_surface() at the end
-	// benchmark: adding duplicate cairo calls increases logger plot updates from 50 to 70 microseconds, flip_surface() takes ~2 milliseconds'
+	plot->draw_set = min_long(begin + draw_request, vs->N_pt);  // update plot.draw_set to reflect last plotted point
+	plot->draw_total += plot->draw_set - begin;
 
 	for (int a = 1; a < 3; a++)
 	{
 		if (plot->axis[a].vci != -1)
 		{
+			set_axis_color(&plot->axis[a], plot->colorscheme, plot->active_set + plot->axis[a].vci);
+
 			draw_axis_lines (cr, &plot->axis[X_AXIS], &plot->axis[a], vs, plot->region, begin, plot->draw_set);
 			draw_axis_points(cr, &plot->axis[X_AXIS], &plot->axis[a], vs, plot->region, begin, plot->draw_set);
 		}
 	}
 
-	if (plot->draw_set - begin > 0) f_print(F_VERBOSE, "Info: Plotted %ld points.\n", plot->draw_set - begin);
+	f_print(F_VERBOSE, "Info: Plotted %ld points.\n", plot->draw_set - begin);
 
 	return plot->draw_set - begin;
 }

@@ -73,7 +73,7 @@ void logger_register (Logger *logger, int pid, GtkWidget **apt);
 void logger_update   (Logger *logger, ChanSet *chanset);
 void logger_final    (Logger *logger);
 
-void run_reader_status   (Logger *logger, ChanSet *chanset, bool *known, double *data);
+void reader_update       (Logger *logger, ChanSet *chanset, bool *known, double *data);
 void set_logger_runlevel (Logger *logger, int rl);
 void set_logger_scanning (Logger *logger, bool scanning);
 

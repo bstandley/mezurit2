@@ -128,6 +128,7 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 	MtThread daq_thread = mt_thread_create(run_daq_thread, tv);
 	f_print(F_UPDATE, "Created DAQ thread.\n");
 
+	long draw_request = 0;
 	while (get_logger_rl(tv) != LOGGER_RL_STOP)
 	{
 		clear_gtk_events(5e-5);
@@ -141,7 +142,7 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 		}
 		mt_mutex_unlock(&tv->ts_mutex);
 
-		xleep(plot->draw_request < M2_BOOST_THRESHOLD_PTS ? primary_interval : primary_boost_interval);  // primary sleeper
+		xleep(draw_request < M2_BOOST_THRESHOLD_PTS ? primary_interval : primary_boost_interval);  // primary sleeper
 
 		if (status_regenerate())
 		{
@@ -162,23 +163,36 @@ void run_gui_thread (ThreadVars *tv, Channel *channel_array, Panel *panel_array)
 			}
 			mt_mutex_unlock(&tv->data_mutex);
 
-			run_reader_status(&panel->logger, chanset, tv->known_gui, tv->data_gui);
+			reader_update(&panel->logger, chanset, tv->known_gui, tv->data_gui);
 			clear_gtk_events(5e-5);
 		}
 
-		if (overtime_then_reset(buffer_timer, buffer_target)) run_buffer_status(buffer, plot);
-
-		if (plot->enabled)  // check how many points need to be plotted
+		if (overtime_then_reset(buffer_timer, buffer_target))
 		{
 			mt_mutex_lock(&buffer->mutex);
-			plot->draw_request = min_long(total_pts(buffer->svs) - plot->draw_total, M2_MAX_GRADUAL_PTS);
+			long total  = total_pts(buffer->svs);
+			bool primed = (buffer->svs->last_vs->N_pt == 0);
+			int sets    = buffer->svs->N_set - (primed ? 1 : 0);
+			int percent = buffer->percent;
+			mt_mutex_unlock(&buffer->mutex);
+
+			plot_buffer(plot, total, sets);
+			plot_scope(plot, percent);
+
+			set_buffer_buttons(buffer, total == 0, !primed);
+		}
+
+		if (plot_active(plot))
+		{
+			mt_mutex_lock(&buffer->mutex);
+			draw_request = min_long(total_pts(buffer->svs) - plot->draw_total, M2_MAX_GRADUAL_PTS);
 			mt_mutex_unlock(&buffer->mutex);
 		}
-		else plot->draw_request = 0;
+		else draw_request = 0;
 
-		xleep(plot->draw_request < M2_BOOST_THRESHOLD_PTS ? secondary_interval : secondary_boost_interval);  // secondary sleeper
+		xleep(draw_request < M2_BOOST_THRESHOLD_PTS ? secondary_interval : secondary_boost_interval);  // secondary sleeper
 
-		if (plot->draw_request > 0) plot_tick(plot);  // in-flight plotting
+		if (draw_request > 0) plot_tick(plot, draw_request);
 	}
 
 	mt_thread_join(daq_thread);

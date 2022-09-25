@@ -145,7 +145,7 @@ void set_logger_scanning (Logger *logger, bool scanning)
 	gtk_widget_set_sensitive(logger->reader_types,  !scanning);
 }
 
-void run_reader_status (Logger *logger, ChanSet *chanset, bool *known, double *data)
+void reader_update (Logger *logger, ChanSet *chanset, bool *known, double *data)
 {
 	// profiling: using spot hack reduced exec time of "for" loop from 9μs to 7μs
 

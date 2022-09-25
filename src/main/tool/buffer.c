@@ -236,23 +236,6 @@ void set_scan_progress (Buffer *buffer, double frac)
 	mt_mutex_unlock(&buffer->mutex);
 }
 
-void run_buffer_status (Buffer *buffer, Plot *plot)
-{
-	mt_mutex_lock(&buffer->mutex);
-
-	long total  = total_pts(buffer->svs);
-	bool primed = (buffer->svs->last_vs->N_pt == 0);
-	int sets    = buffer->svs->N_set - (primed ? 1 : 0);
-	int percent = buffer->percent;
-
-	mt_mutex_unlock(&buffer->mutex);
-
-	plot_buffer(plot, total, sets);
-	plot_scope(plot, percent);
-
-	set_buffer_buttons(buffer, total == 0, !primed);
-}
-
 void set_buffer_buttons (Buffer *buffer, bool empty, bool filling)
 {
 	if (buffer->displayed_empty != empty)

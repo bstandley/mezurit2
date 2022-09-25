@@ -44,6 +44,7 @@ typedef struct
 		int displayed_sets;
 		int displayed_percent;
 
+		bool enabled;
 		int active_set;  // index of currently-plotting varset
 		long draw_set;   // points already drawn from currently-plotting varset
 		bool mcf_activity;
@@ -52,10 +53,7 @@ typedef struct
 
 	// public:
 
-		bool enabled;
-
-		long draw_total;    // total points already drawn
-		long draw_request;  // total points to plot next tick
+		long draw_total;  // total points already drawn
 
 } Plot;
 
@@ -70,9 +68,9 @@ void plot_register_legacy (Plot *plot);
 
 void plot_update_channels (Plot *plot, int *vc_by_vci, SVSP svs);  // call when vset columns change
 
-void full_plot   (Plot *plot);
-void plot_reset  (Plot *plot);
-void plot_tick   (Plot *plot);
+void plot_build  (Plot *plot);
+bool plot_active (Plot *plot);
+void plot_tick   (Plot *plot, long draw_request);
 void plot_buffer (Plot *plot, long total, int sets);
 void plot_scope  (Plot *plot, int percent);
 

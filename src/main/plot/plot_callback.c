@@ -117,7 +117,7 @@ gboolean plot_minmax_cb (GtkWidget *widget, GdkEvent *event, Plot *plot, Axis *a
 			update_tick(axis, axis->limit.value[UPPER] - axis->limit.value[LOWER]);
 			history_range_append(&axis->limit_history, &axis->limit);
 
-			full_plot(plot);
+			plot_build(plot);
 		}
 		else write_entry(axis->limit.entry[side], axis->limit.value[side]);
 
@@ -142,7 +142,7 @@ void plot_minmax_mcf (double *var, const char *signal_name, MValue value, Plot *
 	else if (str_equal(signal_name, "panel"))
 	{
 		history_range_append(&axis->limit_history, &axis->limit);
-		full_plot(plot);
+		plot_build(plot);
 	}
 }
 
@@ -153,7 +153,7 @@ gboolean plot_enable_cb (GtkWidget *widget, GdkEvent *event, bool *enabled, Plot
 	bool was_active = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
 	*enabled = !was_active;
 
-	full_plot(plot);
+	plot_build(plot);
 
 	return 0;
 }
@@ -165,7 +165,7 @@ void plot_enable_mcf (bool *enabled, const char *signal_name, MValue value, GtkW
 	*enabled = value.x_bool;
 	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(widget), value.x_bool);
 
-	if (str_equal(signal_name, "panel")) full_plot(plot);
+	if (str_equal(signal_name, "panel")) plot_build(plot);
 }
 
 void plot_zoom_cb (GtkWidget *widget, Plot *plot, Axis *axis, int zoom)
@@ -181,7 +181,7 @@ void plot_zoom_cb (GtkWidget *widget, Plot *plot, Axis *axis, int zoom)
 				changed = 1;
 	}
 
-	if (changed) full_plot(plot);
+	if (changed) plot_build(plot);
 }
 
 gboolean plot_vci_cb (GtkWidget *widget, GdkEvent *event, Plot *plot, Axis *axis, int vci)
@@ -193,7 +193,7 @@ gboolean plot_vci_cb (GtkWidget *widget, GdkEvent *event, Plot *plot, Axis *axis
 		axis->vci = vci;
 
 		set_axis_channel(axis, plot->svs->data[0]);
-		full_plot(plot);
+		plot_build(plot);
 	}
 
 	gtk_widget_hide(gtk_widget_get_parent(gtk_widget_get_parent(widget)));
@@ -217,7 +217,7 @@ void plot_vci_mcf (int *var, const char *signal_name, MValue value, Plot *plot, 
 			axis->vci = vci;
 
 			set_axis_channel(axis, plot->svs->data[0]);
-			full_plot(plot);
+			plot_build(plot);
 		}
 	}
 }

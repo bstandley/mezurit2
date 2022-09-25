@@ -67,7 +67,6 @@ bool clear_buffer (Buffer *buffer, ChanSet *chanset, bool confirm, bool tzero);
 bool add_set      (Buffer *buffer, ChanSet *chanset);  // needs outer locks
 VSP  active_vsp   (Buffer *buffer);
 
-void run_buffer_status (Buffer *buffer, Plot *plot);
 void set_buffer_buttons (Buffer *buffer, bool empty, bool filling);
 void set_scan_progress (Buffer *buffer, double frac);  // call from DAQ thread
 

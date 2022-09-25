@@ -55,12 +55,12 @@
 #define M2_SLEEP_MULT 15
 #define M2_TERMINAL_POLLING_RATE 400  // Hz
 #define M2_DEFAULT_GUI_RATE 120       // Hz
-#define M2_BOOST_GUI_RATE 5000        // Hz
+#define M2_BOOST_GUI_RATE 480         // Hz
 #define M2_MAX_READER_RATE 73         // Hz
 #define M2_MAX_BUFFER_STATUS_RATE 41  // Hz
 #define M2_SCOPE_PROGRESS_RATE 11     // Hz
 #define M2_MAX_GRADUAL_PTS 800
-#define M2_BOOST_THRESHOLD_PTS 50
+#define M2_BOOST_THRESHOLD_PTS 100
 
 // plotting:
 #define M2_XBORDER 24

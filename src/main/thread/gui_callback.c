@@ -184,7 +184,7 @@ void clear_cb (GtkWidget *widget, ThreadVars *tv, Buffer *buffer, Plot *plot)
 	if (clear_buffer(buffer, tv->chanset, 1, *buffer->link_tzero))  // confirm = 1, tzero = link_tzero
 	{
 		plot_update_channels(plot, tv->chanset->vc_by_vci, buffer->svs);
-		full_plot(plot);
+		plot_build(plot);
 
 		set_recording(tv, RL_NO_HOLD);
 		set_scanning(tv, RL_NO_HOLD);
@@ -202,7 +202,7 @@ char * clear_csf (gchar **argv, ThreadVars *tv, Buffer *buffer, Plot *plot)
 		if (cleared)
 		{
 			plot_update_channels(plot, tv->chanset->vc_by_vci, buffer->svs);
-			full_plot(plot);
+			plot_build(plot);
 
 			set_recording(tv, RL_NO_HOLD);
 			set_scanning(tv, RL_NO_HOLD);

@@ -70,13 +70,8 @@ void axis_init (Axis *axis, int i, GtkWidget *parent)
 
 void set_axis_color (Axis *axis, ColorScheme *colorscheme, int offset)
 {
-	f_start(F_RUN);
-
-	if (axis->vci != -1)
-	{
-		axis->lines.color = colorscheme->data[(offset + axis->vci) % M2_NUM_COLOR];
-		axis->points.color = lighten(axis->lines.color);
-	}
+	axis->lines.color = colorscheme->data[max_int(offset, 0) % M2_NUM_COLOR];
+	axis->points.color = lighten(axis->lines.color);
 }
 
 void axis_final (Axis *axis)
