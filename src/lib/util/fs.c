@@ -77,6 +77,8 @@ void verify_config_file (const char *name, const char *text)
 
 char * extract_dir (const char *filename)  // will return an existing dir, or else NULL
 {
+	if (str_length(filename) == 0) return NULL;  // otherwise glib will complain, before returning NULL anyway
+
 	if (g_file_test(filename, G_FILE_TEST_IS_DIR)) return cat1(filename);
 
 	gchar *dirname = g_path_get_dirname(filename);

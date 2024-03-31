@@ -97,7 +97,7 @@ void save_cb (GtkWidget *widget, Buffer *buffer)
 	f_start(F_CALLBACK);
 
 	char *dirname _strfree_ = extract_dir(buffer->filename);
-	if (str_length(buffer->filename) > 0 && dirname != NULL)
+	if (str_length(buffer->filename) > 0 && dirname != NULL)  // directory must exist, which it might not from the freeform entry box...
 	{
 		if (!g_file_test(buffer->filename, G_FILE_TEST_EXISTS) || run_yes_no_dialog(buffer->main_window, "File exists.\nOverwrite?"))
 			save_buffer(buffer, buffer->filename, 0, 1);
