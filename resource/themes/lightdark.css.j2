@@ -1,0 +1,22 @@
+#m2_worktop { background-color: shade (@theme_bg_color, 0.4) }
+#m2_plotbuffer { background-color: #000000 }
+#m2_section { background-color: @theme_bg_color }
+{% for x in ('sweep', 'jump', 'horizontal', 'vertical', 'rollup', 'rolldown', 'wayleft', 'left', 'top', 'bottom', 'right', 'wayright' ) -%}
+#m2_icon_{{ x }} { background-image: -gtk-recolor(url('icon-{{ x }}.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+{% endfor -%}
+#m2_heading button { padding: 1px }
+#m2_locmenu button { padding: 4px }
+{% if system == 'windows' -%}
+{# silence a warning due to the default font (segoe ui) lacking a semi-condensed variant -#}
+#m2_heading label { font-weight: bold }
+{# make subscripts more readable -#}
+#m2_markup { font-size: 115%; font-weight: 600 }
+{# make various widgets more compact -#}
+button { min-height: 0; padding: 2px 6px; border-radius: 0 }
+entry { min-height: 0; padding: 1px 6px; border-radius: 0 }
+spinbutton { min-height: 0; padding: 1px 0; border-radius: 0 }
+checkbox { min-height: 0; padding: 0 }
+combobox { padding: 0 }
+{% else -%}
+#m2_heading label { font-weight: bold; font-stretch: semi-condensed }
+{% endif -%}

@@ -41,17 +41,18 @@ shares="COPYING:COPYING                                  \
         terminal_startup.py:resource/terminal_startup.py \
         $(find resource -name '*.pdf' -printf '%P:%p ')  \
         $(find resource -name '*.mcf' -printf '%P:%p ')  \
-        $(find resource -name '*.png' -printf '%P:%p ')  \
-        $(find resource -name '*.css' -printf '%P:%p ')"
+        $(find resource -name '*.png' -printf '%P:%p ')"
 
 if ! $mingw ; then
 	rules="$rules app:src/main/$prog1:src/main/main.c \
 	              lib:src/control/_${prog1}control.so:src/control/client.c"
+	shares="$shares themes/lightdark.css:resource/themes/lightdark-linux.css"
 else
 	ldlibs="-lwinmm"
 	rules="$rules app:src/main/$prog2.exe:src/main/main.c \
 	              lib:src/control/_${prog1}control.pyd:src/control/client.c"
-	shares="$shares $(find $win32_path/python2    -name 'python*.dll' -printf '%f:%p')                                          \
+	shares="$shares themes/lightdark.css:resource/themes/lightdark-windows.css                                                  \
+	                $(find $win32_path/python2    -name 'python*.dll' -printf '%f:%p')                                          \
 	                $(find $win32_path/python2    -name 'python.exe'  -printf '%f:%p')                                          \
 	                $(find $win32_path/python2    -name '*.pyd'       -printf 'dlls/%f:%p\n' | grep '_ctypes.pyd\|_socket.pyd') \
 	                $(find $win32_path/pyreadline -name '*.py'        -printf 'lib/%P:%p\n' | grep -v 'setup\|doc\|configuration\|test\|logserver\|ironpython')"

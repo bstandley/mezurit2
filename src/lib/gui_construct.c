@@ -18,6 +18,7 @@
 GtkWidget * new_label (const char *str, bool markup, double xalign)
 {
 	GtkWidget *widget = gtk_label_new(str);
+	if (markup) gtk_widget_set_name(widget, "m2_markup");
 	gtk_label_set_use_markup(GTK_LABEL(widget), markup);
 	gtk_label_set_xalign(GTK_LABEL(widget), (gfloat) xalign);
 	gtk_label_set_yalign(GTK_LABEL(widget), 0.5);

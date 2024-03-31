@@ -1,0 +1,18 @@
+#m2_worktop { background-color: shade (@theme_bg_color, 0.4) }
+#m2_plotbuffer { background-color: #000000 }
+#m2_section { background-color: @theme_bg_color }
+#m2_icon_sweep { background-image: -gtk-recolor(url('icon-sweep.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_jump { background-image: -gtk-recolor(url('icon-jump.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_horizontal { background-image: -gtk-recolor(url('icon-horizontal.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_vertical { background-image: -gtk-recolor(url('icon-vertical.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_rollup { background-image: -gtk-recolor(url('icon-rollup.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_rolldown { background-image: -gtk-recolor(url('icon-rolldown.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_wayleft { background-image: -gtk-recolor(url('icon-wayleft.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_left { background-image: -gtk-recolor(url('icon-left.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_top { background-image: -gtk-recolor(url('icon-top.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_bottom { background-image: -gtk-recolor(url('icon-bottom.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_right { background-image: -gtk-recolor(url('icon-right.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_icon_wayright { background-image: -gtk-recolor(url('icon-wayright.symbolic.png')); background-position: center; background-repeat: no-repeat; min-width: 22px; min-height: 18px }
+#m2_heading button { padding: 1px }
+#m2_locmenu button { padding: 4px }
+#m2_heading label { font-weight: bold; font-stretch: semi-condensed }

@@ -83,6 +83,7 @@ void add_loc_menu (Section *sect, ...)
 	gtk_widget_set_tooltip_text(sect->loc_button, "Move tool");
 
 	sect->loc_menu = attach_window(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), sect->full);  // any parent will do
+	gtk_widget_set_name(sect->loc_menu, "m2_locmenu");
 
 	va_list vl;
 	va_start(vl, sect);

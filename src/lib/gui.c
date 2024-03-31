@@ -182,6 +182,7 @@ GtkWidget * attach_window (GtkWidget *target, GtkWidget *parent)
 	gtk_window_set_skip_pager_hint   (GTK_WINDOW(window), 1);
 	gtk_window_set_transient_for     (GTK_WINDOW(window), GTK_WINDOW(gtk_widget_get_toplevel(parent)));
 	gtk_window_set_position          (GTK_WINDOW(window), GTK_WIN_POS_MOUSE);
+	gtk_window_set_default_size      (GTK_WINDOW(window), 0, 0);
 
 	return container_add(target, window);
 }
