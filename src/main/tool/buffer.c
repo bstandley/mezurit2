@@ -49,7 +49,6 @@ void buffer_init (Buffer *buffer, GtkWidget *parent)
 
 	gtk_widget_set_tooltip_text(buffer->add_button,  "Start new dataset");
 	gtk_widget_set_tooltip_text(buffer->file_button, "Select filename");
-	buffer->adjusted = 0;
 
 	mt_mutex_init(&buffer->mutex);
 	mt_mutex_init(&buffer->confirming);
@@ -116,7 +115,6 @@ void buffer_register (Buffer *buffer, int pid, ChanSet *chanset)
 	snazzy_connect(buffer->tzero_button, "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(tzero_cb),         0x10, buffer);
 	snazzy_connect(buffer->add_button,   "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(add_set_cb),       0x20, buffer, chanset);
 	snazzy_connect(buffer->file_entry,   "key-press-event, focus-out-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(filename_cb),      0x10, buffer);
-	snazzy_connect(buffer->file_entry,   "draw",                             SNAZZY_BOOL_PTR,  BLOB_CALLBACK(buffer_expose_cb), 0x10, buffer);
 	snazzy_connect(buffer->file_button,  "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(choose_file_cb),   0x10, buffer);
 	snazzy_connect(buffer->save_button,  "clicked",                          SNAZZY_VOID_VOID, BLOB_CALLBACK(save_cb),          0x10, buffer);
 

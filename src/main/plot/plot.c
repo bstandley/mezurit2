@@ -338,7 +338,7 @@ void plot_tick (Plot *plot, long draw_request)  // bite-size plotting session fo
 	}
 
 	cairo_destroy(cr);
-	gtk_widget_queue_draw_area(plot->area_widget, (gint) plot->region.X0, (gint) plot->region.Y0, (gint) (plot->region.X1 - plot->region.X0), (gint) (plot->region.Y1 - plot->region.Y0));  // TODO properly calculate, use cairo regions
+	gtk_widget_queue_draw_area(plot->area_widget, (gint) plot->region.X0, (gint) plot->region.Y0, (gint) (plot->region.X1 - plot->region.X0), (gint) (plot->region.Y1 - plot->region.Y0));  // TODO properly calculate regions, see comment in draw_marker() for motivation
 }
 
 long plot_data (cairo_t *cr, Plot *plot, long draw_request)

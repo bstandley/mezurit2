@@ -41,7 +41,6 @@ typedef struct
 		GtkWidget *arm_button, *force_button;
 		GtkWidget *plus_button;
 		GtkWidget *vbox, *hbox1;
-		bool adjusted;
 
 	// public:
 

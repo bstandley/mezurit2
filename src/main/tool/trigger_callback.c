@@ -16,7 +16,6 @@
 */
 
 static void trigger_plus_cb (GtkWidget *widget, Trigger *trigger, MtMutex *mutex);
-static gboolean trigger_expose_cb (GtkWidget *widget, void *ptr, Trigger *trigger);
 static gboolean trigger_button_cb (GtkToggleButton *button, GdkEvent *event, Trigger *trigger, MtMutex *mutex);
 static gboolean trigger_expr_cb (GtkWidget *widget, GdkEvent *event, Trigger *trigger_array, MtMutex *mutex, int i, int l);
 static void trigger_expr_mcf (void *ptr, const char *signal_name, MValue value, Trigger *trigger_array, MtMutex *mutex, int i, int l);
@@ -27,19 +26,6 @@ void trigger_plus_cb (GtkWidget *widget, Trigger *trigger, MtMutex *mutex)
 	f_start(F_CALLBACK);
 
 	update_line_array_vis(trigger, mutex, 1);
-}
-
-gboolean trigger_expose_cb (GtkWidget *widget, void *ptr, Trigger *trigger)
-{
-	if (trigger->adjusted) return 0;
-	f_start(F_CALLBACK);
-
-	GtkAllocation alloc;
-	gtk_widget_get_allocation(widget, &alloc);
-	gtk_widget_set_size_request(trigger->plus_button, -1, alloc.height - 6);
-
-	trigger->adjusted = 1;
-	return 0;
 }
 
 gboolean trigger_button_cb (GtkToggleButton *button, GdkEvent *event, Trigger *trigger, MtMutex *mutex)

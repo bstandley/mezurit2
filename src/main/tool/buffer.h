@@ -35,7 +35,6 @@ typedef struct
 		GtkWidget *tzero_button, *clear_button;
 		GtkWidget *add_button, *save_button;
 		GtkWidget *file_entry, *file_button;
-		bool adjusted;
 
 		bool displayed_empty, displayed_filling;  // threads: GUI only
 

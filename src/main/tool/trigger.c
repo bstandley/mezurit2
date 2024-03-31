@@ -77,8 +77,6 @@ void trigger_array_init (Trigger *trigger_array, GtkWidget **apt, Section *sect)
 			trigger->line_cf[l].info = NULL;
 		}
 
-		trigger->adjusted = 0;
-
 		trigger->ready = trigger->armed = trigger->busy = 0;
 		trigger->any_line_dirty = trigger->arm_dirty = trigger->busy_dirty = 0;
 		trigger->timer = timer_new();
@@ -120,8 +118,7 @@ void trigger_array_register (Trigger *trigger_array, int pid, GtkWidget **apt, S
 
 			mcf_connect(var, "setup, panel", BLOB_CALLBACK(trigger_expr_mcf), 0x22, trigger_array, mutex, id, l);
 
-			/**/        snazzy_connect(trigger->line_entry[l], "key-press-event, focus-out-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(trigger_expr_cb),   0x22, trigger_array, mutex, id, l);
-			if (l == 1) snazzy_connect(trigger->line_entry[l], "draw",                             SNAZZY_BOOL_PTR, BLOB_CALLBACK(trigger_expose_cb), 0x10, trigger);
+			snazzy_connect(trigger->line_entry[l], "key-press-event, focus-out-event", SNAZZY_BOOL_PTR, BLOB_CALLBACK(trigger_expr_cb),   0x22, trigger_array, mutex, id, l);
 		}
 
 		snazzy_connect(trigger->arm_button,   "button-release-event", SNAZZY_BOOL_PTR,  BLOB_CALLBACK(trigger_button_cb), 0x20, trigger, mutex);

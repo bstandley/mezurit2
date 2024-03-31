@@ -445,6 +445,25 @@ void draw_marker (cairo_t *cr, Axis *axis_array, Region r, ColorScheme *colorsch
 {
 	f_start(F_RUN);
 
+	// Clipping checks are based on draw events queued by...
+	//
+	//   - plot_tick(), which (as currently written) invalidates the whole area inside the axes,
+	//     meaning the labels will never match while the marker itself will always match.
+	//
+	//   - plot_buffer() and plot_scope(), which invalidate only their own sections, meaning that
+	//     neither the labels nor the marker will ever match.
+	//
+	//   - all other events will likely invalidate the whole area, meaning both labels and marker
+	//     will match.
+	//
+	// This whole function typically takes 0.1 msec, so checking may not be worthwhile.  However,
+	// we might as well avoid unnecessarily redrawing the markers, effectively using the clipping
+	// as a way to distinguish between frequent plotting, buffer, and scope progress updates and
+	// infrequent window resizing, panel switching, etc.
+	//
+	// If the regions queued by plot_tick were to be more fine-grained, then it would make sense
+	// to actually implement a check for the marker itself.
+
 	char str[16];
 	cairo_text_extents_t ext;
 
@@ -453,7 +472,7 @@ void draw_marker (cairo_t *cr, Axis *axis_array, Region r, ColorScheme *colorsch
 
 	// X axis
 
-	if (axis_array[X_AXIS].vci != -1)
+	if (axis_array[X_AXIS].vci != -1 && cairo_in_clip(cr, XM, r.Y1 + M2_MARKER_ARROW_OFFSET))
 	{
 		snprintf(str, 16, axis_array[X_AXIS].marker_format, descale_point(XM, &axis_array[X_AXIS], r.X0, r.X1));
 		cairo_text_extents(cr, str, &ext);
@@ -477,7 +496,7 @@ void draw_marker (cairo_t *cr, Axis *axis_array, Region r, ColorScheme *colorsch
 
 	for (int a = 1; a < 3; a++)
 	{
-		if (axis_array[a].vci == -1) continue;
+		if (axis_array[a].vci == -1 || !cairo_in_clip(cr, a == Y1_AXIS ? r.X0 - M2_MARKER_ARROW_OFFSET : r.X1 + M2_MARKER_ARROW_OFFSET, YM)) continue;
 
 		snprintf(str, 16, axis_array[a].marker_format, descale_point(YM, &axis_array[a], r.Y1, r.Y0));
 		cairo_text_extents(cr, str, &ext);

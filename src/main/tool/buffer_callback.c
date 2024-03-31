@@ -15,7 +15,6 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-static gboolean buffer_expose_cb (GtkWidget *widget, void *ptr, Buffer *buffer);
 static void tzero_cb (GtkWidget *widget, Buffer *buffer);
 static void add_set_cb (GtkWidget *widget, Buffer *buffer, ChanSet *chanset);
 static gboolean filename_cb (GtkWidget *widget, GdkEvent *event, Buffer *buffer);
@@ -26,24 +25,6 @@ static char * tzero_csf (gchar **argv, Buffer *buffer);
 static char * add_set_csf (gchar **argv, Buffer *buffer, ChanSet *chanset);
 static char * save_csf (gchar **argv, Buffer *buffer);
 static char * get_time_csf (gchar **argv, Buffer *buffer);
-
-gboolean buffer_expose_cb (GtkWidget *widget, void *ptr, Buffer *buffer)
-{
-	if (buffer->adjusted) return 0;
-	f_start(F_CALLBACK);
-
-	GtkAllocation alloc;
-	gtk_widget_get_allocation(widget, &alloc);
-
-	gtk_widget_set_size_request(buffer->tzero_button, -1, alloc.height - 4);
-	gtk_widget_set_size_request(buffer->clear_button, -1, alloc.height - 4);
-	gtk_widget_set_size_request(buffer->add_button,   -1, alloc.height - 4);
-	gtk_widget_set_size_request(buffer->file_button,  -1, alloc.height - 4);
-	gtk_widget_set_size_request(buffer->save_button,  -1, alloc.height - 4);
-
-	buffer->adjusted = 1;
-	return 0;
-}
 
 void tzero_cb (GtkWidget *widget, Buffer *buffer)
 {

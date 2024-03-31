@@ -34,7 +34,7 @@ gboolean plot_draw_cb (GtkWidget *widget, cairo_t *cr, Plot *plot)
 	cairo_set_source_surface(cr, plot->surface, 0, 0);
 	cairo_paint(cr);
 
-	if (plot->XM > -0.5) draw_marker(cr, plot->axis, plot->region, plot->colorscheme, plot->XM, plot->YM);  // TODO check clip region, draw only necessary parts?
+	if (plot->XM > -0.5) draw_marker(cr, plot->axis, plot->region, plot->colorscheme, plot->XM, plot->YM);
 
 	return 0;
 }
