@@ -15,6 +15,7 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <locale.h>
 #include <glib/gstdio.h>
 #ifdef MINGW
 #include <windows.h>  // FreeConsole()
@@ -95,6 +96,9 @@ int main (int argc, char *argv[])
 
 	status_init();
 	status_add(0, supercat("Debug mode set to 0x%X. See Help for an explanation.\n", f_mode));
+
+	setlocale(LC_NUMERIC, "C");
+	status_add(0, supercat("Decimal separator set to '.'\n"));
 
 	verify_config_dir();
 	verify_config_file("compute.py",  atg(supercat("# Place your custom channel and trigger functions here. See %s for examples.\n\n", atg(libpath("mezurit2compute.py")))));
