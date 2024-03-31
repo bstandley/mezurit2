@@ -57,8 +57,8 @@ void trigger_array_init (Trigger *trigger_array, GtkWidget **apt, Section *sect)
 		GtkWidget *vbox10 = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, trigger->hbox1);
 		GtkWidget *vbox11 = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 1, trigger->hbox1);
 
-		trigger->force_button = pack_start(gtk_toggle_button_new(), 0, vbox10);
-		gtk_widget_set_name(container_add(gtk_image_new(), trigger->force_button), "m2_icon_action");
+		trigger->force_button = pack_start(gtk_toggle_button_new_with_label("THEN:"), 0, vbox10);
+		gtk_widget_set_tooltip_text(trigger->force_button, "Manually trigger actions");
 
 		for (int l = 0; l < M2_TRIGGER_LINES; l++)
 		{

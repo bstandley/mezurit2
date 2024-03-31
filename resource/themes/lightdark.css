@@ -1,7 +1,6 @@
 #m2_worktop         { background-color: shade (@theme_bg_color, 0.4) }
 #m2_plotbuffer      { background-color: #000000 }
 #m2_section         { background-color: @theme_bg_color }
-#m2_icon_action     { background-image: -gtk-recolor(url('icon-action.symbolic.png')) }
 #m2_icon_sweep      { background-image: -gtk-recolor(url('icon-sweep.symbolic.png')) }
 #m2_icon_jump       { background-image: -gtk-recolor(url('icon-jump.symbolic.png')) }
 #m2_icon_horizontal { background-image: -gtk-recolor(url('icon-horizontal.symbolic.png')) }

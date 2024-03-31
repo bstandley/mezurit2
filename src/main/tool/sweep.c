@@ -62,8 +62,8 @@ void sweep_array_init (Sweep *sweep_array, GtkWidget **apt)
 		gtk_widget_set_name(container_add(gtk_image_new(), sweep->vis_sweep_button), "m2_icon_sweep");
 		gtk_widget_set_name(container_add(gtk_image_new(), sweep->vis_jump_button),  "m2_icon_jump");
 
-		gtk_widget_set_tooltip_markup(sweep->vis_sweep_button, "Sweep up/down controls");
-		gtk_widget_set_tooltip_markup(sweep->vis_jump_button,  "Jump-to-target control");
+		gtk_widget_set_tooltip_text(sweep->vis_sweep_button, "Sweep up/down controls");
+		gtk_widget_set_tooltip_text(sweep->vis_jump_button,  "Jump-to-target control");
 
 		// make sections:
 		sweep->sweep_section = pack_start(make_sweep_section(sweep),                     0, sweep->sect.box);
@@ -438,7 +438,6 @@ GtkWidget * make_sweep_section (Sweep *sweep)
 	}
 
 	// stop conditions:
-	/**/                   table_attach(new_label("Stop", 0.0),                     0, 8, table);
 	GtkWidget *down_hbox = table_attach(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, 8, table);
 	GtkWidget *up_hbox   = table_attach(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 2, 8, table);
 
@@ -446,6 +445,11 @@ GtkWidget * make_sweep_section (Sweep *sweep)
 	sweep->zerostop_button[UPPER] = pack_end   (flatten_button(size_widget(gtk_toggle_button_new(), -1, 22)), 0, down_hbox);
 	sweep->zerostop_button[LOWER] = pack_start (flatten_button(size_widget(gtk_toggle_button_new(), -1, 22)), 0, up_hbox);
 	sweep->endstop_button[UPPER]  = pack_end   (flatten_button(size_widget(gtk_toggle_button_new(), -1, 22)), 0, up_hbox);
+
+	gtk_widget_set_tooltip_text(sweep->endstop_button[LOWER],  "Stop at lower bound");
+	gtk_widget_set_tooltip_text(sweep->zerostop_button[UPPER], "Stop at zero when sweeping up");
+	gtk_widget_set_tooltip_text(sweep->zerostop_button[LOWER], "Stop at zero when sweeping down");
+	gtk_widget_set_tooltip_text(sweep->endstop_button[UPPER],  "Stop at upper bound");
 
 	container_add(new_label("|←", 0.0), sweep->endstop_button[LOWER]);
 	container_add(new_label("→0", 1.0), sweep->zerostop_button[UPPER]);
@@ -459,7 +463,10 @@ GtkWidget * make_jump_section (Sweep *sweep)
 {
 	f_start(F_VERBOSE);
 
-	GtkWidget *table = set_margins(new_table(0, 2), 2, 2, 14, 4);
+	GtkWidget *hbox = set_margins(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 2, 2, 14, 4);
+
+	GtkWidget *table = pack_start(new_table(0, 2),                          0, hbox);
+	GtkWidget *vbox  = pack_start(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0), 0, hbox);
 
 	sweep->jump_voltage_entry = new_numeric_entry(1, 6, 8);
 	sweep->jump_scaled_entry  = new_numeric_entry(1, 6, 8);
@@ -471,9 +478,8 @@ GtkWidget * make_jump_section (Sweep *sweep)
 	/**/                       table_attach(sweep->jump_voltage_entry->widget,  1, 0, table);
 	/**/                       table_attach(sweep->jump_scaled_entry->widget,   1, 1, table);
 
-	sweep->jump_button = table_attach_full(gtk_button_new_with_label("SET"), 2, 0, 1, 2, table);
-	set_margins(sweep->jump_button, 2, 2, 8, 8);
-	gtk_button_set_image_position(GTK_BUTTON(sweep->jump_button), GTK_POS_RIGHT);
+	sweep->jump_button = gtk_button_new_with_label("SET");
+	gtk_box_set_center_widget(GTK_BOX(vbox), sweep->jump_button);
 
-	return table;
+	return hbox;
 }
