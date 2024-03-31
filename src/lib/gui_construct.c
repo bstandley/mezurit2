@@ -15,10 +15,10 @@
  *  program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-GtkWidget * new_label (const char *str, double xalign)
+GtkWidget * new_label (const char *str, bool markup, double xalign)
 {
 	GtkWidget *widget = gtk_label_new(str);
-	gtk_label_set_use_markup(GTK_LABEL(widget), 1);
+	gtk_label_set_use_markup(GTK_LABEL(widget), markup);
 	gtk_label_set_xalign(GTK_LABEL(widget), (gfloat) xalign);
 	gtk_label_set_yalign(GTK_LABEL(widget), 0.5);
 	return widget;

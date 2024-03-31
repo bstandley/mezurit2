@@ -19,3 +19,8 @@ button image {
 	background-repeat: no-repeat;
 	min-width: 18px;
 }
+
+#m2_heading label {
+	font-weight: bold;
+	font-stretch: semi-condensed;
+ }

@@ -43,9 +43,9 @@ void logger_init (Logger *logger, GtkWidget **apt)
 	set_entry_unit(logger->max_rate_entry, "kHz");
 	set_entry_min (logger->max_rate_entry, 0.010);
 
-	table_attach(new_label("f<sub>max</sub>", 0.0), 0, 0, table);
-	table_attach(logger->max_rate_entry->widget,    1, 0, table);
-	table_attach(new_label("N<sub>ave</sub>", 0.0), 0, 1, table);
+	table_attach(new_label("f<sub>max</sub>", 1, 0.0), 0, 0, table);
+	table_attach(logger->max_rate_entry->widget,       1, 0, table);
+	table_attach(new_label("N<sub>ave</sub>", 1, 0.0), 0, 1, table);
 
 	logger->cbuf_length_widget = pack_start(gtk_spin_button_new_with_range(1, M2_MAX_CBUF_LENGTH, 1), 0,
 	                             table_attach(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), 1, 1, table));

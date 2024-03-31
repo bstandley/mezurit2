@@ -41,9 +41,11 @@ void section_init (Section *sect, const char *icon_filename, const char *label_s
 
 	sect->heading = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),                                         0, vbox);
 	sect->box     = pack_start(set_no_show_all(set_margins(gtk_box_new(GTK_ORIENTATION_VERTICAL, 4), 3, 3, 6, 3)), 1, vbox);
+	
+	gtk_widget_set_name(sect->heading, "m2_heading");
 
-	GtkWidget *icon  = pack_start(gtk_image_new_from_file(icon_filename),                      0, sect->heading);
-	GtkWidget *label = pack_start(new_label(atg(supercat(M2_HEADING_FORMAT, label_str)), 0.0), 0, sect->heading);
+	GtkWidget *icon  = pack_start(gtk_image_new_from_file(icon_filename), 0, sect->heading);
+	GtkWidget *label = pack_start(new_label(label_str, 0, 0.0),           0, sect->heading);
 
 	set_padding(icon,  2);
 	set_padding(label, 1);
@@ -78,7 +80,7 @@ void add_loc_menu (Section *sect, ...)
 	sect->loc_button = pack_end(flatten_button(gtk_button_new()), 0, sect->heading);
 
 	container_add(gtk_image_new(), sect->loc_button);
-	gtk_widget_set_tooltip_markup(sect->loc_button, "Move tool");
+	gtk_widget_set_tooltip_text(sect->loc_button, "Move tool");
 
 	sect->loc_menu = attach_window(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0), sect->full);  // any parent will do
 

@@ -387,7 +387,7 @@ double step_dwell_compute (Sweep *sweep, int side, int mode)
 
 void attach_range (NumericRange *nr, int row, const char *label_str, const char *unit_str, GtkWidget *table)
 {
-	nr->label = table_attach(new_label(label_str, 0.0), 0, row, table);
+	nr->label = table_attach(new_label(label_str, 1, 0.0), 0, row, table);
 
 	for sides
 	{
@@ -451,10 +451,10 @@ GtkWidget * make_sweep_section (Sweep *sweep)
 	gtk_widget_set_tooltip_text(sweep->zerostop_button[LOWER], "Stop at zero when sweeping down");
 	gtk_widget_set_tooltip_text(sweep->endstop_button[UPPER],  "Stop at upper bound");
 
-	container_add(new_label("|←", 0.0), sweep->endstop_button[LOWER]);
-	container_add(new_label("→0", 1.0), sweep->zerostop_button[UPPER]);
-	container_add(new_label("0←", 0.0), sweep->zerostop_button[LOWER]);
-	container_add(new_label("→|", 1.0), sweep->endstop_button[UPPER]);
+	container_add(new_label("|←", 0, 0.0), sweep->endstop_button[LOWER]);
+	container_add(new_label("→0", 0, 1.0), sweep->zerostop_button[UPPER]);
+	container_add(new_label("0←", 0, 0.0), sweep->zerostop_button[LOWER]);
+	container_add(new_label("→|", 0, 1.0), sweep->endstop_button[UPPER]);
 
 	return table;
 }
@@ -473,10 +473,10 @@ GtkWidget * make_jump_section (Sweep *sweep)
 
 	set_entry_unit(sweep->jump_voltage_entry, "V");
 
-	/**/                       table_attach(new_label("V<sub>DAC</sub> ", 0.0), 0, 0, table);
-	sweep->jump_scaled_label = table_attach(new_label("?", 0.0),                0, 1, table);
-	/**/                       table_attach(sweep->jump_voltage_entry->widget,  1, 0, table);
-	/**/                       table_attach(sweep->jump_scaled_entry->widget,   1, 1, table);
+	/**/                       table_attach(new_label("V<sub>DAC</sub> ", 1, 0.0), 0, 0, table);
+	sweep->jump_scaled_label = table_attach(new_label("?",                1, 0.0), 0, 1, table);
+	/**/                       table_attach(sweep->jump_voltage_entry->widget,     1, 0, table);
+	/**/                       table_attach(sweep->jump_scaled_entry->widget,      1, 1, table);
 
 	sweep->jump_button = gtk_button_new_with_label("SET");
 	gtk_box_set_center_widget(GTK_BOX(vbox), sweep->jump_button);

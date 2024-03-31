@@ -32,8 +32,8 @@ void message_init (Message *message, GtkWidget **apt)
 	section_init(&message->sect, atg(sharepath("pixmaps/tool_message.png")), "Message", apt);
 	// (add rollup and location buttons later)
 
-	message->mini_entry  = pack_start(set_no_show_all(size_widget(new_entry(0, 0),    M2_MESSAGE_WIDTH, -1)), 1, message->sect.heading);
-	message->mini_spacer = pack_start(set_no_show_all(size_widget(new_label("", 0.0), M2_MESSAGE_WIDTH, -1)), 1, message->sect.heading);
+	message->mini_entry  = pack_start(set_no_show_all(size_widget(new_entry(0, 0),       M2_MESSAGE_WIDTH, -1)), 1, message->sect.heading);
+	message->mini_spacer = pack_start(set_no_show_all(size_widget(new_label("", 0, 0.0), M2_MESSAGE_WIDTH, -1)), 1, message->sect.heading);
 
 	gtk_widget_set_can_focus(message->mini_entry, 0);
 	gtk_editable_set_editable(GTK_EDITABLE(message->mini_entry), 0);

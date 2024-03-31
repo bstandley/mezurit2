@@ -85,8 +85,8 @@ void hardware_array_init (Hardware *hw_array, GtkWidget **apt)
 		section_init(&hw->sect, icon_filename, label_str, apt);
 		// (add rollup button later)
 
-		hw->mini_entry  = pack_start(set_no_show_all(size_widget(new_entry(0, 0),    M2_HARDWARE_WIDTH, -1)), 1, hw->sect.heading);
-		hw->mini_spacer = pack_start(set_no_show_all(size_widget(new_label("", 0.0), M2_HARDWARE_WIDTH, -1)), 1, hw->sect.heading);
+		hw->mini_entry  = pack_start(set_no_show_all(size_widget(new_entry(0, 0),       M2_HARDWARE_WIDTH, -1)), 1, hw->sect.heading);
+		hw->mini_spacer = pack_start(set_no_show_all(size_widget(new_label("", 0, 0.0), M2_HARDWARE_WIDTH, -1)), 1, hw->sect.heading);
 
 		gtk_widget_set_can_focus(hw->mini_entry, 0);
 		gtk_editable_set_editable(GTK_EDITABLE(hw->mini_entry), 0);

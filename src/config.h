@@ -47,8 +47,6 @@
 #define M2_MESSAGE_HEIGHT 80
 #define M2_HARDWARE_WIDTH 100
 #define M2_HALFSPACE 2
-#define M2_CHANNEL_FORMAT "<span font_stretch=\"semicondensed\">%s</span>"
-#define M2_HEADING_FORMAT "<span font_weight=\"bold\" font_stretch=\"semicondensed\">%s</span>"
 #define M2_URL "brianstandley.com/mezurit2"
 
 // threads:

@@ -51,10 +51,10 @@ void scope_init (Scope *scope, GtkWidget **apt)
 	set_entry_unit (scope->time_entry, "s");
 	set_entry_min  (scope->time_entry, 0);
 
-	table_attach(new_label("f<sub>DAQ</sub>", 0.0),    0, 0, table);
-	table_attach(scope->rate_entry->widget,            1, 0, table);
-	table_attach(new_label("t<sub>sample</sub>", 0.0), 0, 1, table);
-	table_attach(scope->time_entry->widget,            1, 1, table);
+	table_attach(new_label("f<sub>DAQ</sub>", 1, 0.0),    0, 0, table);
+	table_attach(scope->rate_entry->widget,               1, 0, table);
+	table_attach(new_label("t<sub>sample</sub>", 1, 0.0), 0, 1, table);
+	table_attach(scope->time_entry->widget,               1, 1, table);
 
 	// controls:
 	GtkWidget *control_vbox = table_attach_full(gtk_box_new(GTK_ORIENTATION_VERTICAL, 2), 2, 0, 1, 2, table);

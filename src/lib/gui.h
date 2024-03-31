@@ -68,7 +68,7 @@ bool   run_yes_no_dialog (GtkWidget *window, const char *message);
 
 // Custom constructors:
 
-GtkWidget * new_label (const char *str, double xalign);
+GtkWidget * new_label (const char *str, bool markup, double xalign);
 GtkWidget * new_entry (int max, int width);
 GtkWidget * new_text_view (gint left_margin, gint right_margin);
 GtkWidget * new_table (guint row_spacing, guint col_spacing);

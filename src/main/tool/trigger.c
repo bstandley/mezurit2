@@ -50,7 +50,7 @@ void trigger_array_init (Trigger *trigger_array, GtkWidget **apt, Section *sect)
 		GtkWidget *hbox0 = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4), 0, trigger->vbox);  // "if" section
 		trigger->hbox1   = pack_start(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4), 0, trigger->vbox);  // "then" section
 
-		/**/                     pack_start(new_label("IF:", 0.5),                   0, hbox0);
+		/**/                     pack_start(new_label("IF:", 0, 0.5),                0, hbox0);
 		trigger->line_entry[0] = pack_start(new_entry(0, 12),                        1, hbox0);
 		trigger->arm_button    = pack_start(gtk_toggle_button_new_with_label("ARM"), 0, hbox0);
 
