@@ -47,7 +47,7 @@
 #define M2_MESSAGE_HEIGHT 80
 #define M2_HARDWARE_WIDTH 100
 #define M2_HALFSPACE 2
-#define M2_URL "brianstandley.com/mezurit2"
+#define M2_URL "https://brianstandley.com/mezurit2"
 
 // threads:
 #define M2_SLEEP_MULT 15

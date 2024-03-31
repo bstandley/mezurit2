@@ -37,7 +37,7 @@ void help_init (Help *help, GtkWidget *menubar)
 	help->about_dialog = gtk_about_dialog_new();
 
 	const gchar *authors[] = { "Brian Standley <brian@brianstandley.com>\n",
-	                           "Testers:\nBockrath group at UC Riverside\nLau group at UC Riverside\n",
+	                           "Testers:\nBockrath group at UC Riverside, Ohio State University\nLau group at UC Riverside, Ohio State University\n",
 	                           "Special thanks:\nTengfei Miao\nHang Zhang\n",
 	                           "Inspired by \"Mezurit,\" which was written\nby Marc Bockrath and David Cobden",
 	                           NULL };
@@ -45,7 +45,7 @@ void help_init (Help *help, GtkWidget *menubar)
 	gtk_about_dialog_set_program_name (GTK_ABOUT_DIALOG(help->about_dialog), quote(PROG2));
 	gtk_about_dialog_set_logo         (GTK_ABOUT_DIALOG(help->about_dialog), NULL);
 	gtk_about_dialog_set_version      (GTK_ABOUT_DIALOG(help->about_dialog), quote(VERSION));
-	gtk_about_dialog_set_copyright    (GTK_ABOUT_DIALOG(help->about_dialog), "© 2012 California Institute of Technology");
+	gtk_about_dialog_set_copyright    (GTK_ABOUT_DIALOG(help->about_dialog), "© 2012 California Institute of Technology\n© 2024 Brian Standley");
 	gtk_about_dialog_set_website      (GTK_ABOUT_DIALOG(help->about_dialog), M2_URL);
     gtk_about_dialog_set_comments     (GTK_ABOUT_DIALOG(help->about_dialog), "Scriptable continuous and triggered data acquisition for Linux and Windows");
 	gtk_about_dialog_set_authors      (GTK_ABOUT_DIALOG(help->about_dialog), authors);
@@ -82,7 +82,7 @@ void help_register (Help *help)
 	char *filename = atg(sharepath("manual.pdf"));
 	if (filename == NULL) gtk_widget_set_sensitive(help->offline_item, 0);
 
-	/**/                  snazzy_connect(help->online_item,  "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(open_resource_cb), 0x20, cat1(url_fmt), cat3("http://", M2_URL, "/doc"));
+	/**/                  snazzy_connect(help->online_item,  "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(open_resource_cb), 0x20, cat1(url_fmt), cat2(M2_URL, "/doc"));
 	if (filename != NULL) snazzy_connect(help->offline_item, "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(open_resource_cb), 0x20, cat1(pdf_fmt), cat1(filename));
 	/**/                  snazzy_connect(help->about_item,   "activate", SNAZZY_VOID_VOID, BLOB_CALLBACK(show_about_cb),    0x10, help);
 
