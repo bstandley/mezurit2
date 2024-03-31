@@ -45,7 +45,7 @@ gboolean exit_cb (GtkWidget *widget, GdkEvent *event, Page *page, ThreadVars *tv
 
 	if (tv->pid >= 0)
 	{
-		if (run_yes_no_dialog("Exit now?")) stop_threads(tv);
+		if (run_yes_no_dialog(widget, "Exit now?")) stop_threads(tv);  // the widget *is* the main window...
 		else return 1;
 	}
 

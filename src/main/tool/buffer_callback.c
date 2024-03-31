@@ -99,10 +99,10 @@ void save_cb (GtkWidget *widget, Buffer *buffer)
 	char *dirname _strfree_ = extract_dir(buffer->filename);
 	if (str_length(buffer->filename) > 0 && dirname != NULL)
 	{
-		if (!g_file_test(buffer->filename, G_FILE_TEST_EXISTS) || run_yes_no_dialog("File exists.\nOverwrite?"))
+		if (!g_file_test(buffer->filename, G_FILE_TEST_EXISTS) || run_yes_no_dialog(buffer->main_window, "File exists.\nOverwrite?"))
 			save_buffer(buffer, buffer->filename, 0, 1);
 	}
-	else if (str_length(buffer->filename) == 0 || run_yes_no_dialog("The specified filename is unusable.\nDo you want to choose a new filename now?"))
+	else if (str_length(buffer->filename) == 0 || run_yes_no_dialog(buffer->main_window, "The specified filename is unusable.\nDo you want to choose a new filename now?"))
 	{
 		char *filename = run_file_chooser("Save data", FILE_CHOOSER_SAVE, buffer->filename);
 

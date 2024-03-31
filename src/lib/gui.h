@@ -64,7 +64,7 @@ enum
 };
 
 char * run_file_chooser  (const char *title, int action, const char *preset);
-bool   run_yes_no_dialog (const char *message);
+bool   run_yes_no_dialog (GtkWidget *window, const char *message);
 
 // Custom constructors:
 

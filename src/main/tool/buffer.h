@@ -35,6 +35,7 @@ typedef struct
 		GtkWidget *tzero_button, *clear_button;
 		GtkWidget *add_button, *save_button;
 		GtkWidget *file_entry, *file_button;
+		GtkWidget *main_window;                   // initialized by buffer_init(), needed for popup dialogs
 
 		bool displayed_empty, displayed_filling;  // threads: GUI only
 

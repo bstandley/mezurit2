@@ -109,9 +109,9 @@ char * run_file_chooser (const char *title, int action, const char *preset)
 	return filename;
 }
 
-bool run_yes_no_dialog (const char *message)
+bool run_yes_no_dialog (GtkWidget *window, const char *message)
 {
-	GtkWidget *dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO, "%s", message);
+	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO, "%s", message);
 
 	bool rv = (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
 	gtk_widget_destroy(dialog);

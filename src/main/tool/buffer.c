@@ -50,6 +50,8 @@ void buffer_init (Buffer *buffer, GtkWidget *parent)
 	gtk_widget_set_tooltip_text(buffer->add_button,  "Start new dataset");
 	gtk_widget_set_tooltip_text(buffer->file_button, "Select filename");
 
+	buffer->main_window = GTK_WIDGET(gtk_widget_get_parent_window(parent));
+
 	mt_mutex_init(&buffer->mutex);
 	mt_mutex_init(&buffer->confirming);
 
@@ -91,7 +93,7 @@ void buffer_update (Buffer *buffer, ChanSet *chanset)
 			                            "Would you like to clear the buffer now?\n",
 			                            "If not, no additional data can be recorded until the buffer is manually cleared.");
 
-			if (!run_yes_no_dialog(text) || !clear_buffer(buffer, chanset, 1, 0)) buffer->locked = 1;
+			if (!run_yes_no_dialog(buffer->main_window, text) || !clear_buffer(buffer, chanset, 1, 0)) buffer->locked = 1;
 		}
 	}
 }
@@ -164,7 +166,7 @@ bool clear_buffer (Buffer *buffer, ChanSet *chanset, bool confirm, bool tzero)
 		confirm = unsaved_data(buffer->svs);
 		mt_mutex_unlock(&buffer->mutex);
 
-		if (confirm) proceed = run_yes_no_dialog("There are unsaved points in the buffer.\nClear buffer anyway?");
+		if (confirm) proceed = run_yes_no_dialog(buffer->main_window, "There are unsaved points in the buffer.\nClear buffer anyway?");
 
 		mt_mutex_unlock(&buffer->confirming);
 	}
