@@ -70,11 +70,18 @@ fi
 
 ###################  system detection  ####################
 
+if [[ $(uname -o) == 'Msys' ]] ; then
+	mingw=true
+	mingwpath=$MINGW_PREFIX
+	nipath=$NIEXTCCOMPILERSUPP
+elif $mingw ; then
+	mingwpath=/usr/i686-w64-mingw32
+	nipath=./win32
+fi
+
 if $mingw ; then
 	system=Windows
 	arch=i686
-	mingwpath=/usr/i686-w64-mingw32
-	nipath=./win32
 
 	cc=i686-w64-mingw32-gcc
 	pc=i686-w64-mingw32-pkg-config
